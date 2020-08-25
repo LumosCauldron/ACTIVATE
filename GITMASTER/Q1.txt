@@ -1,0 +1,17 @@
+1. This is my first CSCE class.
+2. Background: CS major
+3. To be able to sit down and break open any computer/phone.
+4. I like chess and plane-turbulence.
+5. I hope to be able to keep up.
+6. User can read and write, group can read, other can read.
+7. Live access is maybe when the computer is on and dead access is when the computer is off and another device is used to read whats on the hardrive. Maybe.
+
+8. 
+
+https:// 				--> the s means secure
+www 					--> the world wide web
+.example.com:3000 			--> where to connect to (for DNS resolver)
+path/resource?id=123#section-id		--> file system of some sort and sql code maybe.
+
+9. A place you don't touch if you don't know what your doing.
+10. Files that used to contain the stored user passcodes, maybe. (In the past)
