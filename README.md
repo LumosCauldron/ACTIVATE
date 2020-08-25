@@ -1,0 +1,2 @@
+# ACTIVATE
+root of courses
