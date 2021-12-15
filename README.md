@@ -1,2 +1,4 @@
 # ACTIVATE
-root of courses
+Code to make code easier.
+
+
