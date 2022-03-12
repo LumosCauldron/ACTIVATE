@@ -21,16 +21,16 @@ Matrix* create_matrix(long long int* array, unsigned int rsz, unsigned int csz)
 	return newsquare;
 }
 
-void destroy_matrix(Matrix* ptr)	// Zeros out everything and frees the memory
+void destroy_matrix(Matrix** ptr)	// Zeros out everything and frees the memory
 {
-	if (!ptr)
+	if (!(*ptr))
 		return;
 	register int i;
-	register int sz = ptr->numcol * ptr->numrow;
+	register int sz = (*ptr)->numcol * (*ptr)->numrow;
 	for (i = 0; i < sz; ++i)
-		ptr->matrix[i] = 0;
-	ptr->numcol = 0;
-	ptr->numrow = 0;
+		(*ptr)->matrix[i] = 0;
+	(*ptr)->numcol = 0;
+	(*ptr)->numrow = 0;
 	FREE(ptr);
 }
 

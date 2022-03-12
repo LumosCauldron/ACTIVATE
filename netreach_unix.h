@@ -86,9 +86,10 @@
 #define PORTAL_ALLOCATION(x)	(x->lnum)
 #define ADDRLEN		 	sizeof(struct sockaddr)
 
-typedef Elem Portal;
 
 // **** GLOBAL **** //
+
+// Type 'Elem' is typdef'ed to 'Portal' in "dir.h"
 
 Portal* portalhdr   = NULLPTR; // Used to hold current file being worked on
 short PORTALSOPEN = 0;
@@ -104,20 +105,20 @@ short PORTALSOPEN = 0;
 
 int addrlen = ADDRLEN;
 
-// ******************************** Prototypes ***************************************** //
-Portal* portalize(char* ipstr, char* iface_ipstr, int port, char role, char encryptflag);			 // 
-											 //
-long long int perceptnum(Portal* portal);		 				 //
-Bytes* perceptbytes(Portal* portal, int limit);			 				 //
-char perceptfile(Portal* portal); 							 //
-//char perceptdir(Portal* portal);					 		 //
-											 //
-char inceptnum(Portal* portal, long long int object);			 		 //
-char inceptcstr(Portal* portal, char* object);			 			 //
-char inceptbytes(Portal* portal, Bytes** object);					 //
-char inceptfile(Portal* portal, char* object, char* as);				 //
-//char inceptdir(Portal* portal, char* object);						 //
-// ******************************** Prototypes ***************************************** //
+// ******************************** Prototypes ****************************************** //
+Portal* portalize(char* ipstr, char* iface_ipstr, int port, char role, char encryptflag); // 
+											  //
+long long int perceptnum(Portal* portal);		 				  //
+Bytes* perceptbytes(Portal* portal, int limit);			 			  //
+char perceptfile(Portal* portal); 							  //
+//char perceptdir(Portal* portal);					 		  //
+											  //
+char inceptnum(Portal* portal, long long int object);			 		  //
+char inceptcstr(Portal* portal, char* object);			 			  //
+char inceptbytes(Portal* portal, Bytes** object);					  //
+char inceptfile(Portal* portal, char* object, char* as);				  //
+//char inceptdir(Portal* portal, char* object);						  //
+// ******************************** Prototypes ****************************************** //
 
 Bytes* extractforeignip(Portal* portal)	// Returns dynamically allocated ip address string of connected party
 {
@@ -632,7 +633,7 @@ char perceptfile(Portal* portal)
 			if (eqstr(PORTALBUFFER(portal)->array, "404"))
 			{
 				PRINT("File is inaccessible due to permissions or lack of existence.");
-				++numbytes_handled; // Set as zero bytes read
+				++numbytes_handled; // Set as zero bytes read [Addition is for "numbytes_handled - 1" in below printf statement]
 				goto cleanup;
 			}
 			++firstloopdone;
@@ -700,9 +701,9 @@ char inceptcstr(Portal* portal, char* object)
 	imitate_bytes.array = object;			// Assign string to array position in Bytes struct
 	imitate_bytes.len = countuntilnul(object);	// Assign string length to len position in Bytes struct
 	Bytes* bytes_ptr = &imitate_bytes;
-	char hold = SEND(portal, &bytes_ptr, NOFREEOLD);		// Does not attempt to free Bytes object (would be the same but inefficient behavior if we tried to free the object)
+	char hold = SEND(portal, &bytes_ptr, NOFREEOLD); // Does not attempt to free Bytes object (would be the same but inefficient behavior if we tried to free the object)
 	cleanup:
-		FREE(object);				// Frees c-string if 'object' is NOT a literal or stack value 
+		FREE(&object);				// Frees c-string if 'object' is NOT a literal or stack value 
 		imitate_bytes.array = NULLPTR;		// Cleans stack
 		imitate_bytes.len   = 0;		// Cleans stack
 	return hold;					// Successful send over network
@@ -713,20 +714,19 @@ char inceptbytes(Portal* portal, Bytes** object)
 	return SEND(portal, object, FREEOLD);	// Frees bytes 
 }
 
-char inceptfile(Portal* portal, char* object, char* as)	// (Like inception the movie) inject an "idea" into another computers mind (in this case send a file)
-{							// Sends file in blocks, each block is prefixed by a signal/marker byte (either MORETOCOME or ALLDONE)
-	FILE* stream = fopen(object, "r");				// Opens large object as file
-	if (!stream)							// Checks stream
+char inceptfile(Portal* portal, Bytes** object, Bytes** as, char freeobject)	// (Like inception the movie) inject an "idea" into another computers mind (in this case send a file)
+{										// Sends file in blocks, each block is prefixed by a signal/marker byte (either MORETOCOME or ALLDONE)
+	FILE* stream = fopen((*object)->array, "r");				// Opens object as file
+	if (!stream)								// Checks stream
 	{
 		Bytes* errormsg = dynamic_bytes("404", 3);
 		SEND(portal, &errormsg, FREEOLD);
 		return 0;
 	}
 	
-	Bytes* asname = dynamic_bytes(as, countuntilnul(as));		// Make bytes object of file path name
-	inceptnum(portal, asname->len);					// Send length of file path name
-	SEND(portal, &asname, FREEOLD);					// Send file path name (Frees 'asname')
-	register long long int amtread = 0; 				// The rest opens and sends all of the file content over the network
+	inceptnum(portal, (*as)->len);		// Send length of filepath name
+	SEND(portal, as, FREEOLD);		// Send specified filepath name 
+	register long long int amtread = 0; 	// The rest of the code opens and sends all of the file content over the network
 	char* ptr_plusabyte = PORTALBUFFER(portal)->array + 1;
 	while (amtread = FREAD(&ptr_plusabyte, NETMEMLIMIT + FILEMEMLIMIT - 1, stream))	// -1 --> one for signal char at beginning
 	{
@@ -749,6 +749,8 @@ char inceptfile(Portal* portal, char* object, char* as)	// (Like inception the m
 		SEND(portal, &PORTALBUFFER(portal), NOFREEOLD);   // Send MARKER character + all bytes (DOES NOT FREE PORTALBUFFER)
 	
 	cleanup:
+		if (freeobject)
+			FREE(object);
 		fclose(stream);	    	     		  	  // Closes file stream
 		
 	return 1; // Successful send

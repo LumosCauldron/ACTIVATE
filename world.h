@@ -34,7 +34,7 @@ Bytes* userstring(char* prompt)	// Gets user input until '\n' and returns a stri
 	}
 	if (i == 1)	// If only the 'NL' character was input, count that as no user input and return NULLPTR
 	{
-		FREE(prompt);
+		FREE(&prompt);
 		goto done;
 	}
 	input = REALLOC(input, i + 1);	// Reshape array to correct size + 1 or nul-terminator

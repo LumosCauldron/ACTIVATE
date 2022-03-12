@@ -1,8 +1,0 @@
-clear
-clear
-./makex86bin cli $1 $2
-./makex86bin serv $1 $2
-#./makearmbin serv $1 $2
-
-exit
-

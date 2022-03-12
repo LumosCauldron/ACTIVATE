@@ -6,19 +6,31 @@
 #define CHAR	  1
 #define SHORT     2
 #define INT       4
-#define LONG_LONG 8
+#define LONGLONG  8
 
 // **************************************************************** WRAPPER FUNCTIONS
 
 void PRINTC(char chr)             { printf("%c\n", chr);   }	   // CHAR
-void PRINTNC(char chr)             { printf("%u\n", (unsigned char)chr);   }	   // CHAR
+void PRINTNC(char chr)            { printf("%u\n", (unsigned char)chr);   } // CHAR
 void PRINTN(int num) 	          { printf("%d\n", num);   }	   // INT
-void PRINTUN(unsigned int num) 	  { printf("%u\n", num);   }	   // UNSIGNED INT
 void PRINTLLN(long long int num)  { printf("%lld\n", num); }	   // LONG LONG INT
 void PRINTULLN(long long int num) { printf("%llu\n", num); }	   // UNSIGNED LONG LONG
 void PRINTX(int num) 	          { printf("%x\n", num);   }	   // HEX
 void PRINTLLX(long long int num)  { printf("%llx\n", num); }	   // LONG LONG HEX
 void PRINTD(double num)           { printf("%lf\n", num);  }       // DOUBLE
+
+
+// UNDER DEVELOPMENT
+/* void PRINTN_LEFT_ALIGNED(long long int num, char sign)
+{
+	register long long int holder = num;
+	while(holder /= 10)
+		putc(' ');
+	if (sign)
+		printf("%lln", (long long int)(num));
+	else
+		printf("%lln", (unsigned long long int)(num));
+} */
 
 void PRINTNUMARRAY(long long int* arr, int sz) 
 {

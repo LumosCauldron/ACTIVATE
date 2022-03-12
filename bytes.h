@@ -37,7 +37,6 @@ typedef struct bytes Bytes;
 
 #define FIRSTCHAR(Bytes_ptr) (*((Bytes_ptr)->array))
 #define LASTCHAR(Bytes_ptr)  (*((Bytes_ptr)->array + (Bytes_ptr)->len - 1))
-#define INDEX_BYNUM(cptr)    (*((cptr) + num))
 
 
 // Print tools
@@ -45,7 +44,7 @@ void PRINTBYTES(Bytes* ptr)
 {
 	if (!goodptr(ptr, "NULLPTR PTR GIVEN TO PRINTBYTES", FUNC_RETURN))
 		return;
-	long long int i;
+	unsigned long long int i;
 	for (i = 0; i < ptr->len; ++i)
 	{
 		if (!(*(ptr->array + i)))
@@ -61,7 +60,7 @@ void PRINTHEXBYTES(Bytes* ptr)
 {
 	if (!goodptr(ptr, "NULLPTR PTR GIVEN TO PRINTHEXBYTES", FUNC_RETURN))
 		return;
-	long long int i;
+	unsigned long long int i;
 	for (i = 0; i < ptr->len; ++i)		// To make spacing even, check if 1 digit or 2 digits
 	{
 		if ((0x000000ff & *(ptr->array + i)) > 0xf) printf("%x ",  (unsigned int)(0x000000ff & *(ptr->array + i)));
@@ -101,10 +100,8 @@ char bytescmp_wnul(char* s1, char* s2) // Beats strcmp over the head with a sled
 		return 0;
 	if (!s1 || !s2)
 		return 1;
-	register long long int size = countuntilnul(s1);
-	if (size != countuntilnul(s2))
-		return 1;
-	while (*s1)
+
+	while (*s1 && *s2)
 	{
 		if (*s1 != *s2)
 			return 1;
@@ -114,6 +111,9 @@ char bytescmp_wnul(char* s1, char* s2) // Beats strcmp over the head with a sled
 			++s2; 
 		}
 	}
+
+	if (*s1 || *s2)	// If one string is longer (return 1 == NOT EQUAL)
+		return 1;
 	return 0;	
 }
 int bytescpy_wnul(char* s1, char* s2) // Beats strcpy over the head with a sledgehammer
@@ -129,244 +129,35 @@ int bytescpy_wnul(char* s1, char* s2) // Beats strcpy over the head with a sledg
 	*s1 = 0;	// Assign nuls	
 	return abs(s1 - holder);
 }
-char* nbytesto(char* dest, char* src, unsigned long long int len) // Beats strncpy over the head with a sledgehammer (may in some extremely rare cases have one level of recursion)
+char* nbytesto(char* dest, char* src, unsigned long long int len)
 {
 	if (!len)
 		return dest;
 	goodptr(dest, "NULLPTR DEST GIVEN TO NBYTESTO", NOFUNC_RETURN);
-	if (!goodptr(src , NOMSG, FUNC_RETURN) || dest == src)
+	if (!goodptr(src, NOMSG, FUNC_RETURN) || dest == src)
 		return dest;
 
-	if (dest > src && dest < (src + len))	   // If destination is in the middle of the src string
+	register unsigned long long int blocks   = len / sizeof(unsigned long long int);		// Hold number of 8-byte 'blocks' to copy
+	register unsigned long long int leftover = len % sizeof(unsigned long long int);		// Hold number of 'leftover' bytes
+	register unsigned long long int i;
+	if (dest > src && dest < (src + len))	   // If destination is in the middle of the src string, do what is in the "else" clause but backwards
 	{
-		char holder[len];		   // Make space on stack
-		src = nbytesto(holder, src, len);  // Copy data over to "bucket" and set src pointer to point to holder (now changed destination is not in the middle of src)
+		unsigned long long int* destptr = (unsigned long long int*)(dest);		// long long integer pointer to beginning of 'dest'
+		unsigned long long int* srcptr  = (unsigned long long int*)(src);		// long long integer pointer to beginning of 'src'
+		for (i = 1; i <= leftover; ++i)
+			*(dest + len - i) = *(src + len - i);
+		for (i = blocks - 1; i >= 0; --i)
+			*(destptr + i) = *(srcptr + i);
 	}
-
-	register long long int i = -1;		// Offset to calibrate (some gray magic here with the -1)
-	while (++i < len)			// Increment before comparing (so -1 is never compared, only 0 and up)
-		*(dest + i) = *(src + i);	// Dereferencing is faster than indexing
-
-	/*while (++i < len)
+	else
 	{
-		if ((len - i % 100) == 0)
-		{
-			*(dest + i) = *(src + i);
-			*(dest + i + 1) = *(src + i + 1);
-			*(dest + i + 1) = *(src + i + 2);
-			*(dest + i + 1) = *(src + i + 3);
-			*(dest + i + 1) = *(src + i + 4);
-			*(dest + i + 1) = *(src + i + 5);
-			*(dest + i + 1) = *(src + i + 6);
-			*(dest + i + 1) = *(src + i + 7);
-			*(dest + i + 1) = *(src + i + 8);
-			*(dest + i + 1) = *(src + i + 9);
-			*(dest + i + 1) = *(src + i + 10);
-			*(dest + i + 1) = *(src + i + 11);
-			*(dest + i + 1) = *(src + i + 12);
-			*(dest + i + 1) = *(src + i + 13);
-			*(dest + i + 1) = *(src + i + 14);
-			*(dest + i + 1) = *(src + i + 15);
-			*(dest + i + 1) = *(src + i + 16);
-			*(dest + i + 1) = *(src + i + 17);
-			*(dest + i + 1) = *(src + i + 18);
-			*(dest + i + 1) = *(src + i + 19);
-			*(dest + i + 1) = *(src + i + 20);
-			*(dest + i + 1) = *(src + i + 21);
-			*(dest + i + 1) = *(src + i + 22);
-			*(dest + i + 1) = *(src + i + 23);
-			*(dest + i + 1) = *(src + i + 24);
-			*(dest + i + 1) = *(src + i + 25);
-			*(dest + i + 1) = *(src + i + 26);
-			*(dest + i + 1) = *(src + i + 27);
-			*(dest + i + 1) = *(src + i + 28);
-			*(dest + i + 1) = *(src + i + 29);
-			*(dest + i + 1) = *(src + i + 30);
-			*(dest + i + 1) = *(src + i + 31);
-			*(dest + i + 1) = *(src + i + 32);
-			*(dest + i + 1) = *(src + i + 33);
-			*(dest + i + 1) = *(src + i + 34);
-			*(dest + i + 1) = *(src + i + 35);
-			*(dest + i + 1) = *(src + i + 36);
-			*(dest + i + 1) = *(src + i + 37);
-			*(dest + i + 1) = *(src + i + 38);
-			*(dest + i + 1) = *(src + i + 39);
-			*(dest + i + 1) = *(src + i + 40);
-			*(dest + i + 1) = *(src + i + 41);
-			*(dest + i + 1) = *(src + i + 42);
-			*(dest + i + 1) = *(src + i + 43);
-			*(dest + i + 1) = *(src + i + 44);
-			*(dest + i + 1) = *(src + i + 45);
-			*(dest + i + 1) = *(src + i + 46);
-			*(dest + i + 1) = *(src + i + 47);
-			*(dest + i + 1) = *(src + i + 48);
-			*(dest + i + 1) = *(src + i + 49);
-			*(dest + i + 1) = *(src + i + 50);
-			*(dest + i + 1) = *(src + i + 51);
-			*(dest + i + 1) = *(src + i + 52);
-			*(dest + i + 1) = *(src + i + 53);
-			*(dest + i + 1) = *(src + i + 54);
-			*(dest + i + 1) = *(src + i + 55);
-			*(dest + i + 1) = *(src + i + 56);
-			*(dest + i + 1) = *(src + i + 57);
-			*(dest + i + 1) = *(src + i + 58);
-			*(dest + i + 1) = *(src + i + 59);
-			*(dest + i + 1) = *(src + i + 60);
-			*(dest + i + 1) = *(src + i + 61);
-			*(dest + i + 1) = *(src + i + 62);
-			*(dest + i + 1) = *(src + i + 63);
-			*(dest + i + 1) = *(src + i + 64);
-			*(dest + i + 1) = *(src + i + 65);
-			*(dest + i + 1) = *(src + i + 66);
-			*(dest + i + 1) = *(src + i + 67);
-			*(dest + i + 1) = *(src + i + 68);
-			*(dest + i + 1) = *(src + i + 69);
-			*(dest + i + 1) = *(src + i + 70);
-			*(dest + i + 1) = *(src + i + 71);
-			*(dest + i + 1) = *(src + i + 72);
-			*(dest + i + 1) = *(src + i + 73);
-			*(dest + i + 1) = *(src + i + 74);
-			*(dest + i + 1) = *(src + i + 75);
-			*(dest + i + 1) = *(src + i + 76);
-			*(dest + i + 1) = *(src + i + 77);
-			*(dest + i + 1) = *(src + i + 78);
-			*(dest + i + 1) = *(src + i + 79);
-			*(dest + i + 1) = *(src + i + 80);
-			*(dest + i + 1) = *(src + i + 81);
-			*(dest + i + 1) = *(src + i + 82);
-			*(dest + i + 1) = *(src + i + 83);
-			*(dest + i + 1) = *(src + i + 84);
-			*(dest + i + 1) = *(src + i + 85);
-			*(dest + i + 1) = *(src + i + 86);
-			*(dest + i + 1) = *(src + i + 87);
-			*(dest + i + 1) = *(src + i + 88);
-			*(dest + i + 1) = *(src + i + 89);
-			*(dest + i + 1) = *(src + i + 90);
-			*(dest + i + 1) = *(src + i + 91);
-			*(dest + i + 1) = *(src + i + 92);
-			*(dest + i + 1) = *(src + i + 93);
-			*(dest + i + 1) = *(src + i + 94);
-			*(dest + i + 1) = *(src + i + 95);
-			*(dest + i + 1) = *(src + i + 96);
-			*(dest + i + 1) = *(src + i + 97);
-			*(dest + i + 1) = *(src + i + 98);
-			*(dest + i + 1) = *(src + i + 99);
-			i += 99;
-		}
-		else if ((len - i % 50) == 0)
-		{
-			*(dest + i) = *(src + i);
-			*(dest + i + 1) = *(src + i + 1);
-			*(dest + i + 1) = *(src + i + 2);
-			*(dest + i + 1) = *(src + i + 3);
-			*(dest + i + 1) = *(src + i + 4);
-			*(dest + i + 1) = *(src + i + 5);
-			*(dest + i + 1) = *(src + i + 6);
-			*(dest + i + 1) = *(src + i + 7);
-			*(dest + i + 1) = *(src + i + 8);
-			*(dest + i + 1) = *(src + i + 9);
-			*(dest + i + 1) = *(src + i + 10);
-			*(dest + i + 1) = *(src + i + 11);
-			*(dest + i + 1) = *(src + i + 12);
-			*(dest + i + 1) = *(src + i + 13);
-			*(dest + i + 1) = *(src + i + 14);
-			*(dest + i + 1) = *(src + i + 15);
-			*(dest + i + 1) = *(src + i + 16);
-			*(dest + i + 1) = *(src + i + 17);
-			*(dest + i + 1) = *(src + i + 18);
-			*(dest + i + 1) = *(src + i + 19);
-			*(dest + i + 1) = *(src + i + 20);
-			*(dest + i + 1) = *(src + i + 21);
-			*(dest + i + 1) = *(src + i + 22);
-			*(dest + i + 1) = *(src + i + 23);
-			*(dest + i + 1) = *(src + i + 24);
-			*(dest + i + 1) = *(src + i + 25);
-			*(dest + i + 1) = *(src + i + 26);
-			*(dest + i + 1) = *(src + i + 27);
-			*(dest + i + 1) = *(src + i + 28);
-			*(dest + i + 1) = *(src + i + 29);
-			*(dest + i + 1) = *(src + i + 30);
-			*(dest + i + 1) = *(src + i + 31);
-			*(dest + i + 1) = *(src + i + 32);
-			*(dest + i + 1) = *(src + i + 33);
-			*(dest + i + 1) = *(src + i + 34);
-			*(dest + i + 1) = *(src + i + 35);
-			*(dest + i + 1) = *(src + i + 36);
-			*(dest + i + 1) = *(src + i + 37);
-			*(dest + i + 1) = *(src + i + 38);
-			*(dest + i + 1) = *(src + i + 39);
-			*(dest + i + 1) = *(src + i + 40);
-			*(dest + i + 1) = *(src + i + 41);
-			*(dest + i + 1) = *(src + i + 42);
-			*(dest + i + 1) = *(src + i + 43);
-			*(dest + i + 1) = *(src + i + 44);
-			*(dest + i + 1) = *(src + i + 45);
-			*(dest + i + 1) = *(src + i + 46);
-			*(dest + i + 1) = *(src + i + 47);
-			*(dest + i + 1) = *(src + i + 48);
-			*(dest + i + 1) = *(src + i + 49);
-			i += 49;
-		}
-		else if ((len - i % 25) == 0)
-		{
-			*(dest + i) = *(src + i);
-			*(dest + i + 1) = *(src + i + 1);
-			*(dest + i + 1) = *(src + i + 2);
-			*(dest + i + 1) = *(src + i + 3);
-			*(dest + i + 1) = *(src + i + 4);
-			*(dest + i + 1) = *(src + i + 5);
-			*(dest + i + 1) = *(src + i + 6);
-			*(dest + i + 1) = *(src + i + 7);
-			*(dest + i + 1) = *(src + i + 8);
-			*(dest + i + 1) = *(src + i + 9);
-			*(dest + i + 1) = *(src + i + 10);
-			*(dest + i + 1) = *(src + i + 11);
-			*(dest + i + 1) = *(src + i + 12);
-			*(dest + i + 1) = *(src + i + 13);
-			*(dest + i + 1) = *(src + i + 14);
-			*(dest + i + 1) = *(src + i + 15);
-			*(dest + i + 1) = *(src + i + 16);
-			*(dest + i + 1) = *(src + i + 17);
-			*(dest + i + 1) = *(src + i + 18);
-			*(dest + i + 1) = *(src + i + 19);
-			*(dest + i + 1) = *(src + i + 20);
-			*(dest + i + 1) = *(src + i + 21);
-			*(dest + i + 1) = *(src + i + 22);
-			*(dest + i + 1) = *(src + i + 23);
-			*(dest + i + 1) = *(src + i + 24);
-			i += 24;
-		}
-		else if ((len - i % 12) == 0)
-		{
-			*(dest + i) = *(src + i);
-			*(dest + i + 1) = *(src + i + 1);
-			*(dest + i + 1) = *(src + i + 2);
-			*(dest + i + 1) = *(src + i + 3);
-			*(dest + i + 1) = *(src + i + 4);
-			*(dest + i + 1) = *(src + i + 5);
-			*(dest + i + 1) = *(src + i + 6);
-			*(dest + i + 1) = *(src + i + 7);
-			*(dest + i + 1) = *(src + i + 8);
-			*(dest + i + 1) = *(src + i + 9);
-			*(dest + i + 1) = *(src + i + 10);
-			*(dest + i + 1) = *(src + i + 11);
-			i += 11;
-		}
-		else if ((len - i % 6) == 0)
-		{
-			*(dest + i) = *(src + i);
-			*(dest + i + 1) = *(src + i + 1);
-			*(dest + i + 1) = *(src + i + 2);
-			*(dest + i + 1) = *(src + i + 3);
-			*(dest + i + 1) = *(src + i + 4);
-			*(dest + i + 1) = *(src + i + 5);
-			i += 5;
-		}
-		else
-			*(dest + i) = *(src + i);
-	}*/
-
-
+		unsigned long long int* destptr = (unsigned long long int*)(dest);		// long long integer pointer to beginning of 'dest'
+		unsigned long long int* srcptr  = (unsigned long long int*)(src);		// long long integer pointer to beginning of 'src'
+		for (i = 0; i < blocks; ++i)				// Write to destination in 8-byte blocks
+			*(destptr + i) = *(srcptr + i);			// e.g. "thisisastring" : copies "thisisas" in one shot
+		for (i = leftover; i > 0; --i)				// Write 'leftover' bytes to destination
+			*(dest + len - i) = *(src + len - i);
+	}
 	return dest;
 }
 
@@ -408,9 +199,19 @@ char* findchars(char* cstr, char* str, long long int sz)
 
 void zeroarray(char* ptr, long long int len)	// Zeros out an array
 {
-	register long long int i = EMPTY;		// Offset to calibrate indexing
-	while (++i < len)				// Increment before comparing (so -1 is never compared, only 0 and up)
-		*(ptr + i) ^= *(ptr + i);		// Dereferencing is way faster than indexing
+	//register long long int i = EMPTY;		// Offset to calibrate indexing
+	//while (++i < len)				// Increment before comparing (so -1 is never compared, only 0 and up)
+	//	*(ptr + i) ^= *(ptr + i);		// Dereferencing is way faster than indexing
+
+	register unsigned long long int blocks    = len / sizeof(unsigned long long int);	// Hold number of 8-byte 'blocks' to copy
+	register unsigned long long int leftover  = len % sizeof(unsigned long long int);	// Hold number of 'leftover' bytes
+	unsigned long long int* blockptr = (unsigned long long int*)(ptr);		// long long integer pointer to beginning of 'ptr'
+	register unsigned long long int i;
+
+	for (i = 0; i < blocks; ++i)	// Write zero out array in 8-byte blocks
+		*(blockptr + i) = 0;	// e.g. "thisisastring" : zeros out "thisisas" in one shot
+	for (i = 1; i <= leftover; ++i)	// Write 'leftover' bytes starting from the last position
+		*(ptr + len - i) = 0;   // Zeros out 'leftover' bytes
 }
 
 // Creation tools
@@ -453,15 +254,13 @@ Bytes* copy_bytes(Bytes* ptr)	// Copies Bytes data to and returns a new Bytes in
 	return neword;		   						// Return heap byte array
 }
 
-/* ************************ OPERATIONS ************************ */	
+/* ************************ OPERATIONS ************************ */
 
 // Prototype
 Bytes* concatbytes(Bytes* front, Bytes* back, char between, char freeold);
 
-#ifndef EQSTR_H
-#define EQSTR_H
 char eqstr(char* s1, char* s2) { return !bytescmp_wnul(s1, s2); }	// Wrapper for bytescmp_wnul()
-char eqbytes(Bytes* s1, Bytes* s2) 					// Calculates equality (CAN BE OPTIMIZED LATER)
+char eqbytes(Bytes* s1, Bytes* s2)
 {
 	if (!s1 && !s2)
 		return 1;
@@ -469,37 +268,41 @@ char eqbytes(Bytes* s1, Bytes* s2) 					// Calculates equality (CAN BE OPTIMIZED
 		return 0;
 	if (s1->len != s2->len)	
 		return 0;
-	register long long int i;
-	for (i = 0; i < s1->len; ++i)
-		if (*(s1->array + i) != *(s2->array + i))
+
+	register unsigned long long int blocks    = s1->len / sizeof(unsigned long long int);	// Hold number of 8-byte 'blocks' to copy
+	register unsigned long long int leftover  = s1->len % sizeof(unsigned long long int);	// Hold number of 'leftover' bytes
+	unsigned long long int* s1ptr    = (unsigned long long int*)(s1->array);	// long long integer pointer to beginning of 's1->array'
+	unsigned long long int* s2ptr    = (unsigned long long int*)(s2->array);	// long long integer pointer to beginning of 's2->array'
+	register unsigned long long int i;
+
+	for (i = 0; i < blocks; ++i)	// Compare strings 8 bytes at a time
+		if (*(s1ptr + i) != *(s2ptr + i))
+			return 0;
+	for (i = 1; i <= leftover; ++i)	// Compare 'leftover' bytes starting from the last position
+		if (*(s1->array + s1->len - i) != *(s2->array + s1->len - i))	// Use 's1->len' for indexing 's2->array' because its most likely stored in cache memory
 			return 0;
 	return 1;
 }
-// UNDER DEVELOPMENT
-char eqstr_range(char* s1, char* s2, long long int start, long long int end)
+
+char fastmatch(char* strptr1, char* strptr2, unsigned long long int len)	// Returns '1' if strings are equal (counter-intuitive to 'memcmp' usage)
 {
-	if (!s1 && !s2)
+	if (!strptr1 && !strptr2)
 		return 1;
-	if (!s1 || !s2)
+	if (!strptr1 || !strptr2)
 		return 0;
-	register long long int s1_sz = countuntilnul(s1);
-	register long long int s2_sz = countuntilnul(s2);
-	s1 += start;
-	s2 += start;
-	while (*s1 && *s2 && start <= end)
-	{
-		if (*s1 != *s2)
-			return 1;
-		else
-		{ 
-			s1 += start; 
-			s2 += start; 
-			++start;
-		}
-	}
-	return 0;	
+	register unsigned long long int blocks    = len / sizeof(unsigned long long int);	// Hold number of 8-byte 'blocks' to copy
+	register unsigned long long int leftover  = len % sizeof(unsigned long long int);	// Hold number of 'leftover' bytes
+	unsigned long long int* s1ptr    = (unsigned long long int*)(strptr1);	// long long integer pointer to beginning of 'strptr1'
+	unsigned long long int* s2ptr    = (unsigned long long int*)(strptr2);	// long long integer pointer to beginning of 'strptr2'
+	register unsigned long long int i;
+	for (i = 0; i < blocks; ++i)	// Compare strings 8 bytes at a time
+		if (*(s1ptr + i) != *(s2ptr + i))
+			return 0;
+	for (i = 1; i <= leftover; ++i)	// Compare 'leftover' bytes starting from the last position
+		if (*(strptr1 + len - i) != *(strptr2 + len - i))
+			return 0;
+	return 1;
 }
-#endif
 
 Bytes* extractstr(char* f, char* b)	// Extract and make new string from substring in string 
 {					// (parameters must be valid pointers and "b" points to next character in the larger string)
@@ -510,17 +313,6 @@ Bytes* extractstr(char* f, char* b)	// Extract and make new string from substrin
 	unsigned long long int len = abs((int)(f - b));
 	Bytes* neword = dynamic_bytes(f, len);
 	return neword;
-}
-
-char fastmatch(char* strptr1, char* strptr2, unsigned long long int len) // Dark magic
-{
-	register char sig  = 0;
-	match:
-		--len;
-		 sig = (*(strptr1 + len) == *(strptr2 + len));
-		 if (sig && len)
-			goto match;
-	return (!len && sig);
 }
 
 Bytes* substr(Bytes* str, Bytes* origin)	// Returns substring in string (must be freed thereafter)
@@ -632,8 +424,6 @@ int rmsubstr_all(Bytes* str, Bytes* origin)	// Removes all substrings from byte 
 	return --i;
 }
 
-#ifndef CONCATBYTES_H
-#define CONCATBYTES_H
 Bytes* concatbytes(Bytes* front, Bytes* back, char between, char freeold) // Attach 2 strings together, place a "between" character in the middle, choose whether to discard old strings
 {
 	register unsigned long long int flen = 0;
@@ -646,7 +436,7 @@ Bytes* concatbytes(Bytes* front, Bytes* back, char between, char freeold) // Att
 	if (front && flen)				
 		nbytesto(neword->array, front->array, flen);
 	if (between)						// Insert "between" character
-		neword->array[flen] = (between * (between != NULTERMINATOR));
+		*(neword->array + flen) = (between * (between != NULTERMINATOR));
 	nbytesto(neword->array + flen + (between != 0), back->array, back->len); // Connect strings + in between character if present
 	switch(freeold)	// Check for freeing the input strings
 	{
@@ -656,7 +446,6 @@ Bytes* concatbytes(Bytes* front, Bytes* back, char between, char freeold) // Att
 	}
 	return neword; // Return new string
 }
-#endif
 
 Bytes* appendstr(Bytes* bstr, char* str, int len)
 {
@@ -682,10 +471,8 @@ Bytes* appendctostr(Bytes* str, char c)		// Returns Bytes* pointer to array that
 {
 	if (!str) 	// If no 'str' just make it from scratch
 	{
-		char* newarray = MALLOC(1);
-		*newarray = c;
-		Bytes* holder = dynamic_bytes(newarray, 1);
-		FREE(&newarray);
+		Bytes* holder = dynamic_bytes(NULLPTR, 1);
+		*(holder->array) = c;
 		return holder;
 	}
 	str->array = REALLOC(str->array, str->len + 1 + 1); // one for extra char and one for nul
@@ -698,11 +485,8 @@ Bytes* prependctostr(char c, Bytes* str)  // Returns Bytes* pointer to string th
 {
 	if (!str)
 	{
-		char* newarray = NULLPTR;
-		newarray  = MALLOC(1);
-		*newarray = c;
-		Bytes* holder = dynamic_bytes(newarray, 1);
-		FREE(&newarray);
+		Bytes* holder = dynamic_bytes(NULLPTR, 1);
+		*(holder->array) = c;
 		return holder;
 	}
 	str->array = REALLOC(str->array, str->len + 1 + 1);  // one for extra char and one for nul
@@ -858,12 +642,12 @@ char* map_decnum_tostr(long long int num, int numdigits) // Function that makes 
 { // 18 digits only for the first parameter
 	char* newarray = NULLPTR;		// Holds new string
 	register long long int digits = 1;	// Tracks number of digits
-	register int i = 0;			// Counts digits and tracks indexing from 'newarray'
+	register unsigned int i = 0;		// Counts digits and tracks indexing from 'newarray'
 	while (num / digits != 0)		// Check to the highest 10th power before going over as a divisor
 	{ digits *= 10; ++i; }
 	digits /= 10;	// Set back down by 1 power of 10
 	register int zeros = (numdigits * (numdigits > 0)) - i;	// Get specified number of padded zeros
-	newarray = MALLOC(i + 1 + zeros);	// Get space, +1 for Nul-terminator
+	newarray = MALLOC(i + 1 + zeros);		// Get space, +1 for Nul-terminator
 	newarray[i + zeros] = '\0';			// Nul-terminate
 	for(i = 0; i < zeros; ++i)			// Insert zeros			
 		newarray[i] = 0x30;
@@ -881,8 +665,8 @@ long long int map_decstr_tolonglongint(Bytes* str) // Dark Magic --> String must
 	goodptr(str, "NULLPTR STR GIVEN TO MAP_DECSTR_TOLONGLONGINT", NOFUNC_RETURN);
 	register long long int chosen = 0;
 	register long long int shift = 0x100;
-	register long long int i;
-	register long long int j;
+	register unsigned long long int i;
+	register unsigned long long int j;
 	register long long int holder;
 	for (i = str->len - 1; i >= 0; --i)
 	{
@@ -914,7 +698,7 @@ Bytes* ccipherstr(Bytes* str, int num)	// Ciphers through and upto (unsigned cha
 	if (!str) return str;		// If no string return string
 	char* ptr = str->array;
 	register unsigned long long int len = str->len;
-	register int i;
+	register unsigned long long int i;
 	for (i = 0; i < len; ++i)
 	{
 		*(ptr + i) = (char)(MOD((int)((*(ptr + i)) + num), 256));
@@ -935,8 +719,8 @@ Bytes* replacecwith(char original, char b, Bytes* str, char retcopy)
 	Bytes* holder = str;
 	if (retcopy)
 		holder = copy_bytes(str);
-	register long long int x = holder->len;
-	register long long int i = 0;
+	register unsigned long long int x = holder->len;
+	register unsigned long long int i = 0;
 	for (i; i < x; ++i)
 		if (*(holder->array + i) == original)
 			*(holder->array + i) = b;
@@ -952,7 +736,7 @@ Bytes* rotatestr(Bytes* str, char dir, int num)	// Rotates string by "num" shift
 	if (!MOD(num, len)) return str;				// Checks if no work is needed
 	num = abs(MOD((-(!dir) * num + num * dir), len));	// Calibrates char array offset
 	char* holder = MALLOC(len);				// Makes a bucket
-	register int i;
+	register unsigned long long int i;
 	for (i = 0; i < len; ++i)
 		*(holder + MOD((i + num), len)) = *(str->array + i);	// Fills string with calculated rotation
 	str->array = nbytesto(str->array, holder, len);			// Copies result to original string

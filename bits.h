@@ -116,7 +116,7 @@ Bitfield* rotatebytes(Bitfield* bytestr, char dir, int num)	// Rotates bytes by 
 	for (i = 0; i < bytestr->sz; ++i)
 		holder[MOD((i + num), bytestr->sz)] = bytestr->field[i]; // Fills string with calculated rotation
 	bytestr->field = strncpy(bytestr->field, holder, bytestr->sz);	// Copies result to original string
-	FREE(holder);				 			// Deletes bucket
+	FREE(&holder);				 			// Deletes bucket
 	return bytestr;
 }
 

@@ -4,9 +4,9 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <sys/stat.h>
-#include "stringvector.h"
-#include "structlist.h"
-#include "read.h"
+#include "stringvector.h" // Includes basic.h and bytes.h
+#include "read.h"	  // Includes basic.h, bytes.h, tools.h, structlist.h
+#include "functions.h"	  // Includes basic.h, bytes.h, tools.h
 
 #define FILEOBJECT       4	// EOT - END OF TRANSMISSION character
 #define DIRECTORYOBJECT  5	// ENQUIRY character
@@ -41,6 +41,8 @@
 
 #define ALLDONE		 21	// For 'constructdir'
 #define MORETOCOME	 22	
+
+typedef Elem Portal;
 
 // Globals
 char objmark[NUM_MARKS] = { RESTRICTEDOBJECT, DIRECTORYOBJECT, FILEOBJECT, SYMBOLICOBJECT, SOCKETOBJECT, 0 };
@@ -222,8 +224,8 @@ Bytes* getdir(char** position, long long int bytesleft)				// Changes position t
 
 Bytes* getfile(char** position, long long int bytesleft)			// Changes position that was passed in directly 
 {
-	goodptr( position, "NULLPTR POSITION GIVEN TO GETDIR", NOFUNC_RETURN);	// Check pointer
-	goodptr(*position, "NULLPTR POSITION GIVEN TO GETDIR", NOFUNC_RETURN);	// Check pointer
+	goodptr( position, "NULLPTR POSITION GIVEN TO GETFILE", NOFUNC_RETURN);	// Check pointer
+	goodptr(*position, "NULLPTR POSITION GIVEN TO GETFILE", NOFUNC_RETURN);	// Check pointer
 	if (!bytesleft)	return NULLPTR;
 	char* startmark = findchar(FILEOBJECT, *position, bytesleft);		// Get start of directory name
 	if (!startmark)								// If not found return NULLPTR
@@ -241,8 +243,8 @@ Bytes* getfile(char** position, long long int bytesleft)			// Changes position t
 
 Bytes* getdirorfile(char** position, long long int bytesleft, char* type)			// Changes position that was passed in directly and sets type found, type must be checked and declared as a variable
 {
-	goodptr( position, "NULLPTR POSITION GIVEN TO GETDIR", NOFUNC_RETURN);	// Check pointer
-	goodptr(*position, "NULLPTR POSITION GIVEN TO GETDIR", NOFUNC_RETURN);	// Check pointer
+	goodptr( position, "NULLPTR POSITION GIVEN TO GETDIRORFILE", NOFUNC_RETURN);	// Check pointer
+	goodptr(*position, "NULLPTR POSITION GIVEN TO GETDIRORFILE", NOFUNC_RETURN);	// Check pointer
 	if (!bytesleft)	return NULLPTR;
 	char* startmark = findchars(dirfilemark, *position, bytesleft);		// Get start of directory name
 	if (!startmark)								// If not found return NULLPTR
@@ -304,7 +306,7 @@ int collectalldirs(Elem* dir, Bytes* cwd, Svect* vector, Svect* prunelist, char 
 		if (dirfound)
 		{
 			// If wanting to avoid infinite searching of previous directories and pruned directory paths
-			if ((!backtrace && eqstr(dirfound->array + ((dirfound->len - 2) * (dirfound->len > 2)), "..")) || vectcontains(prunelist, dirfound) || eqstr(dirfound->array, "/run") || eqstr(dirfound->array, "/proc")) 
+			if ((!backtrace && eqstr(dirfound->array + ((dirfound->len - 2) * (dirfound->len > 2)), "..")) || vectcontains(prunelist, dirfound) || eqstr(dirfound->array, "/run"))// || eqstr(dirfound->array, "/proc")) 
 			{
 				free_bytes(&dirfound);
 				continue;
@@ -319,7 +321,7 @@ int collectalldirs(Elem* dir, Bytes* cwd, Svect* vector, Svect* prunelist, char 
 
 int collectallfiles_toread(Elem* dir, Bytes* cwd, Svect* vector, Svect* largevector, char backtrace)	// Must check large-file vector after (This function frees 'cwd')
 {
-	goodptr(dir, "NULLPTR DIRECTORY ELEMENT GIVEN TO COLLECTALLDIRS", NOFUNC_RETURN);	// Check pointer
+	goodptr(dir, "NULLPTR DIRECTORY ELEMENT GIVEN TO COLLECTALLFILESTOREAD", NOFUNC_RETURN);	// Check pointer
 	if (!goodptr(cwd, "NO ACCESS TO CWD IN COLLECTALLDIRS", FUNC_RETURN))			// Check pointer
 		return 0;
 	char* position  		 = DIRCHAIN(dir)->array;				// Holds position in chain of files/directories
@@ -355,8 +357,8 @@ int collectallfiles_toread(Elem* dir, Bytes* cwd, Svect* vector, Svect* largevec
 
 int collectallfiles_tochange(Elem* dir, Bytes* cwd, Svect* vector, Svect* prunelist, char backtrace)	// Frees 'cwd'
 {
-	goodptr(dir, "NULLPTR DIRECTORY ELEMENT GIVEN TO COLLECTALLDIRS", NOFUNC_RETURN);	// Check pointer
-	if (!goodptr(cwd, "NO ACCESS TO CWD IN COLLECTALLDIRS", FUNC_RETURN))			// Check pointer
+	goodptr(dir, "NULLPTR DIRECTORY ELEMENT GIVEN TO COLLECTALLFILESTOCHANGE", NOFUNC_RETURN);	// Check pointer
+	if (!goodptr(cwd, "NO ACCESS TO CWD IN COLLECTALLFILESTOCHANGE", FUNC_RETURN))			// Check pointer
 		return 0;
 	char* position  		 = DIRCHAIN(dir)->array;				// Holds position in chain of files/directories
 	register long long int bytesleft = DIRCHAIN(dir)->len;					// Holds number of bytes left before the end of the chain
@@ -371,7 +373,7 @@ int collectallfiles_tochange(Elem* dir, Bytes* cwd, Svect* vector, Svect* prunel
 		if (filefound)
 		{
 			// If wanting to avoid infinite searching of previous directories and pruned directory paths
-			if ((!backtrace && eqstr(filefound->array + ((filefound->len - 2) * (filefound->len > 2)), "..")) || vectcontains(prunelist, filefound)) 
+			if ((!backtrace && eqstr(filefound->array + ((filefound->len - 2) * (filefound->len > 2)), "..")) || vectcontains(prunelist, filefound))
 			{
 				free_bytes(&filefound);
 				continue;
@@ -384,7 +386,7 @@ int collectallfiles_tochange(Elem* dir, Bytes* cwd, Svect* vector, Svect* prunel
 	return numcollected;
 }
 
-void filescanmodule(char* start, unsigned int depth, char objecttype, Svect* prunelist) // Returns path
+void filescanmodule(char* start, unsigned int depth, char objecttype, Svect* prunelist, char (*fileop)(Portal*, Bytes**, Bytes**, char), Portal* portal, Bytes* asprefix) // Returns path
 {
 	// *** ** * SETUP * ** *** //
 	if (!CHDIR(start))
@@ -395,11 +397,13 @@ void filescanmodule(char* start, unsigned int depth, char objecttype, Svect* pru
 	Bytes* cwd         = GETCWD();
 	if (!goodptr(cwd, "DYNAMIC_BYTES FOR CWD RETURNED NULL -- FILESCANMODULE", FUNC_RETURN))	// Check pointer
 		return;
-	Elem*  startdir    = OPENDIR(cwd);					// Open directory
+	Elem*  startdir    = OPENDIR(cwd);						// Open directory
 	if (!goodptr(startdir, "CANNOT OPEN CWD IN FILESCANMODULE", FUNC_RETURN))	// Check pointer
 		return;
 	Svect* vector      = vectgrab(NULLPTR);
-	volatile register long long int xxt = 0;
+	Svect* filevector  = vectgrab(NULLPTR);
+	register long long int xxt = 0;
+	Bytes* finalpath;
 	// *** ** * SETUP * ** *** //					
 
 	if (!depth)	
@@ -409,13 +413,29 @@ void filescanmodule(char* start, unsigned int depth, char objecttype, Svect* pru
 	register Bytes** vheadinitial = vector->head;
 	register int tracker  = 0;
 	register int numnodes = 0;
-	Elem* 	     ptr      = startdir;
+	register int vecti = 0;
+	Elem* ptr = startdir;
 	do
 	{
 		++xxt;				// Counter that holds count for future debugging and ideas, negligible speed difference
 		//printvectormeta(vector);	// DEBUGGING ONLY TO SEE ALL VECTOR CONTENTS BEING PROCESSED (IN THIS CASE ALL DIRECTORIES BEING OPENED)
 		if (*(vector->vptr))
-			PRINT((*(vector->vptr))->array);	
+		{	
+/*
+			if (asprefix)
+				finalpath = concatbytes(asprefix, (*vector->vptr), 0, NOFREEOLD);	// Prefix path + actual path
+			else 
+				finalpath = *vector->vptr;						// Actual path
+			fileop(portal, vector->vptr, &finalpath, NOFREEOLD);				// File operation function
+*/
+			collectallfiles_tochange(ptr, dynamic_bytes(DIRPATH(ptr), countuntilnul(DIRPATH(ptr))), filevector, prunelist, NOBACKTRACE);
+			while(VECTITEMS(filevector))
+			{
+				printf("%s\n", VECTTOP(filevector)->array);	// file op goes here...
+				vectpop(filevector);
+			}
+				
+		}	
 							// Gets freed			// Record number of directories opened
 		tracker += collectalldirs(ptr, dynamic_bytes(DIRPATH(ptr), countuntilnul(DIRPATH(ptr))), vector, prunelist, NOBACKTRACE);
 		CLOSEDIR(&ptr);
@@ -434,12 +454,12 @@ void filescanmodule(char* start, unsigned int depth, char objecttype, Svect* pru
 			if (*(vector->vptr))
 				printf("-----> CANT OPEN : %s\n", ((*(vector->vptr))->array));
 			if (vector->vptr++ > vector->end)
-				goto searchdone;
+				goto scandone;
 		}
 		++vector->vptr;
 	} while (((vector->vptr <= vector->end) && depth) || abs(vector->vptr - vheadinitial) == 1);	// Open directories down file system tree from start point until no more open directories exist
 								// the object is found, or the specified depth for the search was exhausted
-	searchdone:
+	scandone:
 		vectdestruct(&vector);				// Delete every directory path that was added
 	printf("Searched through %lld directories.\n", xxt);
 	PRINT("----------------------- DONE -----------------------");

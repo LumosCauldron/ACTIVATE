@@ -46,13 +46,7 @@ int elemcnt(Elem* hd)
 	while(hd) {  ++i; hd = (Elem*)(hd->nxt);  }	// Count elem's
 	return i;					// Return count
 }
-/*Elem* push_elem(Elem** hd, Elem* node)
-{
-	goodptr(node, "NULLPTR 'node' GIVEN TO PUSH ELEM"	  , NOFUNC_RETURN);
-	node->nxt = *hd;	// Assign nxt what hd points to
-	*hd 	  = node;	// Assign hd to new elem
-	return node;		// Return pointer to new elem
-}*/
+
 Elem* push_elem(Elem** hd, Elem* node)
 {
 	goodptr(node, "NULLPTR 'node' GIVEN TO PUSH Node", NOFUNC_RETURN);
