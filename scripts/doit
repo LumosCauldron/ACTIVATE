@@ -1,6 +1,6 @@
 #!/bin/sh
 
-echo "Compiling in within directory: $(pwd)"
+echo "Compiling within directory: $(pwd)"
 
 if [ $1 = "wincompile" ] || [ $1 = "all" ] ;
 then

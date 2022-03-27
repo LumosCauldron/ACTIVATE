@@ -161,38 +161,38 @@ char* nbytesto(char* dest, char* src, unsigned long long int len)
 	return dest;
 }
 
-char containschar(char c, char* str, int sz)
+char containschar(char c, char* str, unsigned long long int sz)	// Returns true as soon as 1 matching char is found to be contained by 'str'
 {
 	while (sz)
-		if (*(str + (--sz)) == c)
+		if (*(str + (--sz)) == c)	// Dark magic
 			return 1;
 	return 0;
 }
 
-char containschars(char* cstr, char* str, long long int sz)
+char containschars(char* cstr, char* str, unsigned long long int sz)	// Returns true as soon as 1 of the char values in c-string parameter 'cstr' match with a char value within 'str'
 {
 	register int clen = countuntilnul(cstr);
 	while (sz)
-		if (containschar(*(str + (--sz)), cstr, clen))
+		if (containschar(*(str + (--sz)), cstr, clen))	// Dark magic
 			return 1;
 	return 0;
 }
 
-char* findchar(char c, char* str, long long int sz)
+char* findchar(char c, char* str, unsigned long long int sz)	 // Returns pointer to character of string that matches searched-for char value in parameter 'c'
 {
 	register long long int i = -1;
 	while (++i < sz)
-		if (*(str + i) == c)
+		if (*(str + i) == c)			// Dark magic
 			return (str + i);
 	return NULLPTR;
 }
 
-char* findchars(char* cstr, char* str, long long int sz)
+char* findchars(char* cstr, char* str, unsigned long long int sz)  // Returns pointer to character of string that matches any searched-for char values in c-string parameter 'cstr'
 {
 	register int clen = countuntilnul(cstr);
 	register long long int i = -1;
 	while (++i < sz)
-		if (containschar(*(str + i), cstr, clen))
+		if (containschar(*(str + i), cstr, clen)) // Dark magic
 			return (str + i);
 	return NULLPTR;
 }
@@ -205,7 +205,7 @@ void zeroarray(char* ptr, long long int len)	// Zeros out an array
 
 	register unsigned long long int blocks    = len / sizeof(unsigned long long int);	// Hold number of 8-byte 'blocks' to copy
 	register unsigned long long int leftover  = len % sizeof(unsigned long long int);	// Hold number of 'leftover' bytes
-	unsigned long long int* blockptr = (unsigned long long int*)(ptr);		// long long integer pointer to beginning of 'ptr'
+	unsigned long long int* blockptr = (unsigned long long int*)(ptr);			// long long integer pointer to beginning of 'ptr'
 	register unsigned long long int i;
 
 	for (i = 0; i < blocks; ++i)	// Write zero out array in 8-byte blocks
@@ -215,6 +215,15 @@ void zeroarray(char* ptr, long long int len)	// Zeros out an array
 }
 
 // Creation tools
+Bytes* static_bytes(char* bytes, long long int num)	// Make insert byte array without creating new string on the heap
+{
+	if (num < 0)					// Check if 'num' is zero
+		return NULLPTR;	
+	Bytes* neword = MALLOC(sizeof(Bytes)); 		// Make space for struct
+	neword->array = bytes;
+	neword->len   = num; 				// Set length
+	return neword;	   				// Return heap byte array
+}
 Bytes* dynamic_bytes(char* bytes, long long int num)	// Make byte array in heap [Length ACCESSIBLE]
 {
 	if (num < 0)							// Check if bad pointer or num is zero
@@ -227,7 +236,19 @@ Bytes* dynamic_bytes(char* bytes, long long int num)	// Make byte array in heap 
 	*(neword->array + num) = 0;					// Nul-terminate
 	return neword;	   						// Return heap byte array
 }
-int free_bytes(Bytes** ptr)		// Frees bytes
+int free_static(Bytes** ptr)	// Frees bytes but not 'array' member
+{
+	if ((*ptr))
+	{
+		(*ptr)->array = NULLPTR;	// For compatibility with other programmer code
+		(*ptr)->len   = 0;
+		FREE(ptr);		
+		ptr = NULLPTR;			// For compatibility with other programmer code
+		return 1;
+	}
+	return 0;
+}
+int free_bytes(Bytes** ptr)	// Frees bytes and 'array' member
 {
 	if ((*ptr))
 	{

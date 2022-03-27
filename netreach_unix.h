@@ -109,7 +109,7 @@ int addrlen = ADDRLEN;
 Portal* portalize(char* ipstr, char* iface_ipstr, int port, char role, char encryptflag); // 
 											  //
 long long int perceptnum(Portal* portal);		 				  //
-Bytes* perceptbytes(Portal* portal, int limit);			 			  //
+Bytes* perceptbytes(Portal* portal, unsigned long long int limit);			 			  //
 char perceptfile(Portal* portal); 							  //
 //char perceptdir(Portal* portal);					 		  //
 											  //
@@ -223,7 +223,7 @@ void printbox(struct sockaddr_in* netbox_ptr)
 	PRINT("-------------------------------");
 	PLN(0);
 }
-
+unsigned long long int 
 void setfamily(int family, struct sockaddr_in* netbox_ptr) 	 // Set to IPv4 mode (usually the case)
 { 
 	goodptr(netbox_ptr, "NULLPTR BOX GIVEN TO SETFAMILY", NOFUNC_RETURN);		// Pointer checking
@@ -362,14 +362,16 @@ int READ(Portal* portal, long long int offset, int amount, char clearbufferflag)
 	if (offset + amount > PORTAL_ALLOCATION(portal))
 	{
 		PORTALBUFFER(portal) = REALLOC(PORTALBUFFER(portal), offset + amount + 1);	// If more than preset limit, enlarge portal buffer (can crash embedded devices)
-		zeroarray(PORTALBUFFER(portal)->array + offset, amount + 1);	// Includes Nul-terminator for all 'Bytes' objects
+		zeroarray(PORTALBUFFER(portal)->array + offset, amount + 1);			// Includes Nul-terminator for all 'Bytes' objects
 		PORTAL_ALLOCATION(portal) = offset + amount + 1;
 		goto startreading;
 	}
 	if (clearbufferflag)	// If intending to clear only space needed for new read-in [ Customized actions as opposed to using 'CLEARPORTALBUFFER()' ]
+	{
 		zeroarray(PORTALBUFFER(portal)->array, amount);
 		PORTALBUFFER(portal)->len = 0;
-		
+	}
+	
 	startreading: ;
 		register int r = read(PORTALTUNNEL(portal), PORTALBUFFER(portal)->array + offset, amount);
 		if (r == EMPTY) 
@@ -391,7 +393,7 @@ char SENDSTR(Portal* portal, char* str, char freeold)	// Will free sent in strin
 	if (!goodptr(str, "NULLPTR STR GIVEN TO SEND", FUNC_RETURN))		// Pointer checking
 		return 0;
 	if (PORTALENCRYPTED(portal))			// If encrypted connection then encrypt
-		encrypt7(PORTALBUFFER(portal));
+		encrypt7(PORTALBUFFER(portal));		// FIX...
 	if (write(PORTALTUNNEL(portal), str, countuntilnul(str)) == EMPTY)
 	{
 		perror("write");
@@ -419,7 +421,7 @@ char SEND(Portal* portal, Bytes** str, char freeold)	// Will free sent in string
 	}
 	if (!goodptr((*str)->array, "NULLPTR STR->ARRAY GIVEN TO SEND", FUNC_RETURN))		// Pointer checking
 		return 0;
-	if (PORTALENCRYPTED(portal))			// If encrypted connection then encrypt
+	if (PORTALENCRYPTED(portal))								// If encrypted connection then encrypt
 		encrypt7(*str);
 	if (write(PORTALTUNNEL(portal), (*str)->array, (*str)->len) == EMPTY)
 	{
@@ -594,11 +596,11 @@ long long int perceptnum(Portal* portal)	// Receives 8 (a.k.a. NETWORK_NUMSZ) by
 	devotedrecv(portal, NETWORK_NUMSZ);							// Will not return until number is received
 	          long long int*  numptr = (long long int*)(PORTALBUFFER(portal)->array);	// Get correct pointer type
 	register  long long int   number = (long long int)(numptr);				// Get integer received in portal buffer (NETWORK_NUMSZ == 8 bytes)			
-	zeroarray(PORTALBUFFER(portal)->array, NETWORK_NUMSZ);
+	zeroarray(PORTALBUFFER(portal)->array, NETWORK_NUMSZ);	 	 			// Clean buffer after 'devotedrecv' use
 	return number;
 }
 
-Bytes* perceptbytes(Portal* portal, int limit)
+Bytes* perceptbytes(Portal* portal, unsigned long long int limit)
 {
 	goodptr(portal, "NULLPTR PORTAL GIVEN TO PERCEPTBYTES", NOFUNC_RETURN);
 	devotedrecv(portal, limit);						  // Will not return until byte limit to read has been reached
@@ -612,8 +614,7 @@ char perceptfile(Portal* portal)
 {
 	goodptr(portal, "NULLPTR PORTAL GIVEN TO PERCEPTFILE", NOFUNC_RETURN);
 	
-	register long long int filenamelen = perceptnum(portal);
-	Bytes* filename = perceptbytes(portal, filenamelen);
+	Bytes* filename = perceptbytes(portal, MAXPATHLEN);			// File path of up to 4096 characters allowed
 	FILE* stream = fopen(filename->array, "w+");				// Open new file to write received contents to
 	if (!stream)				  				// Check stream
 	{
@@ -687,35 +688,37 @@ char perceptfile(Portal* portal)
 	return 1;
 }*/
 
-char inceptnum(Portal* portal, long long int number)
+char inceptnum(Portal* portal, long long int number)		// DOES NOT FREE ANY MEMORY
 {
-	Bytes* bytes = dynamic_bytes(NULLPTR, NETWORK_NUMSZ);	// Make space (NETWORK_NUMSZ == 8 bytes)
-	long long int* numptr = (long long int*)(bytes->array);	// Make a large integer pointer point to beginning of 8 byte array
+	char numstr[NETWORK_NUMSZ];				// Use stack memory to store number value
+	long long int* numptr = (long long int*)(numstr);	// Make a large integer pointer point to beginning of 8 byte array
+	Bytes imitate_bytes;					// Make space for Bytes object on stack
+	Bytes* bytes_ptr      = &imitate_bytes;
+	imitate_bytes.array   = numstr;			 	// Assign string to array position in Bytes struct
+	imitate_bytes.len     = NETWORK_NUMSZ;	 		// Assign string length to len position in Bytes struct
+	zeroarray(numstr, NETWORK_NUMSZ);			// Zero-out the memory before injecting value
 	*numptr = number;					// Inject the value of 'number' into the 8 byte section of memory
-	return SEND(portal, &bytes, FREEOLD);			// Send number over network
+	return SEND(portal, &bytes_ptr, NOFREEOLD);		// Send number over network
 }
 
-char inceptcstr(Portal* portal, char* object)
+char inceptcstr(Portal* portal, char* object)		// FREES 'OBJECT'
 {
-	Bytes imitate_bytes;				// Make space for Bytes object on stack
-	imitate_bytes.array = object;			// Assign string to array position in Bytes struct
-	imitate_bytes.len = countuntilnul(object);	// Assign string length to len position in Bytes struct
-	Bytes* bytes_ptr = &imitate_bytes;
-	char hold = SEND(portal, &bytes_ptr, NOFREEOLD); // Does not attempt to free Bytes object (would be the same but inefficient behavior if we tried to free the object)
-	cleanup:
-		FREE(&object);				// Frees c-string if 'object' is NOT a literal or stack value 
-		imitate_bytes.array = NULLPTR;		// Cleans stack
-		imitate_bytes.len   = 0;		// Cleans stack
-	return hold;					// Successful send over network
+	Bytes imitate_bytes;				 // Make space for Bytes object on stack
+	Bytes* bytes_ptr    = &imitate_bytes;
+	imitate_bytes.array = object;			 // Assign string to array position in Bytes struct
+	imitate_bytes.len   = countuntilnul(object);	 // Assign string length to len position in Bytes struct
+	char hold = SEND(portal, &bytes_ptr, NOFREEOLD); // Does not attempt to free Bytes object ('FREE()' would figure it out but this is healthier))
+	FREE(&object);				 	 // Frees c-string if 'object' is NOT a literal or stack value 
+	return hold;					 // Successful send over network
 }
 
-char inceptbytes(Portal* portal, Bytes** object)
+char inceptbytes(Portal* portal, Bytes** object)	// FREES 'OBJECT'
 {
-	return SEND(portal, object, FREEOLD);	// Frees bytes 
+	return SEND(portal, object, FREEOLD);		// Send bytes
 }
 
-char inceptfile(Portal* portal, Bytes** object, Bytes** as, char freeobject)	// (Like inception the movie) inject an "idea" into another computers mind (in this case send a file)
-{										// Sends file in blocks, each block is prefixed by a signal/marker byte (either MORETOCOME or ALLDONE)
+char inceptfile(Portal* portal, Bytes** object, Bytes** as, char freeobject)	// (Like inception the movie) inject an "idea" into another computers mind (in this case send a file)	|	FREES 'AS'
+{										// Sends file in blocks, each block is prefixed by a signal/marker byte (either MORETOCOME or ALLDONE)	|
 	FILE* stream = fopen((*object)->array, "r");				// Opens object as file
 	if (!stream)								// Checks stream
 	{
@@ -724,14 +727,13 @@ char inceptfile(Portal* portal, Bytes** object, Bytes** as, char freeobject)	// 
 		return 0;
 	}
 	
-	inceptnum(portal, (*as)->len);		// Send length of filepath name
-	SEND(portal, as, FREEOLD);		// Send specified filepath name 
-	register long long int amtread = 0; 	// The rest of the code opens and sends all of the file content over the network
+	SEND(portal, as, FREEOLD);				    // Send specified filepath name to be installed on other computer
+	register long long int amtread = 0; 			    // The rest of the code opens and sends all of the file content over the network
 	char* ptr_plusabyte = PORTALBUFFER(portal)->array + 1;
 	while (amtread = FREAD(&ptr_plusabyte, NETMEMLIMIT + FILEMEMLIMIT - 1, stream))	// -1 --> one for signal char at beginning
 	{
 		ptr_plusabyte = PORTALBUFFER(portal)->array + 1;    // Reset pointer that read in data to portal buffer
-		PORTALBUFFER(portal)->len = amtread + 1;	    // Update length
+		PORTALBUFFER(portal)->len = amtread + 1;	    // Update buffer length
 		*(PORTALBUFFER(portal)->array + amtread + 1) = 0;   // Nul-terminate string just to be safe
 		if (amtread != (NETMEMLIMIT + FILEMEMLIMIT - 1))    // Signals end of stream
 			goto reading_done;
@@ -754,7 +756,7 @@ char inceptfile(Portal* portal, Bytes** object, Bytes** as, char freeobject)	// 
 		fclose(stream);	    	     		  	  // Closes file stream
 		
 	return 1; // Successful send
-}	// Sending in blocks helps prevent not taking too much RAM memory when dealing with small embedded systems or large GB/TB scale files
+}	// Sending in blocks helps prevent the usage of too much RAM memory when dealing with small embedded systems and large MB/GB/TB scale files
 
 /*
 // ************************ UNDER CONSTRUCTION ************************
@@ -770,74 +772,6 @@ char inceptdir(Portal* portal, char* object)
 	Portal*  startdir    = OPENDIR(cwd);					// Open directory
 	if (!goodptr(startdir, "CANNOT OPEN CWD IN MAKEREADY", FUNC_RETURN))	// Check pointer
 		return 0;
-	Svect* vector      = vectgrab(NULLPTR);
-	Svect* filevector  = vectgrab(NULLPTR);
-	Svect* largefiles  = vectgrab(NULLPTR);
-	Bytes* finalstr    = dynamic_bytes("%", 1);
-	Bytes* largeholder = NULLPTR;
-	char signalreceiver_largefilesifdone[2] = {0, 0};
-	// *********************** //					
-
-	Portal* ptr = startdir;
-	register char firstime = 1;
-	register int  numfiles = 0;
-	do
-	{	
-		makedirready(&finalstr, *(vector->vptr));		// Read in directory name
-		if (!firstime)
-			++vector->vptr;
-
-		if (ptr)						// Debugging purposes
-			PRINT(ptr->line->array + ptr->line->len + 1);
-
-		numfiles = collectallfiles_toread(ptr, dynamic_bytes(DIRPATH(ptr), countuntilnul(DIRPATH(ptr))), filevector, largefiles, NOBACKTRACE); // Read in all files
-		while (--numfiles > EMPTY)	// --numfiles calibrates for vector access in next statement: "*(filevector->head + numfiles)"	       // excludes large ones
-		{
-			makefileready(&finalstr, *(filevector->head + numfiles));
-			if (finalstr)
-			{
-				PRINTLLN(finalstr->len);
-				if (finalstr->len > NETMEMLIMIT)		// If over the mem. usage limit, send everything
-				{
-					(*finalstr->array) = MORETOCOME;	// Embed signal into message
-					inceptbytes(portal, &finalstr);		// Sends and then frees finalstr (total bytes sent will be <= NETMEMLIMIT + FILEMEMLIMIT)
-				}
-			}
-			vectpop(filevector);
-		}
-											// NULLPTR in place of prunelist, unnecessary here
-		collectalldirs(ptr, dynamic_bytes(DIRPATH(ptr), countuntilnul(DIRPATH(ptr))), vector, NULLPTR, NOBACKTRACE); // Record all directories
-		CLOSEDIR(&ptr);
-
-		while(!(ptr = OPENDIR(*(vector->vptr))))				// Move vptr along until next directory path opens
-		{
-			if (*(vector->vptr)) 
-				printf("-----> CANT OPEN : %s\n", ((*(vector->vptr))->array));
-			if (vector->vptr++ > vector->end)
-				goto searchdone;
-		}
-		firstime = 0;					// Open directories down file system tree from start point until no more open directories exist, 	
-	} while ((vector->vptr <= vector->end));		// the object is found, or the specified depth for the search was exhausted.
-
-	searchdone:
-		finalstr = appendctostr(finalstr, ALLDONE); // Embed signal into message
-		inceptbytes(portal, &finalstr);		    // Frees finalstr
-		vectdestruct(&filevector);		    // Deletes filevector structure which is usually empty
-		vectdestruct(&vector);			    // Delete every directory collected
-		inceptnum(portal, VECTITEMS(largefiles));   // Send number of large files the other side should receive
-		while (VECTITEMS(largefiles))		    // Loop through sending all large files
-		{
-			*signalreceiver_largefilesifdone = ((MORETOCOME * (VECTITEMS(largefiles) != 0)) + (ALLDONE * (VECTITEMS(largefiles) == 0))); // Like a light switch
-			largeholder = dynamic_bytes(signalreceiver_largefilesifdone, 1);		// Initialize a new MORETOCOME/ALLDONE + file name string
-			appendstr(largeholder, (*(largefiles->end))->array, (*(largefiles->end))->len); // Append copy of large file name
-			inceptbytes(portal, &largeholder);  						// Send MORETOCOME/ALLDONE + copy of filename
-			inceptfile(portal, (*(largefiles->end))->array);				// Send file
-			vectpop(largefiles);								// Updates vector and frees filename
-		}
-		vectdestruct(&largefiles);								// Delete all large file names collected
-
-	PRINT("----------------------- DONE -----------------------");
-	
 	return 1;
 }*/
 

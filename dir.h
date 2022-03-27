@@ -27,7 +27,13 @@
 #define NUMFILES(x) 	  ((unsigned long long int)(x->branch))
 #define DIRPATH(x)	  ((char*)(x->line->array + x->line->len + 1))
 
-#define SLASH '/'		// For tacking on file names to file paths and concatenating paths
+#ifdef WINCODE
+	#define SLASH '\'		// For tacking on file names to file paths and concatenating paths
+#endif
+
+#ifdef UNIXCODE
+	#define SLASH '/'		// For tacking on file names to file paths and concatenating paths
+#endif
 
 #define BACKTRACE   1		// For 'trackobject'
 #define NOBACKTRACE 0
@@ -400,8 +406,8 @@ void filescanmodule(char* start, unsigned int depth, char objecttype, Svect* pru
 	Elem*  startdir    = OPENDIR(cwd);						// Open directory
 	if (!goodptr(startdir, "CANNOT OPEN CWD IN FILESCANMODULE", FUNC_RETURN))	// Check pointer
 		return;
-	Svect* vector      = vectgrab(NULLPTR);
-	Svect* filevector  = vectgrab(NULLPTR);
+	Svect* vector      = vectgrab(NULLPTR, NO_OPTAMT);
+	Svect* filevector  = vectgrab(NULLPTR, NO_OPTAMT);
 	register long long int xxt = 0;
 	Bytes* finalpath;
 	// *** ** * SETUP * ** *** //					
@@ -478,8 +484,8 @@ Svect* trackobject(char* start, char* name, unsigned int depth, char objecttype,
 		return NULLPTR;
 	Bytes* objectname  = dynamic_bytes(name, countuntilnul(name));		// Make file name into bytes object
 	Bytes* find        = NULLPTR;
-	Svect* vector      = vectgrab(NULLPTR);
-	Svect* pathsfound  = vectgrab(NULLPTR);
+	Svect* vector      = vectgrab(NULLPTR, NO_OPTAMT);
+	Svect* pathsfound  = vectgrab(NULLPTR, NO_OPTAMT);
 	volatile register long long int xxt = 0;
 	// *** ** * SETUP * ** *** //					
 
@@ -541,112 +547,20 @@ Svect* trackobject(char* start, char* name, unsigned int depth, char objecttype,
 	return pathsfound;
 }
 
-
-/*void makefileready(Bytes** finalstr, Bytes* file)		// Reads in fileobject mark, file name, and file data to finalstr
+Svect* pathdirvect(Bytes* filepath)
 {
-			if (!file)				// Check if good pointer
-				return;				// Return otherwise
-			FILE* stream = fopen(file->array, "r");	// Open file stream and don't add to the list of open files that program is using ['FOPEN()' does that]
-			if (!stream)				// Check if open, else skip
-				return;
-	// step 1 //	(*finalstr) = appendctostr((*finalstr), FILEOBJECT);  		// Set character marker as FILEOBJECT
-	// step 2 //	(*finalstr) = appendstr((*finalstr), file->array, file->len);  	// Set read in file name
 
-	// step 3 //	register unsigned long long int amtsofar = (unsigned long long int)((*finalstr)->len) + 1;   		// Cast as large integer pointer
-			(*finalstr)->len                        += sizeof(unsigned long long int) + 1;				// Update finalstr length to go past Nul-terminator and 8-bytes that store file size
-	// step 4 //	register unsigned long long int amt_read = read_tobuffer((*finalstr), objectsize(file->array), stream); // Read file stream and update finalstr len
-			unsigned long long int* szptr 		 = (unsigned long long int*)((*finalstr)->array + amtsofar);	// Record file size
-			*szptr = amt_read;
-			// Records number of bytes in 8 bytes before file data (pointed to by sz_embedder)
-			
-	// step 5 //	(*finalstr) = appendctostr((*finalstr), 0);	 // Append Nul-terminator to string
-			fclose(stream);					 // Close file stream
-}
-
-void makedirready(Bytes** finalstr, Bytes* dir)		// FREES GIVEN DIRECTORY NAME
-{
-			if (!dir)							// Check if good pointer
-				return;							// Return otherwise
-	// step 1 //	(*finalstr) = appendctostr((*finalstr), DIRECTORYOBJECT); 	// Set character marker as DIRECTORYOBJECT
-	// step 2 //	(*finalstr) = appendstr((*finalstr), dir->array, dir->len);   	// Read in directory pathname to finalstr
-	// step 3 //	(*finalstr) = appendctostr((*finalstr), 0);		    	// Append Nul-terminator to string
-}
-
-Bytes* constructdir(Bytes** dirline, char* name, Bytes* topdir, char freeold)	// Takes line of data and constructs directory and file structures, updates topdir
-{
-	register int  ncount = 0;
-	register char skip   = 0;
-	Bytes*        caster = NULLPTR;		// Casted to Bytes object to input length and array
-	if (!dirline)
-		return topdir;	// If no pointer to data, return
-	if (!(*dirline))
-		return topdir;  // If no more data, return
-	char* ptr = (*dirline)->array + (FIRSTCHAR(*dirline) == MORETOCOME || FIRSTCHAR(*dirline) == ALLDONE);	// +1 if a CONNECTION MARKER is present
-	if (topdir)
-		goto state_directory;
-	else if (!name)
-		THROW("NO NAME GIVEN -- CONSTRUCTDIR");
-
-	initialize: ;				// Creates initial directory
-		Bytes* cwd    = GETCWD();
-		       topdir = concatbytes(cwd, dynamic_bytes(name, countuntilnul(name)), SLASH, FREEOLD);
-		if (!MKDIR(topdir->array))
-		{
-			PRINT("DIRECTORY CONSTRUCTION FAILED -- CONSTRUCTDIR STATE: INITIALIZE");
-			return topdir;
-		}
-
-	state_directory: ;			// Gets name, creates directory, moves pointer to file name, if no directory name, moves to file state
-		if (*(ptr++) != DIRECTORYOBJECT)
-		{
-			--ptr;
-			goto state_file;
-		}
-		ncount = countuntilnul(ptr);
-		appendctostr(topdir, SLASH);
-		if (!MKDIR((appendstr(topdir, ptr, ncount))->array))	// printf("-----> CANT MKDIR : %s\n", ptr);
-		{
-			PRINT("DIRECTORY CONSTRUCTION FAILED -- CONSTRUCTDIR STATE: STATE_DIRECTORY");
-			return topdir;
-		}
-		ptr += ncount + 1;
-		movewhilenul(ptr); // Should definitely hit a \x04 or \x05 byte, otherwise something is wrong with line structure
-		if (abs(ptr - (*dirline)->array) >= (*dirline)->len)
-			goto done;
-		
-	state_file: ;				// Constructs received file based on prefixed size
-		if (*ptr == DIRECTORYOBJECT)
-			goto state_directory;
-		if (*(ptr++) != FILEOBJECT)
-		{
-			PRINT("BAD LINE STRUCTURE -- FILE MARKER NOT FOUND");
-			return topdir;
-		}
-		ncount = countuntilnul(ptr);
-		printf("Writing file: %s in directory %s\n", ptr, topdir->array); // For debugging purposes (make sure topdir array is nul-terminated)
-		FILE* stream = fopen(ptr, "w+");
-		ptr += ncount + 1;
-		caster = (Bytes*)(ptr);		// Caster now points to length and content of the file
-		if (!stream)
-		{
-			printf("Could not create file %s during construction...skipping this file.\n", ptr - (ncount + 1));
-			goto fstreamdone;
-		}
-		FWRITE(caster->array, caster->len, stream);
-		fclose(stream);
-	fstreamdone:
-		ptr += caster->len + sizeof(unsigned long long int);
-		movewhilenul(ptr); // Should definitely hit a \x04 or \x05 hex-value byte, otherwise something is wrong with line structure
-		goto state_directory;
-		
-	checkdone:				// Checks if done
-		if (abs((unsigned long long int)ptr - (*dirline)->len) < (unsigned long long int)(*dirline)->array)
-			goto state_directory;
 	
-	done:					// Cleans up
-		if (freeold)
-			free_bytes(dirline);
-	return topdir;
-}*/
+	
+}
+
+void pathmaker(Bytes* filepath)
+{
+	Svect* dirvect = pathdirvect(filepath);	// Make vector of strings all pointing to different parts of the large filepath string (one huge string with no nul-terminators incorporated
+	
+	
+	
+	vectrelease(&dirvect);			// Memory management 101 (Frees Svect structure, but elements are not freed
+}
 
 #endif // For DIR_H
