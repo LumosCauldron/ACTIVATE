@@ -1,7 +1,7 @@
 #include <time.h>
-#include "../bytes.h"
-//#include <string.h>
-#include "../conquer.h"
+// #include <string.h>
+#include "../stringvector.h"
+#include "../functions.h"
 //#include "../dir.h"
 
 
@@ -14,74 +14,64 @@ void programenvironment()
 	setcores();
 }
 
-void timer()
+void missionwrapper(long long int str, long long int dlim, long long int skipfirst, long long int opt)	// Varies from test case to test case [strtovect(Bytes* str, char dlim, char skipfirst, char opt)]
+{
+	Svect* sptr = strtovect((Bytes*)str, (char)dlim, (char)skipfirst, (char)opt);
+	printvector(sptr);
+	vectdestruct(&sptr);
+}
+
+void timer(Mission** mission)
 {
     clock_t t;
     double time_taken;
     t = clock();
     
-    // Function here
+    missionstart(mission);
     
     t = clock() - t;
     time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds
 
-    printf("timer took %f seconds to execute \n", time_taken);
+    //printf("\n[+] timer took %f seconds to execute [+]\n", time_taken);
 }
 
 // Global
-char* a1;
-char* a2;
-char* a3;
-char* a4;
 
-
-#define NUMBR 2
 int main(int argc, char** argv)
 {
     programenvironment();
-    //int var = 0;
-    //printf("%d\n", var);
+	char* hardcoded = "hello";
+	char* cptr = (char*)((long long int)hardcoded * (argc != 2) + (argc == 2) * (long long int)argv[1]);
+	Bytes* bptr = dynamic_bytes(cptr, countuntilnul(cptr));
+	Mission* mptr = missionplan(missionwrapper, assign4tools((long long int)bptr, '/', SKIPFIRST, MAKENEW), 4, FREEMISSION);
+	
+		printf("\t SKIPFIRST NEW\n\n|||||||||||||||||||||||||||||||||||||||||||||||\n");
+		timer(&mptr);	// Frees mptr and mptr->equipment and bptr
+	
+	mptr = missionplan(missionwrapper, assign4tools((long long int)bptr, '/', NOSKIPFIRST, MAKENEW), 4, FREEMISSION);
+	
+		printf("\t NOSKIPFIRST NEW\n\n|||||||||||||||||||||||||||||||||||||||||||||||\n");
+		timer(&mptr);	// Frees mptr and mptr->equipment and bptr
+		
+	mptr = missionplan(missionwrapper, assign4tools((long long int)bptr, '/', SKIPFIRST, MAKEFROM), 4, FREEMISSION);
+	
+		printf("\n-------------------------------------------------------------\n\n\t SKIPFIRST FROM\n\n|||||||||||||||||||||||||||||||||||||||||||||||\n");
+		timer(&mptr);	// Frees mptr and mptr->equipment and bptr
 
-    volatile unsigned long long int hun = 5000000000;
-    register unsigned long long int i = NUMBR;
-    register unsigned int long long j = NUMBR;
-
-    Bytes* ptr1 = dynamic_bytes(NULLPTR, hun);
-
-    memset(ptr1->array, 'c', hun);
-
-    Bytes* ptr2 = dynamic_bytes(NULLPTR, hun);
-
-    memset(ptr2->array, 'c', hun);
-
-    clock_t t;
-    double time_taken;
-    t = clock();
-    while (--i)
-    	conquer_nbytesto(ptr1->array, ptr2->array, hun);
-
-    t = clock() - t;
-    time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds
-
-    printf("memmove took %f seconds to execute \n", time_taken);
-
-    t = clock();
-    while (--j)
-
-    {
-    	memmove(ptr2->array, ptr1->array, hun);
-	joinall();
-    }
-
-    t = clock() - t;
-    time_taken = ((double)t) / CLOCKS_PER_SEC; // in seconds
-
-    printf("conquer took %f seconds to execute \n", time_taken);
-
-    // filescanmodule("/", 0, 0, NULLPTR, NULLPTR, NULLPTR, NULLPTR); //(char* start, unsigned int depth, char objecttype, Svect* prunelist, char (*fileop)(Portal*, Bytes**, Bytes**, char), Portal* portal, Bytes* asprefix)
+	mptr = missionplan(missionwrapper, assign4tools((long long int)bptr, '/', NOSKIPFIRST, MAKEFROM), 4, FREEMISSION);
+	
+		printf("\t NOSKIPFIRST FROM\n\n|||||||||||||||||||||||||||||||||||||||||||||||\n");
+		timer(&mptr);	// Frees mptr and mptr->equipment and bptr
+		
+	free_bytes(&bptr);
 }
 
-/*  volatile unsigned long long int hun = 1000000000;
+// filescanmodule("/", 0, 0, NULLPTR, NULLPTR, NULLPTR, NULLPTR); //(char* start, unsigned int depth, char objecttype, Svect* prunelist, char (*fileop)(Portal*, Bytes**, Bytes**, char), Portal* portal, Bytes* asprefix)
+
+
+/*  
+    #define NUMBR 2
+    volatile unsigned long long int hun = 1000000000;
     register unsigned long long int i = NUMBR;
     register unsigned int long long j = NUMBR;
 

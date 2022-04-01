@@ -136,7 +136,7 @@ Mission* missionplan(void* function, unsigned long long int* equipment, char num
 	return ptr;
 }
 
-void missionscrub(Mission** ptr)	// Force frees a mission object
+void missionscrub(Mission** ptr)	// Force frees a mission object (SAME AS 'missionclean()' WHEN FREEMISSION FLAG IS SET)
 {
 	FREE(&((*ptr)->equipment));	// Frees 'mission_object.equipment' by address of pointer to mission object (in short, frees equipment array and zeros out the pointer)
 	FREE(ptr);

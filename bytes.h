@@ -52,7 +52,7 @@ void PRINTBYTES(Bytes* ptr)
 		else
 			putchar(*(ptr->array + i));
 	}
-	printf("\n%lld in length\n", ptr->len);
+	//printf("\n%lld in length\n", ptr->len);
 	PLN(1);
 }		  // BYTES
 

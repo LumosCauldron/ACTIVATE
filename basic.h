@@ -169,8 +169,8 @@ void PLN(char num)
 }       	   // NEW LINES
 
 // Error checking
-char goodptr(void* ptr, char* errormsg, char ret) // Checks given pointer, if error message != NOMSG 'errormsg' will be printed, 
-{						  // 'ret' determines whether or not to print and exit, or return a notifying value to its caller
+static inline char goodptr(void* ptr, char* errormsg, char ret) // Checks given pointer, if error message != NOMSG 'errormsg' will be printed, 
+{						 	 // 'ret' determines whether or not to print and exit, or return a notifying value to its caller
 	if (!ptr)
 	{
 		if (ret == FUNC_RETURN)
