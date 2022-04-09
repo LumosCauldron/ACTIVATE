@@ -15,28 +15,29 @@
 
 char bssstart;		// Keep this, this gets put in the first portion of the BSS section as uninitialized data
 
-// _____ C STD LIBRARIES _____ 
+// _____ WIN32 AND UNIX DIFFERENCES _____ 
 
 #ifdef WINCODE
 	#include <windows.h>	// For 'Sleep()'
+	#include <sysinfoapi.h>
+	
+	#define SLASH '\\'	// For tacking on file names to file paths and concatenating paths
+	char* ROOTHEAD;
 #endif
 
 #ifdef UNIXCODE
-	#include <unistd.h>		// For 'sleep()'
+	#include <unistd.h>	// For 'sleep()'
+	#include <sys/sysinfo.h>
+	
+	#define SLASH '/'	// For tacking on file names to file paths and concatenating paths
+	
 #endif
 
 #include <stdlib.h>
 #include <ctype.h>
 #include <stdio.h>
 
-#ifdef WINCODE
-	#include <sysinfoapi.h>
-#endif
-
-#ifdef UNIXCODE
-	#include <sys/sysinfo.h>
-#endif
-// _____ C STD LIBRARIES ______________________________
+// _____ WIN32 AND UNIX DIFFERENCES ______________________________
 
 
 // _____ ERROR CHECKING _____ 
@@ -78,6 +79,7 @@ void THROW(char* str) { PRINT(str); exit(9); }
 
 void* MALLOC(long long int space)
 {
+	PRINT("MALLOCED SPACE");
 	void* ptr = NULLPTR; ptr = malloc(space);
 	if (!ptr) { perror("MALLOC ERROR"); EXIT(1); }
 	return ptr;
@@ -85,6 +87,7 @@ void* MALLOC(long long int space)
 
 void* REALLOC(void* ptr, long long int space)
 {
+	PRINT("REALLOCED SPACE");
 	ptr = realloc(ptr, space);
 	if (!ptr) { perror("REALLOC ERROR"); EXIT(1); }
 	return ptr;
@@ -92,6 +95,7 @@ void* REALLOC(void* ptr, long long int space)
 
 void* CALLOC(long long int space)
 {
+	PRINT("CALLOCED SPACE");
 	void* ptr = NULLPTR; ptr = calloc(1, space);
 	if (!ptr) { perror("CALLOC ERROR"); EXIT(1); }
 	return ptr;
@@ -99,7 +103,7 @@ void* CALLOC(long long int space)
 
 
 // ** ENVIRONMENT DETECTING ** //
-char arch()
+char setarch()
 {
 	switch(sizeof(void*))
 	{
@@ -136,6 +140,31 @@ void setcores()
 		cores = 1;
 }
 
+void setfilesysenv()
+{
+	#ifdef WINCODE
+		ROOTHEAD = MALLOC(4);
+		ROOTHEAD[0] = 'C';
+		ROOTHEAD[1] = ':';
+		ROOTHEAD[2] = SLASH;
+		ROOTHEAD[3] = 0;
+	#endif // _______________________________________________________________________
+}
+
+void CALIBRATE()
+{
+	setarch();
+	setcores();
+	setfilesysenv();
+}
+
+void DECALIBRATE()
+{
+	#ifdef WINCODE
+		FREE(&ROOTHEAD);
+	#endif // _______________________________________________________________________
+}
+
 // *************************** //
 
 
@@ -155,10 +184,10 @@ void FREE(void* ptr)	// Can cast to any pointer type because we are just freeing
 			goto freepointer;
 		else
 			return;
-			
 		freepointer:
 			free(*((char**)(ptr)));
 			*((char**)(ptr)) = NULLPTR;	// For safety and reuse of the pointer passed in by reference
+			PRINT("FREED SPACE");
 	}
 }
 

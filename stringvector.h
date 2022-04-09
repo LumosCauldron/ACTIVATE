@@ -1,24 +1,39 @@
 #ifndef STRINGVECTOR_H
 #define STRINGVECTOR_H
 
-#define PREVDIRECTION 1	// For 'foreach_vect'
-#define NXTDIRECTION  0
-
-#define MAKENEW	      1 // For 'strtovect'
-#define MAKEFROM      0
-
-#define SKIPFIRST     1 // For 'strtovect'
-#define NOSKIPFIRST   0
-
-#define VECTGRAB       1000
-#define NO_OPTAMT      0
-#define VECTITEMS(x)   (x->numitems)
-#define VECTBYTES(x)   (x->numitems * sizeof(Bytes*))
-#define VECTALLOC(x)   (x->allocated)
-#define VECTCURRENT(x) (x->allocated)
-#define VECTFULL(x)    ((x->numitems * sizeof(Bytes*)) == x->allocated)
-#define VECTTOP(x)     (*(x->end))
 #include "bytes.h"
+
+#define PREVDIRECTION 	1	// For 'foreach_vectelem'
+#define NXTDIRECTION  	0
+
+#define MAKENEW	      	1	// For 'strtovect'
+#define MAKEFROM      	0
+
+#define SKIPFIRST    	1 	// For 'strtovect'
+#define NOSKIPFIRST   	0
+
+#define VECTGRAB       	1000	// For 'vectgrab'
+#define NO_OPTAMT      	0
+
+#define F_STR_B		3	// For 'vecttostr'
+#define F_STR_		2
+#define _STR_B		1
+#define _STR_		0
+#define NOMIDCHAR	0
+
+#define VECTITEMS(x)   		((x)->numitems)
+#define VECTBYTES(x)   		((x)->numitems * sizeof(Bytes*))
+#define VECTALLOC(x)   		((x)->allocated)
+#define VECTCURRENT(x) 		((x)->allocated)
+#define VECTFULL(x)    		(((x)->numitems * sizeof(Bytes*)) == (x)->allocated)
+#define VECTTOP(x)  		((x)->head)
+#define VECTBOTTOM(x)     	((x)->end)
+#define VECTTOPELEM(x)     	(*((x)->head))
+#define VECTBOTTOMELEM(x)  	(*((x)->end))
+#define VECTNEXT(x)    		((x) + 1)
+#define VECTPREV(x)    		((x) - 1)
+#define VECTSLOTS(x)   		(abs((x)->end - (x)->head) + (1 * ((x)->numitems != 0)))
+#define VECTELEM(x)		(*(x))
 
 struct svect
 {
@@ -41,7 +56,7 @@ Svect* vectgrab(Svect* ptr, unsigned int optamt)	// Grabs (VECTGRAB * sizeof(Byt
 	if (!ptr)
 	{
 		ptr            = MALLOC(sizeof(Svect));
-		ptr->head      = CALLOC(sizeof(Bytes*) * allocsz);
+		ptr->head      = CALLOC(sizeof(Bytes*) * allocsz);	// CALLOC IS IMPORTANT HERE
 		ptr->vptr      = ptr->head;
 		ptr->end       = ptr->head;
 		ptr->numitems  = 0;
@@ -52,17 +67,17 @@ Svect* vectgrab(Svect* ptr, unsigned int optamt)	// Grabs (VECTGRAB * sizeof(Byt
 	{
 		register int vptr_dist = abs(ptr->vptr - ptr->head);
 		register int end_dist  = abs(ptr->end - ptr->head);
-		ptr->head      = REALLOC(ptr->head, (ptr->allocated += (allocsz * sizeof(Bytes*))));
-		ptr->vptr      = ptr->head + vptr_dist;
-		ptr->end       = ptr->head + end_dist;
+		ptr->head = REALLOC(ptr->head, (ptr->allocated += (allocsz * sizeof(Bytes*))));
+		ptr->vptr = ptr->head + vptr_dist;
+		ptr->end  = ptr->head + end_dist;
 	}
 	
 	return ptr;
 }
 
-void vectmemlock(Svect* vector)		// Set lock on 'Bytes' elements in vector so that they are not freed
+void vectmemlock(Svect* vect)		// Set lock on 'Bytes' elements in vector so that they are not freed
 {
-	vector->memlock = 1;
+	vect->memlock = 1;
 }
 
 void vectconform(Svect* ptr)	// Saves memory by deallocating the space that the vector is not using
@@ -107,12 +122,12 @@ void vectpop(Svect* ptr)	// Pops/Frees a vector Bytes element from the end and u
 	} while (!(*ptr->end));		// While NULLPTR found, track down farthest object from head
 }
 
-void vectrelease(Svect** ptr)	// Releases a given vector WITHOUT freeing all its string elements
+void vectrelease(Svect** ptr)	// Releases a given vector WITHOUT freeing all its string elements (Make certain that all dynamic Bytes* pointers are freed as well (manually))
 {
 	goodptr(ptr, "SVECT ADDRESS NULLPTR GIVEN TO VECTRELEASE", NOFUNC_RETURN);
 	goodptr(*ptr, "SVECT NULLPTR GIVEN TO VECTRELEASE", NOFUNC_RETURN);
 	FREE(&((*ptr)->head));		// Frees pointer to array of 'Bytes*', a.k.a. 'FREE()' frees a vector pointer passed in by reference, hence the reason for a confusing expression
-	(*ptr)->head         = NULLPTR;	// Make certain that all dynamic Bytes* pointers are freed as well (manually)
+	(*ptr)->head         = NULLPTR;
 	(*ptr)->vptr         = NULLPTR;
 	(*ptr)->end          = NULLPTR;
 	(*ptr)->numitems     = 0;
@@ -131,13 +146,33 @@ char vectcontains(Svect* vect, Bytes* object)
 	return 0;
 }
 
+static inline unsigned long long int vectobjlen(Bytes* obj)
+{
+	if (obj)
+		return obj->len;
+	return 0;
+}
+
+unsigned long long int vecttotalbytes(Svect* vect)		// Returns total array length of all 'Bytes' objects stored within the vector
+{
+	goodptr(vect, "SVECT NULLPTR GIVEN TO FOREACH_VECTELEM", NOFUNC_RETURN);
+	if (!VECTITEMS(vect))
+		return 0;
+	register unsigned long long int totalbytes = 0;
+	register unsigned int slots = VECTSLOTS(vect);		// Get number of slots to add up (NULLPTR elements add 0 to 'totalbytes'))
+	register unsigned int i;
+	for (i = 0; i < slots; ++i)				// Add up length of all arrays held in vector
+		totalbytes += vectobjlen(*(vect->head + i));
+	return totalbytes;					// Return  final length
+}
+
 // PREVDIRECTION 1
 // NXTDIRECTION  0
-Bytes** foreach_vect(Svect* vect, Bytes** vectptr, int (*ptr)(Bytes**), char dir)	// Used to check/modify through a given vector
+Bytes** foreach_vectelem(Svect* vect, Bytes** vectptr, unsigned long long int (*ptr)(Bytes**), char dir)	// Used to check/modify through a given vector
 {
-	goodptr(vect, "SVECT NULLPTR GIVEN TO FOREACH_VECT", NOFUNC_RETURN);
-	goodptr(vectptr, "BYTES NULLPTR GIVEN TO FOREACH_VECT", NOFUNC_RETURN);
-	goodptr(ptr, "FUNCTION NULLPTR GIVEN TO FOREACH_VECT", NOFUNC_RETURN);
+	goodptr(vect, "SVECT NULLPTR GIVEN TO FOREACH_VECTELEM", NOFUNC_RETURN);
+	goodptr(vectptr, "BYTES NULLPTR GIVEN TO FOREACH_VECTELEM", NOFUNC_RETURN);
+	goodptr(ptr, "FUNCTION NULLPTR GIVEN TO FOREACH_VECTELEM", NOFUNC_RETURN);
 	if (!vect->numitems)
 		return NULLPTR;
 	if (abs(vectptr - vect->head) + abs(vect->end - vectptr) != abs(vect->end - vect->head))
@@ -168,32 +203,57 @@ Bytes** foreach_vect(Svect* vect, Bytes** vectptr, int (*ptr)(Bytes**), char dir
 	return NULLPTR;
 }
 
-void vectdestruct(Svect** vector) // FREES ALL ELEMENTS THEN DESTROYS STRUCTURE (CALL 'VECTRELEASE()' IF ELEMENTS ARE STILL NEEDED BY OTHER PARTS OF PROGRAM OR STRUCTURES)
+void vectdestruct(Svect** vect) // FREES ALL ELEMENTS THEN DESTROYS STRUCTURE (CALL 'VECTRELEASE()' IF ELEMENTS ARE STILL NEEDED BY OTHER PARTS OF PROGRAM OR STRUCTURES)
 {
-	goodptr(vector, "SVECT NULLPTR ADDRESS GIVEN TO VECTDESTRUCT", NOFUNC_RETURN);
-	goodptr(*vector, "SVECT NULLPTR GIVEN TO VECTDESTRUCT", NOFUNC_RETURN);
-	if (!(*vector)->memlock)
-		foreach_vect(*vector, (*vector)->head, free_bytes, NXTDIRECTION);
-	vectrelease(vector);
+	goodptr(vect, "SVECT NULLPTR ADDRESS GIVEN TO VECTDESTRUCT", NOFUNC_RETURN);
+	goodptr(*vect, "SVECT NULLPTR GIVEN TO VECTDESTRUCT", NOFUNC_RETURN);
+	if (!(*vect)->memlock)
+		foreach_vectelem(*vect, (*vect)->head, (unsigned long long int (*)(Bytes**))(free_bytes), NXTDIRECTION);	// *Note: 'free_bytes()' returns an INT type instead of defined "unsigned long long int" type (we don't care)
+	vectrelease(vect);
 }
 
 // ********************** EXTENDED FUNCTIONALITY ********************** //
 
 // PREVDIRECTION 1
 // NXTDIRECTION  0
-Bytes* vecttostr(Svect** vect, Bytes** vectptr, char midchar, char dir)	// Used to check/modify through a given vector [!!!NEEDS OPTIMIZING!!!]
+// NOMIDCHAR	 0
+// fbmidchar  	 3 --> add to boths sides of string
+// fbmidchar  	 2 --> add to front side of string
+// fbmidchar  	 1 --> add to back  side of string
+// fbmidchar  	 0 --> don't add to boundaries of string
+
+Bytes* vecttostr(Svect** vect, Bytes** vectptr, unsigned char midchar, unsigned char dir, unsigned char fbmidchar)	// Used to check/modify through a given vector
 {
-	goodptr(vect, "SVECT NULLPTR ADDRESS GIVEN TO FOREACH_VECT", NOFUNC_RETURN);
-	goodptr(*vect, "SVECT NULLPTR GIVEN TO FOREACH_VECT", NOFUNC_RETURN);
-	goodptr(vectptr, "VECTPTR ADDRESS NULLPTR GIVEN TO FOREACH_VECT", NOFUNC_RETURN);
+	goodptr(vect, "SVECT NULLPTR ADDRESS GIVEN TO VECTTOSTR", NOFUNC_RETURN);
+	goodptr(*vect, "SVECT NULLPTR GIVEN TO VECTTOSTR", NOFUNC_RETURN);
+	goodptr(vectptr, "VECTPTR ADDRESS NULLPTR GIVEN TO VECTTOSTR", NOFUNC_RETURN);
 	if (!(*vect)->numitems)
 		return NULLPTR;
 	if (abs(vectptr - (*vect)->head) + abs((*vect)->end - vectptr) != abs((*vect)->end - (*vect)->head))
 		THROW("BYTES POINTER 'vectptr' NOT IN GIVEN SVECT VECTOR");
+	register unsigned int itemstildone;
 	register int direction;
-	register int itemstildone;
-	Bytes* str = NULLPTR;
-	if (dir == PREVDIRECTION)
+	register unsigned char extraspace = 0;
+	if (midchar)
+	{	
+		switch(fbmidchar)
+		{
+			case F_STR_B : ++extraspace;	  // Falls into 'case : F_STR_'
+			case F_STR_  : ++extraspace;	  // Extraspace accounts for 2 or 1 extra mid-characters
+				       break;
+			case _STR_B  : ++extraspace;
+		}
+		extraspace  += (VECTITEMS(*vect) - 1);
+	}
+	Bytes* str   = dynamic_bytes(NULLPTR, vecttotalbytes(*vect) + extraspace);	// Get total space needed for final string and add space for all in between middle characters
+	char* writer = str->array;
+	if (midchar)
+		if (fbmidchar == F_STR_B || fbmidchar == F_STR_)
+		{
+			*writer = midchar; // Writes in first mid-character to beginning of string
+			++writer; 	   // Increment writer
+		}
+	if (dir)	// If PREVDIRECTION
 	{
 		itemstildone = (abs(vectptr - (*vect)->head)) + 1;	// Bytes until head
 		direction = -1;
@@ -203,20 +263,27 @@ Bytes* vecttostr(Svect** vect, Bytes** vectptr, char midchar, char dir)	// Used 
 		itemstildone = (abs(vectptr - (*vect)->end)) + 1;	// Bytes until end
 		direction = 1;
 	}
-	register int numitemstildone = itemstildone;
 	do
 	{
 		if (!vectptr)			// Skips holes/gaps of dynamically freed pointers with no strings
 			goto gotonext;
-
-		if (itemstildone == numitemstildone)
-			str = copy_bytes(*vectptr);
-		else
-			str = concatbytes(str, *vectptr, midchar, FREEFRONT);
-
+	
+		nbytesto(writer, (*vectptr)->array, (*vectptr)->len);	// Write array to string and move 'writer' forward in accordance with the number of bytes written 
+		writer += (*vectptr)->len;
+		if (itemstildone > 1 && midchar)			// Insert middle character if specified
+		{
+			*writer = (midchar * (midchar != NULTERMINATOR));
+			++writer;
+		}
+		
 		gotonext:	
-			vectptr += direction;
+			vectptr += direction;				// Go to next vector object
 	} while (--itemstildone);
+	
+	if (midchar)
+		if (fbmidchar == F_STR_B || fbmidchar == _STR_B)
+			*writer = midchar;
+			
 	vectdestruct(vect);
 	return str;
 }
@@ -242,7 +309,7 @@ Svect* strtovect(Bytes* str, char dlim, char skipfirst, char opt)	// Creates a v
 		{
 			vectpush(strvect, str);				// Else 'opt' == MAKEFROM
 			if (ptr)
-				--((VECTTOP(strvect))->len);		// Make sure to ommit delimiter by correcting newly pushed 'Bytes' object.len (if one is found by 'findchar()')
+				--((VECTBOTTOMELEM(strvect))->len);		// Make sure to ommit delimiter by correcting newly pushed 'Bytes' object.len (if one is found by 'findchar()')
 		}
 		goto done;
 	}
@@ -274,7 +341,7 @@ Svect* strtovect(Bytes* str, char dlim, char skipfirst, char opt)	// Creates a v
 	return strvect;
 }
 
-int printvect(Bytes** bytes)
+unsigned long long int printvectelem(Bytes** bytes)
 {
 	goodptr(bytes, "NULLPTR BYTES ADDRESS GIVEN TO PRINTVECT", NOFUNC_RETURN);
 	if (!(*bytes))
@@ -284,22 +351,22 @@ int printvect(Bytes** bytes)
 	return 1;
 }
 
-void printvector(Svect* vector)
+void printvect(Svect* vect)
 {
-	goodptr(vector, "NULLPTR VECTOR GIVEN TO PRINTVECTOR", NOFUNC_RETURN);
-	foreach_vect(vector, vector->head, printvect, NXTDIRECTION);
+	goodptr(vect, "NULLPTR VECT GIVEN TO PRINTVECTOR", NOFUNC_RETURN);
+	foreach_vectelem(vect, vect->head, printvectelem, NXTDIRECTION);
 }
 
-void printvectormeta(Svect* vector)
+void printvectormeta(Svect* vect)
 {
-	goodptr(vector, "NULLPTR VECTOR GIVEN TO PRINTVECTORMETA", NOFUNC_RETURN);
-	printf("Distance between head and vptr: %lld\n", (long long int)(vector->vptr - vector->head));
-	printf("Distance between head and end: %lld\n" , (long long int)(vector->end - vector->head));
-	printf("Distance between vptr and end: %lld\n" , (long long int)(vector->end - vector->vptr));
-	printf("Numitems: %d\n" , vector->numitems);
-	printf("Allocated: %lld\n", vector->allocated);
+	goodptr(vect, "NULLPTR VECT GIVEN TO PRINTVECTORMETA", NOFUNC_RETURN);
+	printf("Distance between head and vptr: %lld\n", (long long int)(vect->vptr - vect->head));
+	printf("Distance between head and end: %lld\n" , (long long int)(vect->end  - vect->head));
+	printf("Distance between vptr and end: %lld\n" , (long long int)(vect->end  - vect->vptr));
+	printf("Numitems: %d\n" , vect->numitems);
+	printf("Allocated: %lld\n", vect->allocated);
 	//printf("VPTR holds --> ");
-	//printvect(vector->vptr);
+	//printvectelem(vect->vptr);
 }
 
 #endif

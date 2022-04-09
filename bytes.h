@@ -403,7 +403,7 @@ char* delsubstr(Bytes* origin, char* f, char* b)	// Deletes string between 'f' a
 	}
 	register int frontpiece = abs(f - origin->array);
 	register int backpiece = origin->len - abs(b - origin->array);	// Example: Take out "str" from "butterstrfly" ---> Front piece = "butter" | Backpiece = "fly"
-	char* newarray = CALLOC(frontpiece + backpiece + 1);		// Make space
+	char* newarray = MALLOC(frontpiece + backpiece + 1);		// Make space
 	nbytesto(newarray, origin->array, frontpiece);			// Copy up to front of substring to be deleted
 	nbytesto(newarray + frontpiece, b, backpiece);			// Start after end of substring and continue copying
 	newarray[frontpiece + backpiece] = 0;				// Nul
@@ -510,7 +510,7 @@ Bytes* prependctostr(char c, Bytes* str)  // Returns Bytes* pointer to string th
 		*(holder->array) = c;
 		return holder;
 	}
-	str->array = REALLOC(str->array, str->len + 1 + 1);  // one for extra char and one for nul
+	str->array = REALLOC(str->array, str->len + 2);  // one for extra char and one for nul
 	nbytesto(str->array + 1, str->array, str->len++);    // Don't forget to increment Bytes class stored length
 	*(str->array + str->len) = 0;			     // Nul
 	*str->array              = c; 
