@@ -445,6 +445,15 @@ int rmsubstr_all(Bytes* str, Bytes* origin)	// Removes all substrings from byte 
 	return --i;
 }
 
+void scanreplace(Bytes* bytes, char bad, char good)
+{
+	register unsigned long long int i;
+	register unsigned long long int len = bytes->len;
+	for(i = 0; i < len; ++i)
+		if(*(bytes->array+i) == bad)
+			(*(bytes->array+i)) = good;
+}
+
 Bytes* concatbytes(Bytes* front, Bytes* back, char between, char freeold) // Attach 2 strings together, place a "between" character in the middle, choose whether to discard old strings
 {
 	register unsigned long long int flen = 0;

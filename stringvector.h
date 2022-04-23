@@ -360,9 +360,9 @@ void printvect(Svect* vect)
 void printvectormeta(Svect* vect)
 {
 	goodptr(vect, "NULLPTR VECT GIVEN TO PRINTVECTORMETA", NOFUNC_RETURN);
-	printf("Distance between head and vptr: %lld\n", (long long int)(vect->vptr - vect->head));
-	printf("Distance between head and end: %lld\n" , (long long int)(vect->end  - vect->head));
-	printf("Distance between vptr and end: %lld\n" , (long long int)(vect->end  - vect->vptr));
+	printf("Distance between head and vptr: %lld slots\n", (long long int)(vect->vptr - vect->head));
+	printf("Distance between head and end: %lld slots\n" , (long long int)(vect->end  - vect->head));
+	printf("Distance between vptr and end: %lld\n slots" , (long long int)(vect->end  - vect->vptr));
 	printf("Numitems: %d\n" , vect->numitems);
 	printf("Allocated: %lld\n", vect->allocated);
 	//printf("VPTR holds --> ");
