@@ -234,6 +234,17 @@
 #define SETBYTE6(reg, val) ((reg) |= ((val) << 48))
 #define SETBYTE7(reg, val) ((reg) |= ((val) << 56))
 
+//************************************CLEARBYTE************************************//
+
+#define CLEARBYTE0(reg) ((reg) &= 0b1111111111111111111111111111111111111111111111111111111100000000)
+#define CLEARBYTE1(reg) ((reg) &= 0b1111111111111111111111111111111111111111111111110000000011111111)
+#define CLEARBYTE2(reg) ((reg) &= 0b1111111111111111111111111111111111111111000000001111111111111111)
+#define CLEARBYTE3(reg) ((reg) &= 0b1111111111111111111111111111111100000000111111111111111111111111)
+#define CLEARBYTE4(reg) ((reg) &= 0b1111111111111111111111110000000011111111111111111111111111111111)
+#define CLEARBYTE5(reg) ((reg) &= 0b1111111111111111000000001111111111111111111111111111111111111111)
+#define CLEARBYTE6(reg) ((reg) &= 0b1111111100000000111111111111111111111111111111111111111111111111)
+#define CLEARBYTE7(reg) ((reg) &= 0b0000000011111111111111111111111111111111111111111111111111111111)
+
 //************************************CLEARSETBYTE************************************//
 
 #define CLEARSETBYTE0(reg, val) ((reg) = ((reg) ^ (reg)) | (val))
@@ -335,7 +346,18 @@
 
 //************************************OPS************************************//
 
-#define INVERT(x)   ((~(x)))
+#define INVERT(x)   		 ((~(x)))
+#define ROTATERIGHT_64BIT(reg, offset) ((reg) = (reg) >> (offset) | (reg) << (64 - (offset)))
+#define ROTATELEFT_64BIT(reg, offset)  ((reg) = (reg) << (offset) | (reg) >> (64 - (offset)))
+#define ROTATERIGHT_32BIT(reg, offset) ((reg) = (reg) >> (offset) | (reg) << (32 - (offset)))
+#define ROTATELEFT_32BIT(reg, offset)  ((reg) = (reg) << (offset) | (reg) >> (32 - (offset)))
+#define ROTATERIGHT_16BIT(reg, offset) ((reg) = (reg) >> (offset) | (reg) << (16 - (offset)))
+#define ROTATELEFT_16BIT(reg, offset)  ((reg) = (reg) << (offset) | (reg) >> (16 - (offset)))
+#define ROTATERIGHT_8BIT(reg, offset)  ((reg) = (reg) >> (offset) | (reg) << ( 8 - (offset)))
+#define ROTATELEFT_8BIT(reg, offset)   ((reg) = (reg) << (offset) | (reg) >> ( 8 - (offset)))
+
+#define RADICALROTATERIGHT(reg, offset, fieldsz) ((reg) = (reg) >> (offset) | (reg) << ((fieldsz) - (offset)))
+#define RADICALROTATELEFT(reg, offset, fieldsz)  ((reg) = (reg) << (offset) | (reg) >> ((fieldsz) - (offset)))
 
 void REVERSE8(uint8_t* x)	// Cool
 {
@@ -491,79 +513,100 @@ void REVERSE64(uint64_t* x)	// Hello arthritis
 	   | (b47 >> 31) | (b46 >> 29) | (b45 >> 27) | (b44 >> 25) | (b43 >> 23) | (b42 >> 21) | (b41 >> 19) | (b40 >> 17) | (b39 >> 15) | (b38 >> 13) | (b37 >> 11) | (b36 >>  9) | (b35 >>  7) | (b34 >>  5) | (b33 >>  3) | (b32 >>  1);
 }
 
-void hide(uint64_t* x, uint64_t* k, uint8_t decree)
+void sow(uint64_t* x, uint64_t* k, uint64_t decree)
 {
-	register uint64_t S     = *k; 	//5514838803201;
+	register uint64_t C     = *k; 	//5514838803201;
 	register uint64_t faith = 0b0000000000000000000000000000000000000000000000000000000000000000 | (decree << 48);
 	
 	switch(decree % 7)
 	{
 		case 0 : ;
-			 faith = GETBYTE0(S) |
-			 	 GETBYTE1(S) |
-			 	 GETBYTE2(S) |
-			 	 GETBYTE3(S) |
-			 	 GETBYTE4(S) |
-			 	 GETBYTE5(S) ^
-			 	 GETBYTE6(S);
+			 faith = GETBYTE0(C) |
+			 	 GETBYTE1(C) |
+			 	 GETBYTE2(C) |
+			 	 GETBYTE3(C) |
+			 	 GETBYTE4(C) |
+			 	 GETBYTE5(C) ^
+			 	 GETBYTE6(C);
 			 break;
 		case 1 : ;
-			 faith = GETBYTE1_AS_BYTE0(S) |
-			 	 GETBYTE2_AS_BYTE1(S) |
-			 	 GETBYTE3_AS_BYTE2(S) |
-			 	 GETBYTE4_AS_BYTE3(S) |
-			 	 GETBYTE5_AS_BYTE4(S) |
-			 	 GETBYTE6_AS_BYTE5(S) ^
-			 	 GETBYTE0_AS_BYTE6(S);
+			 faith = GETBYTE1_AS_BYTE0(C) |
+			 	 GETBYTE2_AS_BYTE1(C) |
+			 	 GETBYTE3_AS_BYTE2(C) |
+			 	 GETBYTE4_AS_BYTE3(C) |
+			 	 GETBYTE5_AS_BYTE4(C) |
+			 	 GETBYTE6_AS_BYTE5(C) ^
+			 	 GETBYTE0_AS_BYTE6(C);
 			 break;
 		case 2 : ;
-			 faith = GETBYTE2_AS_BYTE0(S) |
-			 	 GETBYTE3_AS_BYTE1(S) |
-			 	 GETBYTE4_AS_BYTE2(S) |
-			 	 GETBYTE5_AS_BYTE3(S) |
-			 	 GETBYTE6_AS_BYTE4(S) |
-			 	 GETBYTE0_AS_BYTE5(S) ^
-			 	 GETBYTE1_AS_BYTE6(S);
+			 faith = GETBYTE2_AS_BYTE0(C) |
+			 	 GETBYTE3_AS_BYTE1(C) |
+			 	 GETBYTE4_AS_BYTE2(C) |
+			 	 GETBYTE5_AS_BYTE3(C) |
+			 	 GETBYTE6_AS_BYTE4(C) |
+			 	 GETBYTE0_AS_BYTE5(C) ^
+			 	 GETBYTE1_AS_BYTE6(C);
 			 break;
 		case 3 : ;
-			 faith = GETBYTE3_AS_BYTE0(S) |
-			 	 GETBYTE4_AS_BYTE1(S) |
-			 	 GETBYTE5_AS_BYTE2(S) |
-			 	 GETBYTE6_AS_BYTE3(S) |
-			 	 GETBYTE0_AS_BYTE4(S) |
-			 	 GETBYTE1_AS_BYTE5(S) ^
-			 	 GETBYTE2_AS_BYTE6(S);
+			 faith = GETBYTE3_AS_BYTE0(C) |
+			 	 GETBYTE4_AS_BYTE1(C) |
+			 	 GETBYTE5_AS_BYTE2(C) |
+			 	 GETBYTE6_AS_BYTE3(C) |
+			 	 GETBYTE0_AS_BYTE4(C) |
+			 	 GETBYTE1_AS_BYTE5(C) ^
+			 	 GETBYTE2_AS_BYTE6(C);
 			 break;
 		case 4 : ;
-			 faith = GETBYTE4_AS_BYTE0(S) |
-			 	 GETBYTE5_AS_BYTE1(S) |
-			 	 GETBYTE6_AS_BYTE2(S) |
-			 	 GETBYTE0_AS_BYTE3(S) |
-			 	 GETBYTE1_AS_BYTE4(S) |
-			 	 GETBYTE2_AS_BYTE5(S) ^
-			 	 GETBYTE3_AS_BYTE6(S);
+			 faith = GETBYTE4_AS_BYTE0(C) |
+			 	 GETBYTE5_AS_BYTE1(C) |
+			 	 GETBYTE6_AS_BYTE2(C) |
+			 	 GETBYTE0_AS_BYTE3(C) |
+			 	 GETBYTE1_AS_BYTE4(C) |
+			 	 GETBYTE2_AS_BYTE5(C) ^
+			 	 GETBYTE3_AS_BYTE6(C);
 			 break;
 		case 5 : ;
-			 faith = GETBYTE5_AS_BYTE0(S) |
-			 	 GETBYTE6_AS_BYTE1(S) |
-			 	 GETBYTE0_AS_BYTE2(S) |
-			 	 GETBYTE1_AS_BYTE3(S) |
-			 	 GETBYTE2_AS_BYTE4(S) |
-			 	 GETBYTE3_AS_BYTE5(S) ^
-			 	 GETBYTE4_AS_BYTE6(S);
+			 faith = GETBYTE5_AS_BYTE0(C) |
+			 	 GETBYTE6_AS_BYTE1(C) |
+			 	 GETBYTE0_AS_BYTE2(C) |
+			 	 GETBYTE1_AS_BYTE3(C) |
+			 	 GETBYTE2_AS_BYTE4(C) |
+			 	 GETBYTE3_AS_BYTE5(C) ^
+			 	 GETBYTE4_AS_BYTE6(C);
 			 break;
 		case 6 : ;
-			 faith = GETBYTE6_AS_BYTE0(S) |
-			 	 GETBYTE0_AS_BYTE1(S) |
-			 	 GETBYTE1_AS_BYTE2(S) |
-			 	 GETBYTE2_AS_BYTE3(S) |
-			 	 GETBYTE3_AS_BYTE4(S) |
-			 	 GETBYTE4_AS_BYTE5(S) ^
-			 	 GETBYTE5_AS_BYTE6(S);
-			 break;
+			 faith = GETBYTE6_AS_BYTE0(C) |
+			 	 GETBYTE0_AS_BYTE1(C) |
+			 	 GETBYTE1_AS_BYTE2(C) |
+			 	 GETBYTE2_AS_BYTE3(C) |
+			 	 GETBYTE3_AS_BYTE4(C) |
+			 	 GETBYTE4_AS_BYTE5(C) ^
+			 	 GETBYTE5_AS_BYTE6(C);
 	}
-	
 	*x ^= faith;
+}
+
+void til(uint64_t* x, uint64_t* k, uint64_t decree)
+{
+	uint64_t  S     = *k;
+	uint64_t  field = *x;
+	uint32_t* ptr32 = (uint32_t*)(&field);
+	uint16_t* ptr16 = (uint16_t*)(&field);
+	uint8_t* ptr8   =  (uint8_t*)(&field);
+	switch (decree % 3)
+	{
+		case 0 :
+			//REVERSE64(&field);		// Reverse 64 bits 
+			//field >>= 8;			// Shift one byte right to get rid of the zeroed out 8th byte that is now in the first byte's place
+			//REVERSE32(ptr32);		// The rest is like a wave crashing back and forth in a tank
+			//REVERSE16(ptr16 + 4);
+			break;
+		case 1 :
+			break;
+		case 2 :
+	}
+	*x = field;
+	// cultivated, intervening event, other
 }
 
 void printbits_debug(uint64_t i)	
@@ -578,6 +621,7 @@ void printbits_debug(uint64_t i)
 		if (j % 8 == 0)
 			putc(' ', stdout);
 	}
+	putc('\n', stdout);
 }
 
 #endif

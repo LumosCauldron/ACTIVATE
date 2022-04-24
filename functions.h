@@ -35,6 +35,9 @@ typedef unsigned long long int MISSIONTOOL;
 #define FREEEQUIP      1
 #define FREEMISSION    2
 
+#define EMPTYTOOLSET   NULLPTR
+#define ZEROTOOLS      0
+
 MISSIONTOOL* assign1tool(unsigned long long int item1)
 {
 	unsigned long long int* ptr = MALLOC(sizeof(unsigned long long int));
@@ -158,7 +161,8 @@ void missionstart(Mission** order)	// Executes whatever function is passed in as
 {					// Equipment array and numtools MUST be consistent (e.g 3 elements in 'equipment' means numtools == 3) !!! IMPERATIVE !!!
 	goodptr(order, "NULLPTR ORDER ADDRESS GIVEN TO MISSIONSTART", NOFUNC_RETURN);
 	goodptr(*order, "NULLPTR ORDER GIVEN TO MISSIONSTART", NOFUNC_RETURN);
-	goodptr((*order)->equipment, "NULLPTR ORDER->EQUIPMENT GIVEN TO MISSIONSTART", NOFUNC_RETURN);
+	if ((*order)->numtools)
+		goodptr((*order)->equipment, "NULLPTR ORDER->EQUIPMENT GIVEN TO MISSIONSTART", NOFUNC_RETURN);
 	switch((*order)->numtools)	// Casts and executes function
 	{
 		case 0 : ;

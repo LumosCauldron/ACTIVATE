@@ -1,7 +1,7 @@
 #include <time.h>
 // #include <string.h>
 //#include "../stringvector.h"
-//#include "../functions.h"
+#include "../functions.h"
 //#include "../dir.h"
 #include "../bits.h"
 #include "../bytes.h"
@@ -27,23 +27,35 @@ uint64_t rand64(void)
 }
 
 
-void missionwrapper(long long int filepathaddr, long long int pathaction, long long int freepath)	// Varies from test case to test case [strtovect(Bytes* str, char dlim, char skipfirst, char opt)]
+void missionwrapper()	// Varies from test case to test case [strtovect(Bytes* str, char dlim, char skipfirst, char opt)]
 {
 	//PRINTBYTES(*((Bytes**)filepathaddr));
 	//printf("\n|||||||||||||||||||||||||||||||||||||||||||||||\n\n");
 	//pathmaker((Bytes**)filepathaddr, (char)pathaction, (char)freepath);
-    uint64_t i = 1;
+    uint64_t decree = 0xab;
+    uint64_t key  = rand64();
+    CLEARBYTE7(key);
+    uint64_t data = 0xaabbccddeeff11;
+    uint64_t cpy = data;
+    uint32_t* ptr32 = (uint32_t*)(&data);
+    uint16_t* ptr16 = (uint16_t*)(&data);
+    uint8_t*  ptr8  = (uint8_t*)(&data);
     double time_taken;
     clock_t t = clock();
-    
-    while (1)
-    {
-        i = rand64();
-    	REVERSE64(&i);
-    	printbits_debug(i);
-    	putc('\n', stdout);
-    }
-    
+    	printf("%llx\n", data);
+    	printbits_debug(data);
+	REVERSE64(&data);
+	data >>= 8;
+	REVERSE32(ptr32);
+	REVERSE16(ptr16 + 2);
+	printf("%llx\n", data);
+	printbits_debug(data);
+	REVERSE16(ptr16 + 2);
+	REVERSE32(ptr32);
+	data <<= 8;
+	REVERSE64(&data);
+	printf("%llx\n", data);
+	printbits_debug(data);
     t = clock() - t;
     time_taken = ((double)t) / CLOCKS_PER_SEC; // in seconds
 }
@@ -69,7 +81,7 @@ int main(int argc, char** argv)
 	char* hardcoded = "hello";
 	char* cptr = (char*)((long long int)hardcoded * (argc != 2) + (argc == 2) * (long long int)argv[1]);
 	Bytes* bptr = dynamic_bytes(cptr, countuntilnul(cptr));
-	Mission* mptr = missionplan(missionwrapper, assign3tools((long long int)(&bptr), PATHDISAPPEAR, FREEPATH), 3, FREEMISSION);
+	Mission* mptr = missionplan(missionwrapper, EMPTYTOOLSET, ZEROTOOLS, FREEMISSION);
 	timer(&mptr);	        // Frees 'mptr'
 	//free_bytes(&bptr);	// Frees 'bptr'
      DECALIBRATE();
