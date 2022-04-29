@@ -349,6 +349,8 @@
 #define INVERT(x)   		 ((~(x)))
 #define ROTATERIGHT_64BIT(reg, offset) ((reg) = (reg) >> (offset) | (reg) << (64 - (offset)))
 #define ROTATELEFT_64BIT(reg, offset)  ((reg) = (reg) << (offset) | (reg) >> (64 - (offset)))
+#define ROTATERIGHT_56BIT(reg, offset) ((reg) = ((((reg) >> (offset) | (reg) << (56 - (offset))) & 0b0000000011111111111111111111111111111111111111111111111111111111) | ((reg) & 0b1111111100000000000000000000000000000000000000000000000000000000)))
+#define ROTATELEFT_56BIT(reg, offset) ((reg) = ((((reg) << (offset) | (reg) >> (56 - (offset))) & 0b0000000011111111111111111111111111111111111111111111111111111111) | ((reg) & 0b1111111100000000000000000000000000000000000000000000000000000000)))
 #define ROTATERIGHT_32BIT(reg, offset) ((reg) = (reg) >> (offset) | (reg) << (32 - (offset)))
 #define ROTATELEFT_32BIT(reg, offset)  ((reg) = (reg) << (offset) | (reg) >> (32 - (offset)))
 #define ROTATERIGHT_16BIT(reg, offset) ((reg) = (reg) >> (offset) | (reg) << (16 - (offset)))
@@ -511,102 +513,6 @@ void REVERSE64(uint64_t* x)	// Hello arthritis
 	   | (b16 << 31) | (b17 << 29) | (b18 << 27) | (b19 << 25) | (b20 << 23) | (b21 << 21) | (b22 << 19) | (b23 << 17) | (b24 << 15) | (b25 << 13) | (b26 << 11) | (b27 <<  9) | (b28 <<  7) | (b29 <<  5) | (b30 <<  3) | (b31 <<  1)
 	   | (b63 >> 63) | (b62 >> 61) | (b61 >> 59) | (b60 >> 57) | (b59 >> 55) | (b58 >> 53) | (b57 >> 51) | (b56 >> 49) | (b55 >> 47) | (b54 >> 45) | (b53 >> 43) | (b52 >> 41) | (b51 >> 39) | (b50 >> 37) | (b49 >> 35) | (b48 >> 33)
 	   | (b47 >> 31) | (b46 >> 29) | (b45 >> 27) | (b44 >> 25) | (b43 >> 23) | (b42 >> 21) | (b41 >> 19) | (b40 >> 17) | (b39 >> 15) | (b38 >> 13) | (b37 >> 11) | (b36 >>  9) | (b35 >>  7) | (b34 >>  5) | (b33 >>  3) | (b32 >>  1);
-}
-
-void sow(uint64_t* x, uint64_t* k, uint64_t decree)
-{
-	register uint64_t C     = *k; 	//5514838803201;
-	register uint64_t faith = 0b0000000000000000000000000000000000000000000000000000000000000000 | (decree << 48);
-	
-	switch(decree % 7)
-	{
-		case 0 : ;
-			 faith = GETBYTE0(C) |
-			 	 GETBYTE1(C) |
-			 	 GETBYTE2(C) |
-			 	 GETBYTE3(C) |
-			 	 GETBYTE4(C) |
-			 	 GETBYTE5(C) ^
-			 	 GETBYTE6(C);
-			 break;
-		case 1 : ;
-			 faith = GETBYTE1_AS_BYTE0(C) |
-			 	 GETBYTE2_AS_BYTE1(C) |
-			 	 GETBYTE3_AS_BYTE2(C) |
-			 	 GETBYTE4_AS_BYTE3(C) |
-			 	 GETBYTE5_AS_BYTE4(C) |
-			 	 GETBYTE6_AS_BYTE5(C) ^
-			 	 GETBYTE0_AS_BYTE6(C);
-			 break;
-		case 2 : ;
-			 faith = GETBYTE2_AS_BYTE0(C) |
-			 	 GETBYTE3_AS_BYTE1(C) |
-			 	 GETBYTE4_AS_BYTE2(C) |
-			 	 GETBYTE5_AS_BYTE3(C) |
-			 	 GETBYTE6_AS_BYTE4(C) |
-			 	 GETBYTE0_AS_BYTE5(C) ^
-			 	 GETBYTE1_AS_BYTE6(C);
-			 break;
-		case 3 : ;
-			 faith = GETBYTE3_AS_BYTE0(C) |
-			 	 GETBYTE4_AS_BYTE1(C) |
-			 	 GETBYTE5_AS_BYTE2(C) |
-			 	 GETBYTE6_AS_BYTE3(C) |
-			 	 GETBYTE0_AS_BYTE4(C) |
-			 	 GETBYTE1_AS_BYTE5(C) ^
-			 	 GETBYTE2_AS_BYTE6(C);
-			 break;
-		case 4 : ;
-			 faith = GETBYTE4_AS_BYTE0(C) |
-			 	 GETBYTE5_AS_BYTE1(C) |
-			 	 GETBYTE6_AS_BYTE2(C) |
-			 	 GETBYTE0_AS_BYTE3(C) |
-			 	 GETBYTE1_AS_BYTE4(C) |
-			 	 GETBYTE2_AS_BYTE5(C) ^
-			 	 GETBYTE3_AS_BYTE6(C);
-			 break;
-		case 5 : ;
-			 faith = GETBYTE5_AS_BYTE0(C) |
-			 	 GETBYTE6_AS_BYTE1(C) |
-			 	 GETBYTE0_AS_BYTE2(C) |
-			 	 GETBYTE1_AS_BYTE3(C) |
-			 	 GETBYTE2_AS_BYTE4(C) |
-			 	 GETBYTE3_AS_BYTE5(C) ^
-			 	 GETBYTE4_AS_BYTE6(C);
-			 break;
-		case 6 : ;
-			 faith = GETBYTE6_AS_BYTE0(C) |
-			 	 GETBYTE0_AS_BYTE1(C) |
-			 	 GETBYTE1_AS_BYTE2(C) |
-			 	 GETBYTE2_AS_BYTE3(C) |
-			 	 GETBYTE3_AS_BYTE4(C) |
-			 	 GETBYTE4_AS_BYTE5(C) ^
-			 	 GETBYTE5_AS_BYTE6(C);
-	}
-	*x ^= faith;
-}
-
-void til(uint64_t* x, uint64_t* k, uint64_t decree)
-{
-	uint64_t  S     = *k;
-	uint64_t  field = *x;
-	uint32_t* ptr32 = (uint32_t*)(&field);
-	uint16_t* ptr16 = (uint16_t*)(&field);
-	uint8_t* ptr8   =  (uint8_t*)(&field);
-	switch (decree % 3)
-	{
-		case 0 :
-			//REVERSE64(&field);		// Reverse 64 bits 
-			//field >>= 8;			// Shift one byte right to get rid of the zeroed out 8th byte that is now in the first byte's place
-			//REVERSE32(ptr32);		// The rest is like a wave crashing back and forth in a tank
-			//REVERSE16(ptr16 + 4);
-			break;
-		case 1 :
-			break;
-		case 2 :
-	}
-	*x = field;
-	// cultivated, intervening event, other
 }
 
 void printbits_debug(uint64_t i)	
