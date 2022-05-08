@@ -1,6 +1,7 @@
 #ifndef TOOLS_H
 #define TOOLS_H
 
+#include <stdint.h>
 #include "bytes.h"
 
 #define CHAR	  1
@@ -10,14 +11,17 @@
 
 // **************************************************************** WRAPPER FUNCTIONS
 
-void PRINTC(char chr)             { printf("%c\n", chr);   }	   // CHAR
-void PRINTNC(char chr)            { printf("%u\n", (unsigned char)chr);   } // CHAR
-void PRINTN(int num) 	          { printf("%d\n", num);   }	   // INT
-void PRINTLLN(long long int num)  { printf("%lld\n", num); }	   // LONG LONG INT
-void PRINTULLN(long long int num) { printf("%llu\n", num); }	   // UNSIGNED LONG LONG
-void PRINTX(int num) 	          { printf("%x\n", num);   }	   // HEX
-void PRINTLLX(long long int num)  { printf("%llx\n", num); }	   // LONG LONG HEX
-void PRINTD(double num)           { printf("%lf\n", num);  }       // DOUBLE
+static inline void PRINTC(char chr)             { printf("%c\n", chr);   	 }	 // CHAR
+static inline void PRINT8(int8_t num)           { printf("%u\n", (int8_t)num);  }	 // SIGNED 8-bit
+static inline void PRINTU8(uint8_t num)         { printf("%u\n", (uint8_t)num); }       // UNSIGNED 8-bit
+static inline void PRINTN(int num) 	         { printf("%d\n", num);   	 }	 // INT
+static inline void PRINTUN(int num) 	         { printf("%u\n", num);   	 }	 // UNSIGNED INT
+static inline void PRINTLLN(long long int num)  { printf("%lld\n", num); 	 }	 // LONG LONG INT
+static inline void PRINTULLN(long long int num) { printf("%llu\n", num); 	 }	 // UNSIGNED LONG LONG INT
+static inline void PRINTX(int num) 	         { printf("0x%x\n", num);   	 }	 // HEX
+static inline void PRINTLLX(long long int num)  { printf("0x%llx\n", num); 	 }	 // LONG LONG HEX
+static inline void PRINTF(float num)            { printf("%llf\n", num);  	 }       // FLOAT
+static inline void PRINTD(double num)           { printf("%llf\n", num);  	 }       // DOUBLE
 
 
 // UNDER DEVELOPMENT

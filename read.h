@@ -187,7 +187,7 @@ int checkahead_for(char c, FILE* stream)					    // Checks if a certain whitespa
 	return i;					// Return distance
 }
 
-Bytes* readword(FILE* stream, char skipw)		// Returns NULLPTR or Nul-terminated string (will skip white after word)
+Bytes* readword(FILE* stream, char skipw)		// Returns NULLPTR or Nul-terminated string or (will skip white after word)
 {
 	goodptr(stream, "NULLPTR STREAM GIVEN TO READWORD", NOFUNC_RETURN);
 	Elem* current = find_elem(filehdr, stream, LNUM, NXTSEARCH); // Find file object being worked on

@@ -5,6 +5,7 @@
 //#include "../dir.h"
 #include "../crypt.h"
 #include "../bytes.h"
+#include "../write.h"
 
 
 #define ARGWANTED 1	// Set for whats needed
@@ -32,69 +33,65 @@ void missionwrapper(long long int revoff)	// Varies from test case to test case 
 	//PRINTBYTES(*((Bytes**)filepathaddr));
 	//printf("\n|||||||||||||||||||||||||||||||||||||||||||||||\n\n");
 	//pathmaker((Bytes**)filepathaddr, (char)pathaction, (char)freepath);
-		double time_taken; clock_t t = clock();
+    double time_taken; clock_t t = clock();
     uint64_t decree = 0xab;
     uint64_t key  = rand64();
     key  = rand64();
     key  = rand64();
-        CLEARBYTE7(key);
+    key  = CLEARBYTE7(rand64());
     unsigned long long int x = 0;
     unsigned long long int y = 0;
     unsigned long long int max = 0;
     unsigned long long int maxrds = 0;
+    unsigned long long int maxrev = revoff;
     uint64_t data = 0x7632abe5f2a3f1;
     uint64_t cpy = data;
     uint32_t* ptr32 = (uint32_t*)(&data);
     uint16_t* ptr16 = (uint16_t*)(&data);
     uint8_t*  ptr8  = (uint8_t*)(&data);
-
-	uint64_t check = 21669;
-    while (check)
+    PRINTLLX(cpy);
+    while (--revoff > 0)
     {
-    x = 0;
-    y = 0;
     while(y < 64)
     {
     while (++x)
     {
 
-	if (x % check != 0)
-		//ROTATELEFT_64BIT(data, y);
+	//if (x % check != 0)
+	//ROTATELEFT_32BIT(data, y);
 	//else
-		ROTATERIGHT_56BIT(data, y);
-	data ^= key;
-	REVERSE8(ptr8 + 0);
-	REVERSE8(ptr8 + 1);
-	REVERSE8(ptr8 + 3);
-	if (cpy == data)
+	data = ROTATERIGHT_56BIT(data, revoff);
+	*ptr8 = REVERSE8(ptr8);
+	*(ptr8 + 1) = REVERSE8(ptr8 + 1);
+	*(ptr8 + 3) = REVERSE8(ptr8 + 3);
+	if (cpy == data || !data)
 	{
 		if (maxrds <= x)
 		{
-			printf("check: %d MAX -------------------------------------------> %llu | %llu\n", check, y, x);
+			printf("MAX -------------------------------------------> %llu | %llu\n", y, x);
 			max    = y;
-			maxrds = x;
+			if (x != maxrds)
+				maxrds = x;
+			maxrev = revoff;
 		}
-		//printf("\t%d bits ---> %d rounds\n", y, x);
+		PRINTLLX(data);
 		break;
 	}
 	//printbits_debug(data);
 	//REVERSE16(ptr16 + 2);
 	//REVERSE32(ptr32);
-	//data <<= 8;
 	//REVERSE64(&data);
-	//if (x % 10000000 == 0) 
-	//{
-		//if (x == 40000000)
-		//	break;
-	//	printf("%llx\n", data);
-	//}
+	
 	//printbits_debug(data);
     }
     x = 0;
     ++y;
     }
+    y = x = 0;
     }
-    printf("\ncheck: %d... %llu bits with %llu rounds\n", check, max, maxrds);
+    PLN(1);
+    PRINTLLX(cpy);
+    printf("%llu revoff, %llu bits with %llu rounds\n", maxrev, max, maxrds);
     t = clock() - t;
     time_taken = ((double)t) / CLOCKS_PER_SEC; // in seconds
 }
@@ -122,7 +119,7 @@ int main(int argc, char** argv)
 	Bytes* bptr = dynamic_bytes(cptr, countuntilnul(cptr));
 	Mission* mptr = missionplan(missionwrapper, assign1tool(atoi(argv[1])), 1, FREEMISSION);
 	timer(&mptr);	        // Frees 'mptr'
-	//free_bytes(&bptr);	// Frees 'bptr'
+	free_bytes(&bptr);	// Frees 'bptr'
      DECALIBRATE();
 }
 

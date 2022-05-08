@@ -1,7 +1,9 @@
 #ifndef _CRYPT_
 #define _CRYPT_
 
-#include bits.h
+#include "bits.h"
+
+#define SBOXSZ 256
 
 // SBOX FROM AES
 uint8_t sbox[SBOXSZ] = 
@@ -42,6 +44,48 @@ uint8_t sbox_inverse[SBOXSZ] =
 /*d0*/ 	0x60, 	0x51, 	0x7f, 	0xa9, 	0x19, 	0xb5, 	0x4a, 	0x0d, 	0x2d, 	0xe5, 	0x7a, 	0x9f, 	0x93, 	0xc9, 	0x9c,	0xef,
 /*e0*/ 	0xa0, 	0xe0, 	0x3b, 	0x4d, 	0xae, 	0x2a, 	0xf5, 	0xb0, 	0xc8, 	0xeb, 	0xbb, 	0x3c, 	0x83, 	0x53, 	0x99,	0x61,
 /*f0*/ 	0x17, 	0x2b, 	0x04, 	0x7e, 	0xba, 	0x77, 	0xd6, 	0x26, 	0xe1, 	0x69, 	0x14, 	0x63, 	0x55, 	0x21, 	0x0c,	0x7d };
+
+uint8_t seal[256]   = { 71  , 130 , 34  , 219 , 212 , 209 , 24  , 44  , 120 , 11  , 181 , 168 , 223 , 103 , 217 , 220 ,
+                        26  , 159 , 73  , 225 , 8   , 197 , 151 , 161 , 233 , 132 , 97  , 226 , 31  , 90  , 137 , 47  ,
+                        205 , 22  , 243 , 189 , 50  , 51  , 185 , 110 , 140 , 88  , 231 , 85  , 250 , 145 , 228 , 142 ,
+                        182 , 188 , 221 , 74  , 27  , 30  , 86  , 204 , 229 , 94  , 119 , 242 , 37  , 203 , 170 , 213 ,
+                        25  , 164 , 201 , 199 , 98  , 171 , 192 , 133 , 191 , 163 , 156 , 234 , 81  , 91  , 33  , 246 ,
+                        207 , 19  , 157 , 45  , 167 , 128 , 67  , 241 , 69  , 183 , 172 , 134 , 232 , 148 , 105 , 68  ,
+                        2   , 122 , 150 , 12  , 138 , 253 , 76  , 92  , 84  , 210 , 125 , 237 , 146 , 238 , 248 , 208 ,
+                        15  , 240 , 75  , 77  , 224 , 106 , 104 , 152 , 127 , 65  , 249 , 211 , 202 , 64  , 109 , 18  ,
+                        99  , 123 , 100 , 107 , 196 , 193 , 187 , 184 , 255 , 70  , 38  , 59  , 190 , 129 , 200 , 160 ,
+                        3   , 82  , 40  , 195 , 55  , 63  , 79  , 89  , 53  , 87  , 239 , 54  , 173 , 251 , 43  , 147 ,
+                        23  , 57  , 95  , 56  , 42  , 0   , 113 , 141 , 36  , 136 , 186 , 39  , 121 , 29  , 6   , 32  ,
+                        7   , 48  , 161 , 46  , 4   , 72  , 214 , 215 , 78  , 230 , 83  , 247 , 131 , 126 , 58  , 114 ,
+                        96  , 180 , 20  , 17  , 28  , 93  , 1   , 9   , 111 , 162 , 124 , 41  , 245 , 252 , 52  , 216 ,
+                        14  , 102 , 254 , 108 , 175 , 154 , 10  , 16  , 206 , 117 , 244 , 218 , 62  , 21  , 35  , 66  ,
+                        179 , 5   , 144 , 80  , 116 , 176 , 198 , 101 , 155 , 194 , 13  , 236 , 158 , 135 , 166 , 169 ,
+                        227 , 235 , 165 , 115 , 222 , 112 , 49  , 178 , 174 , 60  , 153 , 118 , 139 , 177 , 143 , 149 };
+                      
+uint8_t unseal[256] = { 165 , 198 , 96  , 144 , 180 , 225 , 174 , 176 , 20  , 199 , 214 , 9   , 99  , 234 , 208 , 112 , 
+			215 , 195 , 127 , 81  , 194 , 221 , 33  , 160 , 6   , 64  , 16  , 52  , 196 , 173 , 53  , 28  , 
+			175 , 78  , 2   , 222 , 168 , 60  , 138 , 171 , 146 , 203 , 164 , 158 , 7   , 83  , 179 , 31  , 
+			177 , 246 , 36  , 37  , 206 , 152 , 155 , 148 , 163 , 161 , 190 , 139 , 249 , 0   , 220 , 149 , 
+			125 , 121 , 223 , 86  , 95  , 88  , 137 , 0   , 181 , 18  , 51  , 114 , 102 , 115 , 184 , 150 , 
+			227 , 76  , 145 , 186 , 104 , 43  , 54  , 153 , 41  , 151 , 29  , 77  , 103 , 197 , 57  , 162 , 
+			192 , 26  , 68  , 128 , 130 , 231 , 209 , 13  , 118 , 94  , 117 , 131 , 211 , 126 , 39  , 200 , 
+			245 , 166 , 191 , 243 , 228 , 217 , 251 , 58  , 8   , 172 , 97  , 129 , 202 , 106 , 189 , 120 , 
+			85  , 141 , 1   , 188 , 25  , 71  , 91  , 237 , 169 , 30  , 100 , 252 , 40  , 167 , 47  , 254 , 
+			226 , 45  , 108 , 159 , 93  , 255 , 98  , 22  , 119 , 250 , 213 , 232 , 74  , 82  , 236 , 17  , 
+			143 , 178 , 201 , 73  , 65  , 242 , 238 , 84  , 11  , 239 , 62  , 69  , 90  , 156 , 248 , 212 , 
+			229 , 253 , 247 , 224 , 193 , 10  , 48  , 89  , 135 , 38  , 170 , 134 , 49  , 35  , 140 , 72  , 
+			70  , 133 , 233 , 147 , 132 , 21  , 230 , 67  , 142 , 66  , 124 , 61  , 55  , 32  , 216 , 80  , 
+			111 , 5   , 105 , 123 , 4   , 63  , 182 , 183 , 207 , 14  , 219 , 3   , 15  , 50  , 244 , 12  , 
+			116 , 19  , 27  , 240 , 46  , 56  , 185 , 42  , 92  , 24  , 75  , 241 , 235 , 107 , 109 , 154 , 
+			113 , 87  , 59  , 34  , 218 , 204 , 79  , 187 , 110 , 122 , 44  , 157 , 205 , 101 , 210 , 136 };
+                      
+                      
+
+#define TRANSPOSE(reg) ((*(sbox + (reg))))
+#define TRANSLATE(reg) ((*(sbox_inverse + (reg))))
+
+#define SEAL(reg)   ((*(seal + (reg))))
+#define UNSEAL(reg) ((*(unseal + (reg))))
 
 /*
 // MATRIX FROM AES
@@ -86,26 +130,38 @@ char bytemult(uint8_t first, uint8_t arrval)	// Executes Galois Field Multiplica
 
 char bytesubadd(uint8_t first, uint8_t second) { return (0x00000000000000ff & first) ^ (0x00000000000000ff & second); }
 
-char sbox_mapval(long long int msgbyte)
-{
-	register long long int hmsk = 0x00000000000000f0;	// High value mask
-	register long long int lmsk = 0x000000000000000f;	// Low  value mask
-	register char rval = (char)((msgbyte & hmsk) >> 4);	// Gets row to pull substitution from (e.g. Input = 0x3a, 'rval' = 0x3) 
-	register char cval = (char)(msgbyte & lmsk);		// Gets col to pull substitution from (e.g. Input = 0x3a, 'rval' = 0xa) 
-	
-	if (MODE == ENCRYPT) return sbox[rval * SBOXDIM + cval];
-	else 		     return sbox_inverse[rval * SBOXDIM + cval];
-}
 */
+
+// Call 8 times on same byte to get back to original byte value
+#define permute8bits_byte0(H0) ((GETBIT0_ASBIT3((H0))   | GETBIT3_ASBIT6((H0))   | GETBIT6_ASBIT1((H0))   | GETBIT1_ASBIT4((H0))   | GETBIT4_ASBIT7((H0))   | GETBIT7_ASBIT2((H0))   | GETBIT2_ASBIT5((H0))   | GETBIT5_ASBIT0((H0)))) 	 
+#define permute8bits_byte1(H0) ((GETBIT8_ASBIT11((H0))  | GETBIT11_ASBIT14((H0)) | GETBIT14_ASBIT9((H0))  | GETBIT9_ASBIT12((H0))  | GETBIT12_ASBIT15((H0)) | GETBIT15_ASBIT10((H0)) | GETBIT10_ASBIT13((H0)) | GETBIT13_ASBIT8((H0))))	 
+#define permute8bits_byte2(H0) ((GETBIT16_ASBIT19((H0)) | GETBIT19_ASBIT22((H0)) | GETBIT22_ASBIT17((H0)) | GETBIT17_ASBIT20((H0)) | GETBIT20_ASBIT23((H0)) | GETBIT23_ASBIT18((H0)) | GETBIT18_ASBIT21((H0)) | GETBIT21_ASBIT16((H0)))) 
+#define permute8bits_byte3(H0) ((GETBIT24_ASBIT27((H0)) | GETBIT27_ASBIT30((H0)) | GETBIT30_ASBIT25((H0)) | GETBIT25_ASBIT28((H0)) | GETBIT28_ASBIT31((H0)) | GETBIT31_ASBIT26((H0)) | GETBIT26_ASBIT29((H0)) | GETBIT29_ASBIT24((H0)))) 
+#define permute8bits_byte4(H0) ((GETBIT32_ASBIT35((H0)) | GETBIT35_ASBIT38((H0)) | GETBIT38_ASBIT33((H0)) | GETBIT33_ASBIT36((H0)) | GETBIT36_ASBIT39((H0)) | GETBIT39_ASBIT34((H0)) | GETBIT34_ASBIT37((H0)) | GETBIT37_ASBIT32((H0)))) 
+#define permute8bits_byte5(H0) ((GETBIT40_ASBIT43((H0)) | GETBIT43_ASBIT46((H0)) | GETBIT46_ASBIT41((H0)) | GETBIT41_ASBIT44((H0)) | GETBIT44_ASBIT47((H0)) | GETBIT47_ASBIT42((H0)) | GETBIT42_ASBIT45((H0)) | GETBIT45_ASBIT40((H0)))) 
+#define permute8bits_byte6(H0) ((GETBIT48_ASBIT51((H0)) | GETBIT51_ASBIT54((H0)) | GETBIT54_ASBIT49((H0)) | GETBIT49_ASBIT52((H0)) | GETBIT52_ASBIT55((H0)) | GETBIT55_ASBIT50((H0)) | GETBIT50_ASBIT53((H0)) | GETBIT53_ASBIT48((H0)))) 
+#define permute8bits_byte7(H0) ((GETBIT56_ASBIT59((H0)) | GETBIT59_ASBIT62((H0)) | GETBIT62_ASBIT57((H0)) | GETBIT57_ASBIT60((H0)) | GETBIT60_ASBIT63((H0)) | GETBIT63_ASBIT58((H0)) | GETBIT58_ASBIT61((H0)) | GETBIT61_ASBIT56((H0))))   
+
+// Call 56 times on same 7-byte key to get back to original key value
+#define permute7bytes(H0) ((permute8bits_byte3(GETBYTE0_ASBYTE3((H0))) | permute8bits_byte6(GETBYTE3_ASBYTE6((H0))) | permute8bits_byte2(GETBYTE6_ASBYTE2((H0))) | permute8bits_byte5(GETBYTE2_ASBYTE5((H0))) | permute8bits_byte1(GETBYTE5_ASBYTE1((H0))) | permute8bits_byte4(GETBYTE1_ASBYTE4((H0))) | permute8bits_byte0(GETBYTE4_ASBYTE0((H0)))))
 
 void sow(uint64_t* x, uint64_t* k, uint64_t decree)
 {
 	register uint64_t C     = *k; 	//5514838803201;
-	register uint64_t faith = 0b0000000000000000000000000000000000000000000000000000000000000000 | (decree << 48);
+	register uint64_t faith = 0b0000000000000000000000000000000000000000000000000000000000000000 | (decree << 48);	// Places decree value into 6th byte
 	
 	switch(decree % 7)
 	{
 		case 0 : ;
+			 faith = GETBYTE0_ASBYTE4(C) |
+			 	 GETBYTE4_ASBYTE1(C) |
+			 	 GETBYTE1_ASBYTE5(C) |
+			 	 GETBYTE5_ASBYTE2(C) |
+			 	 GETBYTE2_ASBYTE6(C) |
+			 	 GETBYTE6_ASBYTE3(C) ^
+			 	 GETBYTE3_ASBYTE0(C);
+			 break;
+		case 1 : ;
 			 faith = GETBYTE0(C) |
 			 	 GETBYTE1(C) |
 			 	 GETBYTE2(C) |
@@ -114,70 +170,61 @@ void sow(uint64_t* x, uint64_t* k, uint64_t decree)
 			 	 GETBYTE5(C) ^
 			 	 GETBYTE6(C);
 			 break;
-		case 1 : ;
-			 faith = GETBYTE1_AS_BYTE0(C) |
-			 	 GETBYTE2_AS_BYTE1(C) |
-			 	 GETBYTE3_AS_BYTE2(C) |
-			 	 GETBYTE4_AS_BYTE3(C) |
-			 	 GETBYTE5_AS_BYTE4(C) |
-			 	 GETBYTE6_AS_BYTE5(C) ^
-			 	 GETBYTE0_AS_BYTE6(C);
-			 break;
 		case 2 : ;
-			 faith = GETBYTE2_AS_BYTE0(C) |
-			 	 GETBYTE3_AS_BYTE1(C) |
-			 	 GETBYTE4_AS_BYTE2(C) |
-			 	 GETBYTE5_AS_BYTE3(C) |
-			 	 GETBYTE6_AS_BYTE4(C) |
-			 	 GETBYTE0_AS_BYTE5(C) ^
-			 	 GETBYTE1_AS_BYTE6(C);
+			 faith = GETBYTE0_ASBYTE5(C) |
+			 	 GETBYTE5_ASBYTE3(C) |
+			 	 GETBYTE3_ASBYTE1(C) |
+			 	 GETBYTE1_ASBYTE6(C) |
+			 	 GETBYTE6_ASBYTE4(C) |
+			 	 GETBYTE4_ASBYTE2(C) ^
+			 	 GETBYTE2_ASBYTE0(C);
 			 break;
 		case 3 : ;
-			 faith = GETBYTE3_AS_BYTE0(C) |
-			 	 GETBYTE4_AS_BYTE1(C) |
-			 	 GETBYTE5_AS_BYTE2(C) |
-			 	 GETBYTE6_AS_BYTE3(C) |
-			 	 GETBYTE0_AS_BYTE4(C) |
-			 	 GETBYTE1_AS_BYTE5(C) ^
-			 	 GETBYTE2_AS_BYTE6(C);
+			 faith = GETBYTE0_ASBYTE2(C) |
+			 	 GETBYTE2_ASBYTE4(C) |
+			 	 GETBYTE4_ASBYTE6(C) |
+			 	 GETBYTE6_ASBYTE1(C) |
+			 	 GETBYTE1_ASBYTE3(C) |
+			 	 GETBYTE3_ASBYTE5(C) ^
+			 	 GETBYTE5_ASBYTE0(C);
 			 break;
 		case 4 : ;
-			 faith = GETBYTE4_AS_BYTE0(C) |
-			 	 GETBYTE5_AS_BYTE1(C) |
-			 	 GETBYTE6_AS_BYTE2(C) |
-			 	 GETBYTE0_AS_BYTE3(C) |
-			 	 GETBYTE1_AS_BYTE4(C) |
-			 	 GETBYTE2_AS_BYTE5(C) ^
-			 	 GETBYTE3_AS_BYTE6(C);
+			 faith = GETBYTE0_ASBYTE6(C) |
+			 	 GETBYTE6_ASBYTE5(C) |
+			 	 GETBYTE5_ASBYTE4(C) |
+			 	 GETBYTE4_ASBYTE3(C) |
+			 	 GETBYTE3_ASBYTE2(C) |
+			 	 GETBYTE2_ASBYTE1(C) ^
+			 	 GETBYTE1_ASBYTE0(C);
 			 break;
 		case 5 : ;
-			 faith = GETBYTE5_AS_BYTE0(C) |
-			 	 GETBYTE6_AS_BYTE1(C) |
-			 	 GETBYTE0_AS_BYTE2(C) |
-			 	 GETBYTE1_AS_BYTE3(C) |
-			 	 GETBYTE2_AS_BYTE4(C) |
-			 	 GETBYTE3_AS_BYTE5(C) ^
-			 	 GETBYTE4_AS_BYTE6(C);
+			 faith = GETBYTE0_ASBYTE6(C) |
+			 	 GETBYTE6_ASBYTE5(C) |
+			 	 GETBYTE5_ASBYTE4(C) |
+			 	 GETBYTE4_ASBYTE3(C) |
+			 	 GETBYTE3_ASBYTE2(C) |
+			 	 GETBYTE2_ASBYTE1(C) ^
+			 	 GETBYTE1_ASBYTE0(C);
 			 break;
 		case 6 : ;
-			 faith = GETBYTE6_AS_BYTE0(C) |
-			 	 GETBYTE0_AS_BYTE1(C) |
-			 	 GETBYTE1_AS_BYTE2(C) |
-			 	 GETBYTE2_AS_BYTE3(C) |
-			 	 GETBYTE3_AS_BYTE4(C) |
-			 	 GETBYTE4_AS_BYTE5(C) ^
-			 	 GETBYTE5_AS_BYTE6(C);
+			 faith = GETBYTE0_ASBYTE3(C) |
+			 	 GETBYTE3_ASBYTE6(C) |
+			 	 GETBYTE6_ASBYTE2(C) |
+			 	 GETBYTE2_ASBYTE5(C) |
+			 	 GETBYTE5_ASBYTE1(C) |
+			 	 GETBYTE1_ASBYTE4(C) ^
+			 	 GETBYTE4_ASBYTE0(C);
 	}
 	*x ^= faith;
 }
 
 void til(uint64_t* x, uint64_t* k, uint64_t decree)
 {
-	uint64_t  S     = *k;
+	register uint64_t S = *k;
 	uint64_t  field = *x;
 	uint32_t* ptr32 = (uint32_t*)(&field);
 	uint16_t* ptr16 = (uint16_t*)(&field);
-	uint8_t* ptr8   =  (uint8_t*)(&field);
+	uint8_t*  ptr8  =  (uint8_t*)(&field);
 	switch (decree % 3)
 	{
 		case 0 :
@@ -193,6 +240,35 @@ void til(uint64_t* x, uint64_t* k, uint64_t decree)
 	*x = field;
 	// cultivated, intervening event, other
 }
+
+void flesh(uint64_t* x)
+{
+	register uint64_t hold = *x;
+	register uint64_t work = TRANSPOSE(GETBYTE0(hold)) | 
+				 TRANSPOSE(GETBYTE1(hold)) | 
+				 TRANSPOSE(GETBYTE2(hold)) | 
+				 TRANSPOSE(GETBYTE3(hold)) | 
+				 TRANSPOSE(GETBYTE4(hold)) | 
+				 TRANSPOSE(GETBYTE5(hold)) | 
+				 TRANSPOSE(GETBYTE6(hold)) | 
+				 TRANSPOSE(GETBYTE7(hold));
+	*x = work;
+}
+void stone(uint64_t* x)
+{
+	register uint64_t hold = *x;
+	register uint64_t work = TRANSLATE(GETBYTE0(hold)) | 
+				 TRANSLATE(GETBYTE1(hold)) | 
+				 TRANSLATE(GETBYTE2(hold)) | 
+				 TRANSLATE(GETBYTE3(hold)) | 
+				 TRANSLATE(GETBYTE4(hold)) | 
+				 TRANSLATE(GETBYTE5(hold)) | 
+				 TRANSLATE(GETBYTE6(hold)) | 
+				 TRANSLATE(GETBYTE7(hold));
+	*x = work;
+}
+
+
 
 
 #endif // _CRYPT_
