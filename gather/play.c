@@ -117,9 +117,40 @@ int main(int argc, char** argv)
 	char* hardcoded = "hello";
 	char* cptr = (char*)((long long int)hardcoded * (argc != 2) + (argc == 2) * (long long int)argv[1]);
 	Bytes* bptr = dynamic_bytes(cptr, countuntilnul(cptr));
-	Mission* mptr = missionplan(missionwrapper, assign1tool(atoi(argv[1])), 1, FREEMISSION);
-	timer(&mptr);	        // Frees 'mptr'
+	//Mission* mptr = missionplan(missionwrapper, assign1tool(atoi(argv[1])), 1, FREEMISSION);
+	//timer(&mptr);	        // Frees 'mptr'
 	free_bytes(&bptr);	// Frees 'bptr'
+	U64 data = 0x00ffaabbddeecc77;
+	register U64 cpy = data;
+	U8* ptr8 = (U8*)(&data);
+	PRINTLLX(data);
+	register U8 i;
+	register U64 x = 0;
+	register U64 y = 0;
+	while (1)
+	{
+		for (i = 0; i < 1; ++i)
+		{
+			//*(ptr8 + i) = TRANSPOSE(*(ptr8 + i));
+			//*(ptr8 + i) = SEAL(*(ptr8 + i));
+			*(ptr8 + i) = DARKNESS(*(ptr8 + i));
+		}
+		++x;
+		
+		if (*(ptr8 + i) == 0x77)
+			break;
+		if (x % 1000 == y)
+			PRINTLLX(data);
+	}
+	/*for (i = 0; i < 7; ++i)
+	{
+		*(ptr8 + i) = LIGHT(*(ptr8 + i));
+		*(ptr8 + i) = UNSEAL(*(ptr8 + i));
+		*(ptr8 + i) = TRANSLATE(*(ptr8 + i));
+	}*/			
+	PRINTLLX(data);
+	PRINTLLN(x);
+
      DECALIBRATE();
 }
 
@@ -127,6 +158,35 @@ int main(int argc, char** argv)
 
 
 /*  
+	FILE* fptr = FOPEN("lol", "r");
+	int i;
+	int x = 0;
+	uint8_t arr[256];
+	zeroarray(arr, 256);
+	for (i = 0; i < 256; ++i)
+	{
+		bptr = readword(fptr, 1);
+		arr[atoi(bptr->array)] = i;
+		free_bytes(&bptr);
+	}
+	for (i = 0; i < 256; ++i)
+	{
+			if (arr[i] / 100 > 0)
+				printf("%d , ", arr[i]);
+			else if (arr[i] / 10 > 0)
+				printf("%d  , ", arr[i]);
+			else
+				printf("%d   , ", arr[i]);
+		++x;
+		if (x == 16)
+		{
+			x = 0;
+			PLN(1);
+		}
+	}
+
+
+
     #define NUMBR 2
     volatile unsigned long long int hun = 1000000000;
     register unsigned long long int i = NUMBR;

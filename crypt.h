@@ -3,10 +3,10 @@
 
 #include "bits.h"
 
-#define SBOXSZ 256
+#define BOXSZ 256
 
 // SBOX FROM AES
-uint8_t sbox[SBOXSZ] = 
+uint8_t aes[BOXSZ] = 
 // 	00 	01 	02 	03 	04 	05 	06 	07 	08 	09 	0a 	0b 	0c 	0d 	0e 	0f
 /*00*/{	0x63, 	0x7c, 	0x77, 	0x7b, 	0xf2, 	0x6b, 	0x6f, 	0xc5, 	0x30, 	0x01, 	0x67, 	0x2b, 	0xfe, 	0xd7, 	0xab, 	0x76,
 /*10*/ 	0xca, 	0x82, 	0xc9, 	0x7d, 	0xfa, 	0x59, 	0x47, 	0xf0, 	0xad, 	0xd4, 	0xa2, 	0xaf, 	0x9c, 	0xa4, 	0x72, 	0xc0,
@@ -26,7 +26,7 @@ uint8_t sbox[SBOXSZ] =
 /*f0*/ 	0x8c, 	0xa1, 	0x89, 	0x0d, 	0xbf, 	0xe6, 	0x42, 	0x68, 	0x41, 	0x99, 	0x2d, 	0x0f, 	0xb0, 	0x54, 	0xbb, 	0x16 }; 
 
 // INVERSE SBOX FROM AES
-uint8_t sbox_inverse[SBOXSZ] =
+uint8_t aesinv[BOXSZ] =
 // 	00 	01 	02 	03 	04 	05 	06 	07 	08 	09 	0a 	0b 	0c 	0d 	0e 	0f
 /*00*/{ 0x52, 	0x09, 	0x6a, 	0xd5, 	0x30, 	0x36, 	0xa5, 	0x38, 	0xbf, 	0x40, 	0xa3, 	0x9e, 	0x81, 	0xf3, 	0xd7, 	0xfb,
 /*10*/ 	0x7c, 	0xe3, 	0x39, 	0x82, 	0x9b, 	0x2f, 	0xff, 	0x87, 	0x34, 	0x8e, 	0x43, 	0x44, 	0xc4, 	0xde, 	0xe9,	0xcb,
@@ -45,7 +45,7 @@ uint8_t sbox_inverse[SBOXSZ] =
 /*e0*/ 	0xa0, 	0xe0, 	0x3b, 	0x4d, 	0xae, 	0x2a, 	0xf5, 	0xb0, 	0xc8, 	0xeb, 	0xbb, 	0x3c, 	0x83, 	0x53, 	0x99,	0x61,
 /*f0*/ 	0x17, 	0x2b, 	0x04, 	0x7e, 	0xba, 	0x77, 	0xd6, 	0x26, 	0xe1, 	0x69, 	0x14, 	0x63, 	0x55, 	0x21, 	0x0c,	0x7d };
 
-uint8_t seal[256]   = { 71  , 130 , 34  , 219 , 212 , 209 , 24  , 44  , 120 , 11  , 181 , 168 , 223 , 103 , 217 , 220 ,
+uint8_t seal[BOXSZ]   = { 71  , 130 , 34  , 219 , 212 , 209 , 24  , 44  , 120 , 11  , 181 , 168 , 223 , 103 , 217 , 220 ,
                         26  , 159 , 73  , 225 , 8   , 197 , 151 , 161 , 233 , 132 , 97  , 226 , 31  , 90  , 137 , 47  ,
                         205 , 22  , 243 , 189 , 50  , 51  , 185 , 110 , 140 , 88  , 231 , 85  , 250 , 145 , 228 , 142 ,
                         182 , 188 , 221 , 74  , 27  , 30  , 86  , 204 , 229 , 94  , 119 , 242 , 37  , 203 , 170 , 213 ,
@@ -62,7 +62,7 @@ uint8_t seal[256]   = { 71  , 130 , 34  , 219 , 212 , 209 , 24  , 44  , 120 , 11
                         179 , 5   , 144 , 80  , 116 , 176 , 198 , 101 , 155 , 194 , 13  , 236 , 158 , 135 , 166 , 169 ,
                         227 , 235 , 165 , 115 , 222 , 112 , 49  , 178 , 174 , 60  , 153 , 118 , 139 , 177 , 143 , 149 };
                       
-uint8_t unseal[256] = { 165 , 198 , 96  , 144 , 180 , 225 , 174 , 176 , 20  , 199 , 214 , 9   , 99  , 234 , 208 , 112 , 
+uint8_t unseal[BOXSZ] = { 165 , 198 , 96  , 144 , 180 , 225 , 174 , 176 , 20  , 199 , 214 , 9   , 99  , 234 , 208 , 112 , 
 			215 , 195 , 127 , 81  , 194 , 221 , 33  , 160 , 6   , 64  , 16  , 52  , 196 , 173 , 53  , 28  , 
 			175 , 78  , 2   , 222 , 168 , 60  , 138 , 171 , 146 , 203 , 164 , 158 , 7   , 83  , 179 , 31  , 
 			177 , 246 , 36  , 37  , 206 , 152 , 155 , 148 , 163 , 161 , 190 , 139 , 249 , 0   , 220 , 149 , 
@@ -79,13 +79,90 @@ uint8_t unseal[256] = { 165 , 198 , 96  , 144 , 180 , 225 , 174 , 176 , 20  , 19
 			116 , 19  , 27  , 240 , 46  , 56  , 185 , 42  , 92  , 24  , 75  , 241 , 235 , 107 , 109 , 154 , 
 			113 , 87  , 59  , 34  , 218 , 204 , 79  , 187 , 110 , 122 , 44  , 157 , 205 , 101 , 210 , 136 };
                       
-                      
+uint8_t darkofnight[BOXSZ] = { 130 , 181 , 146 , 11  , 143 , 99  , 155 , 89  , 201 , 87  , 27  , 158 , 202 , 16  , 153 , 157 , 
+			     165 , 206 , 248 , 178 , 10  , 44  , 237 , 7   , 5   , 247 , 119 , 208 , 73  , 40  , 31  , 232 , 
+			     184 , 29  , 90  , 207 , 82  , 57  , 145 , 141 , 219 , 170 , 32  , 144 , 148 , 172 , 15  , 140 , 
+			     97  , 188 , 42  , 41  , 118 , 107 , 228 , 253 , 111 , 204 , 62  , 17  , 242 , 189 , 183 , 231 , 
+			     154 , 46  , 126 , 180 , 200 , 229 , 167 , 92  , 56  , 109 , 129 , 96  , 100 , 70  , 195 , 169 , 
+			     198 , 187 , 245 , 18  , 149 , 142 , 222 , 30  , 71  , 84  , 210 , 80  , 35  , 177 , 19  , 213 , 
+			     103 , 234 , 134 , 246 , 36  , 239 , 128 , 139 , 74  , 9   , 135 , 226 , 131 , 218 , 216 , 116 , 
+			     104 , 255 , 243 , 25  , 51  , 168 , 34  , 233 , 28  , 161 , 33  , 179 , 251 , 48  , 61  , 65  , 
+			     236 , 196 , 182 , 175 , 138 , 209 , 101 , 102 , 132 , 230 , 85  , 215 , 123 , 164 , 150 , 55  , 
+			     162 , 192 , 199 , 93  , 203 , 124 , 45  , 37  , 244 , 75  , 79  , 83  , 249 , 24  , 13  , 94  , 
+			     220 , 8   , 64  , 174 , 117 , 53  , 38  , 122 , 121 , 95  , 240 , 112 , 193 , 22  , 63  , 254 , 
+			     136 , 238 , 171 , 190 , 78  , 60  , 137 , 1   , 2   , 52  , 176 , 14  , 194 , 185 , 147 , 156 , 
+			     20  , 86  , 235 , 76  , 12  , 98  , 217 , 127 , 163 , 39  , 205 , 115 , 23  , 191 , 197 , 211 , 
+			     110 , 69  , 66  , 173 , 160 , 241 , 108 , 47  , 250 , 133 , 91  , 43  , 212 , 21  , 106 , 151 , 
+			     54  , 88  , 114 , 214 , 227 , 152 , 67  , 0   , 72  , 225 , 105 , 26  , 50  , 221 , 113 , 3   , 
+			     4   , 6   , 59  , 68  , 77  , 223 , 58  , 186 , 81  , 125 , 252 , 166 , 159 , 49  , 224 , 120 };
 
-#define TRANSPOSE(reg) ((*(sbox + (reg))))
-#define TRANSLATE(reg) ((*(sbox_inverse + (reg))))
+uint8_t lightofday[BOXSZ]  = { 231 , 183 , 184 , 239 , 240 , 24  , 241 , 23  , 161 , 105 , 20  , 3   , 196 , 158 , 187 , 46  , 
+			     13  , 59  , 83  , 94  , 192 , 221 , 173 , 204 , 157 , 115 , 235 , 10  , 120 , 33  , 87  , 30  , 
+			     42  , 122 , 118 , 92  , 100 , 151 , 166 , 201 , 29  , 51  , 50  , 219 , 21  , 150 , 65  , 215 , 
+			     125 , 253 , 236 , 116 , 185 , 165 , 224 , 143 , 72  , 37  , 246 , 242 , 181 , 126 , 58  , 174 , 
+			     162 , 127 , 210 , 230 , 243 , 209 , 77  , 88  , 232 , 28  , 104 , 153 , 195 , 244 , 180 , 154 , 
+			     91  , 248 , 36  , 155 , 89  , 138 , 193 , 9   , 225 , 7   , 34  , 218 , 71  , 147 , 159 , 169 , 
+			     75  , 48  , 197 , 5   , 76  , 134 , 135 , 96  , 112 , 234 , 222 , 53  , 214 , 73  , 208 , 56  , 
+			     171 , 238 , 226 , 203 , 111 , 164 , 52  , 26  , 255 , 168 , 167 , 140 , 149 , 249 , 66  , 199 , 
+			     102 , 74  , 0   , 108 , 136 , 217 , 98  , 106 , 176 , 182 , 132 , 103 , 47  , 39  , 85  , 4   , 
+			     43  , 38  , 2   , 190 , 44  , 84  , 142 , 223 , 229 , 14  , 64  , 6   , 191 , 15  , 11  , 252 , 
+			     212 , 121 , 144 , 200 , 141 , 16  , 251 , 70  , 117 , 79  , 41  , 178 , 45  , 211 , 163 , 131 , 
+			     186 , 93  , 19  , 123 , 67  , 1   , 130 , 62  , 32  , 189 , 247 , 81  , 49  , 61  , 179 , 205 , 
+			     145 , 172 , 188 , 78  , 129 , 206 , 80  , 146 , 68  , 8   , 12  , 148 , 57  , 202 , 17  , 35  , 
+			     27  , 133 , 90  , 207 , 220 , 95  , 227 , 139 , 110 , 198 , 109 , 40  , 160 , 237 , 86  , 245 , 
+			     254 , 233 , 107 , 228 , 54  , 69  , 137 , 63  , 31  , 119 , 97  , 194 , 128 , 22  , 177 , 101 , 
+			     170 , 213 , 60  , 114 , 152 , 82  , 99  , 25  , 18  , 156 , 216 , 124 , 250 , 55  , 175 , 113 };
 
-#define SEAL(reg)   ((*(seal + (reg))))
-#define UNSEAL(reg) ((*(unseal + (reg))))
+#define TRANSPOSE(reg) 	((*(aes + (reg))))
+#define TRANSLATE(reg) 	((*(aesinv + (reg))))
+
+#define SEAL(reg)   	((*(seal + (reg))))
+#define UNSEAL(reg) 	((*(unseal + (reg))))
+
+#define DARKNESS(reg)   ((*(darkofnight + (reg))))
+#define LIGHT(reg) 	((*(lightofday + (reg))))
+
+#define DYNAMICBOX(box, reg)    ((*((box) + (reg))))
+
+#define FIRSTHALF_MASK  0b00001111
+#define SECONDHALF_MASK 0b11110000
+
+#define FIRSTQTR_MASK  0b00000011
+#define SECONDQTR_MASK 0b00001100
+#define THIRDQTR_MASK  0b00110000
+#define FOURTHQTR_MASK 0b11000000
+
+#define FIRSTHALF(reg)  		(FIRSTHALF_MASK  & (reg))
+#define SECONDHALF(reg) 		(SECONDHALF_MASK & (reg))
+
+// 12 and 21 indicate bits format from binary direction perspective (not array direction)
+#define COMBINEHALVES12(reg1, reg2)	((SECONDHALF(reg1)) | (FIRSTHALF(reg2)))
+#define COMBINEHALVES21(reg1, reg2)	((SECONDHALF(reg2)) | (FIRSTHALF(reg1)))
+static inline void POSITION_HALFBYTES_FROM12(uint8_t* byte1, uint8_t* byte2, uint8_t halves)
+{
+	*byte1 = COMBINEHALVES12(halves, *byte1);
+	*byte2 = COMBINEHALVES12(*byte2, halves);
+}
+static inline void POSITION_HALFBYTES_FROM21(uint8_t* byte1, uint8_t* byte2, uint8_t halves)
+{
+	*byte2 = COMBINEHALVES21(*byte2, halves);
+	*byte1 = COMBINEHALVES21(halves, *byte1);
+}
+
+// Weave top part of first byte and bottom part of second byte together
+static inline void switchlock12(uint8_t* blackbox, uint8_t* byte1, uint8_t* byte2)
+{
+	register uint8_t halves = COMBINEHALVES12(*byte1, *byte2);
+			 halves = DYNAMICBOX(box, halves);
+	POSITION_HALFBYTES_FROM12(byte1, byte2, halves);
+}
+// Weave bottom part of first byte and top part of second byte together
+static inline void switchlock21(uint8_t* blackbox, uint8_t* byte1, uint8_t* byte2)
+{
+	register uint8_t halves = COMBINEHALVES21(*byte1, *byte2);
+			 halves = DYNAMICBOX(box, halves);
+	POSITION_HALFBYTES_FROM21(byte1, byte2, halves);
+}
 
 /*
 // MATRIX FROM AES
