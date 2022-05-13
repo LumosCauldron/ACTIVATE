@@ -643,6 +643,72 @@ uint32_t REVERSE32(uint32_t* x)	// My hands hurt
 	     | (b16 >>  1) | (b17 >>  3) | (b18 >>  5) | (b19 >>  7) | (b20 >>  9) | (b21 >> 11) | (b22 >> 13) | (b23 >> 15) | (b24 >> 17) | (b25 >> 19) | (b26 >> 21) | (b27 >> 23) | (b28 >> 25) | (b29 >> 27) | (b30 >> 29) | (b31 >> 31);
 }
 
+uint64_t REVERSE56(uint64_t* x)	// Hello arthritis
+{
+	register uint64_t H0  = *x;
+	register uint64_t b0  = GETBIT0(H0);
+	register uint64_t b1  = GETBIT1(H0);
+	register uint64_t b2  = GETBIT2(H0);
+	register uint64_t b3  = GETBIT3(H0);
+	register uint64_t b4  = GETBIT4(H0);
+	register uint64_t b5  = GETBIT5(H0);
+	register uint64_t b6  = GETBIT6(H0);
+	register uint64_t b7  = GETBIT7(H0);
+	register uint64_t b8  = GETBIT8(H0);
+	register uint64_t b9  = GETBIT9(H0);
+	register uint64_t b10 = GETBIT10(H0);
+	register uint64_t b11 = GETBIT11(H0);
+	register uint64_t b12 = GETBIT12(H0);
+	register uint64_t b13 = GETBIT13(H0);
+	register uint64_t b14 = GETBIT14(H0);
+	register uint64_t b15 = GETBIT15(H0);
+	register uint64_t b16 = GETBIT16(H0);
+	register uint64_t b17 = GETBIT17(H0);
+	register uint64_t b18 = GETBIT18(H0);
+	register uint64_t b19 = GETBIT19(H0);
+	register uint64_t b20 = GETBIT20(H0);
+	register uint64_t b21 = GETBIT21(H0);
+	register uint64_t b22 = GETBIT22(H0);
+	register uint64_t b23 = GETBIT23(H0);
+	register uint64_t b24 = GETBIT24(H0);
+	register uint64_t b25 = GETBIT25(H0);
+	register uint64_t b26 = GETBIT26(H0);
+	register uint64_t b27 = GETBIT27(H0);
+	register uint64_t b28 = GETBIT28(H0);
+	register uint64_t b29 = GETBIT29(H0);
+	register uint64_t b30 = GETBIT30(H0);
+	register uint64_t b31 = GETBIT31(H0);
+	register uint64_t b32 = GETBIT32(H0);
+	register uint64_t b33 = GETBIT33(H0);
+	register uint64_t b34 = GETBIT34(H0);
+	register uint64_t b35 = GETBIT35(H0);
+	register uint64_t b36 = GETBIT36(H0);
+	register uint64_t b37 = GETBIT37(H0);
+	register uint64_t b38 = GETBIT38(H0);
+	register uint64_t b39 = GETBIT39(H0);
+	register uint64_t b40 = GETBIT40(H0);
+	register uint64_t b41 = GETBIT41(H0);
+	register uint64_t b42 = GETBIT42(H0);
+	register uint64_t b43 = GETBIT43(H0);
+	register uint64_t b44 = GETBIT44(H0);
+	register uint64_t b45 = GETBIT45(H0);
+	register uint64_t b46 = GETBIT46(H0);
+	register uint64_t b47 = GETBIT47(H0);
+	register uint64_t b48 = GETBIT48(H0);
+	register uint64_t b49 = GETBIT49(H0);
+	register uint64_t b50 = GETBIT50(H0);
+	register uint64_t b51 = GETBIT51(H0);
+	register uint64_t b52 = GETBIT52(H0);
+	register uint64_t b53 = GETBIT53(H0);
+	register uint64_t b54 = GETBIT54(H0);
+	register uint64_t b55 = GETBIT55(H0);
+	
+	return (b0  << 55) | (b1  << 53) | (b2  << 51) | (b3  << 49) | (b4  << 47) | (b5  << 45) | (b6  << 43) | (b7  << 41) | (b8  << 39) | (b9  << 37) | (b10 << 35) | (b11 << 33) | (b12 << 31) | (b13 << 29) | (b14 << 27) | (b15 << 25)
+	     | (b16 << 23) | (b17 << 21) | (b18 << 19) | (b19 << 17) | (b20 << 15) | (b21 << 13) | (b22 << 11) | (b23 <<  9) | (b24 <<  7) | (b25 <<  5) | (b26 <<  3) | (b27 <<  1) | 
+	     | (b28 >>  1) | (b29 >>  3) | (b30 >>  5) | (b31 >>  7) | (b31 >>  9) | (b31 >> 11) | (b31 >> 13) | (b31 >> 15) | (b31 >> 17) | (b31 >> 19) | (b31 >> 21) | (b31 >> 23) | (b31 >> 25) | (b31 >> 27) | (b31 >> 29) | (b31 >> 31)
+	     | (b31 >> 33) | (b31 >> 35) | (b31 >> 37) | (b31 >> 39) | (b31 >> 41) | (b31 >> 43) | (b31 >> 45) | (b31 >> 47) | (b31 >> 49) | (b31 >> 51) | (b31 >> 53) | (b31 >> 55);
+}
+
 uint64_t REVERSE64(uint64_t* x)	// Hello arthritis
 {
 	register uint64_t H0  = *x;
