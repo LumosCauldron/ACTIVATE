@@ -178,15 +178,15 @@ static inline void POSITION_HALFBYTES_FROM21(uint8_t* byte1, uint8_t* byte2, uin
 // Weave top part of first byte and bottom part of second byte together
 static inline void switchlock12(uint8_t* blackbox, uint8_t* byte1, uint8_t* byte2)
 {
-	register uint8_t halves = COMBINEHALVES12(*byte1, *byte2);
-			 halves = DYNAMICBOX(box, halves);
+	register uint8_t halves = permute8bits_byte0(COMBINEHALVES12(*byte1, *byte2));
+			 halves = DYNAMICBOX(blackbox, halves);
 	POSITION_HALFBYTES_FROM12(byte1, byte2, halves);
 }
 // Weave bottom part of first byte and top part of second byte together
 static inline void switchlock21(uint8_t* blackbox, uint8_t* byte1, uint8_t* byte2)
 {
-	register uint8_t halves = permute8bits(COMBINEHALVES21(*byte1, *byte2));
-			 halves = DYNAMICBOX(box, halves);
+	register uint8_t halves = unify8bits_byte0(COMBINEHALVES21(*byte1, *byte2));
+			 halves = DYNAMICBOX(blackbox, halves);
 	POSITION_HALFBYTES_FROM21(byte1, byte2, halves);
 }
 

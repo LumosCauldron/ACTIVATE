@@ -120,7 +120,7 @@ int main(int argc, char** argv)
 	//Mission* mptr = missionplan(missionwrapper, assign1tool(atoi(argv[1])), 1, FREEMISSION);
 	//timer(&mptr);	        // Frees 'mptr'
 	free_bytes(&bptr);	// Frees 'bptr'
-	U64 data = 0x00ffaabbddeecc77;
+	U64 data = 0x00ffaabbddeecc17;
 	register U64 cpy = data;
 	U8* ptr8 = (U8*)(&data);
 	PRINTLLX(data);
@@ -137,7 +137,7 @@ int main(int argc, char** argv)
 		}
 		++x;
 		
-		if (*(ptr8 + i) == 0x77)
+		if (*(ptr8 + 0) == 0x17)
 			break;
 		if (x % 1000 == y)
 			PRINTLLX(data);
