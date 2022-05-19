@@ -29,20 +29,20 @@
 
 struct element
 {
-	long long int 	lnum;
-	int           	mnum;
-	short         	snum;
-	char          	type;
-	char          	hold;
+	i64 		lnum;
+	i32           	mnum;
+	i16         	snum;
+	i8          	type;
+	i8          	hold;
 	Bytes* 	      	line;
 	void*	      	branch;
 	struct element* nxt;
 	struct element* prev;
 };
 typedef struct element Elem;
-int elemcnt(Elem* hd)
+u32 elemcnt(Elem* hd)
 {
-	short i = 0;					// Make counter
+	u16 i = 0;					// Make counter
 	while(hd) {  ++i; hd = (Elem*)(hd->nxt);  }	// Count elem's
 	return i;					// Return count
 }
@@ -63,7 +63,7 @@ Elem* push_elem(Elem** hd, Elem* node)
 
 	return node;		// Return pointer to new Node
 }
-Elem* make_elem(Elem** hd, long long int l, int m, short s, char t, char h, Bytes* b, void* o, char add_option)
+Elem* make_elem(Elem** hd, i64 l, i32 m, i16 s, i8 t, i8 h, Bytes* b, void* o, u8 add_option)
 {
 	Elem* nw = MALLOC(sizeof(Elem));	// Make space for new elem
 	nw->lnum      = l;			// Fill lnum
@@ -139,23 +139,23 @@ void make_into_list(Elem** hd)				// Reverses stack data structure
 	*hd = list;
 }
 
-void change_elem(Elem* node, void* q, short v)
+void change_elem(Elem* node, void* q, u8 v)
 {
 	switch(v)
 	{
-		case LNUM   : 	node->lnum        = *((long long int*)(q));   // Set lnum
+		case LNUM   : 	node->lnum        = *((i64*)(q));   // Set lnum
 				break;
-		case MNUM   : 	node->mnum        = *((int*)(q));   	     // Set mnum
+		case MNUM   : 	node->mnum        = *((i32*)(q));   	     // Set mnum
 				break;	
-		case SNUM   : 	node->snum        = *((short*)(q)); 	     // Set snum
+		case SNUM   : 	node->snum        = *((i16*)(q)); 	     // Set snum
 				break;
-		case TYPE   : 	node->type        = *((char*)(q));  	     // Set type
+		case TYPE   : 	node->type        = *((i8*)(q));  	     // Set type
 				break;
-		case HOLD   : 	node->hold        = *((char*)(q));  	     // Set hold
+		case HOLD   : 	node->hold        = *((i8*)(q));  	     // Set hold
 				break;
 		case LINE   : 	node->line        = (Bytes*)(q); 	     // Set line
 				break;
-		case LINEA  : 	node->line->array = (char*)(q); 	     // Set line
+		case LINEA  : 	node->line->array = (u8*)(q); 	     // Set line
 				break;
 		case BRANCH : 	node->branch      = q;   	   	     // Set branch
 				break;
@@ -168,7 +168,7 @@ void change_elem(Elem* node, void* q, short v)
 
 // PREVDIRECTION 1
 // NXTDIRECTION  0
-void foreach_elem(Elem** start, int (*ptr)(Elem**), char dir) // Takes function pointer and executes it on every Node of Node list pointed to by given Node header
+void foreach_elem(Elem** start, i32 (*funcptr)(Elem**), u8 dir) // Takes function pointer and executes it on every Node of Node list pointed to by given Node header
 {
 	if (!goodptr( start,  "NULLPTR ADDRESS OF 'start' GIVEN TO FOREACH_ELEM", FUNC_RETURN))
 		return;
@@ -176,11 +176,11 @@ void foreach_elem(Elem** start, int (*ptr)(Elem**), char dir) // Takes function 
 		return;
 	Elem* indexor = *start;
 	Elem* passoff = *start;
-	int check = 0;
+	i32 check = 0;
 	while(indexor)
 	{
-		passoff = (Elem*)((((unsigned long long int)passoff->nxt) * (dir == NXTDIRECTION)) + (((unsigned long long int)passoff->prev) * (dir == PREVDIRECTION)));
-		check = ptr(&indexor);
+		passoff = (Elem*)((((i64)passoff->nxt) * (dir == NXTDIRECTION)) + (((i64)passoff->prev) * (dir == PREVDIRECTION)));
+		check = funcptr(&indexor);
 		if (check == FUNC_RETURN)
 			return;
 		indexor = passoff;	// Go to next/previous node saved by 'passoff'
@@ -189,7 +189,7 @@ void foreach_elem(Elem** start, int (*ptr)(Elem**), char dir) // Takes function 
 
 // PREVSEARCH 1 
 // NXTSEARCH  0 
-Elem* find_elem(Elem* hd, void* q, short v, char dir)	// Give list head, object to search for pointed by any pointer, and Elem type to search for (e.g. LNUM, MNUM, BRANCH ...etc)
+Elem* find_elem(Elem* hd, void* q, u8 v, u8 dir)	// Give list head, object to search for pointed by any pointer, and Elem type to search for (e.g. LNUM, MNUM, BRANCH ...etc)
 {
 	if (!goodptr(hd, NOMSG, FUNC_RETURN)) 				return NULLPTR;
 	if (!goodptr(q, "NULLPTR Q GIVEN TO FIND_ELEM", FUNC_RETURN)) 	return NULLPTR;
@@ -197,36 +197,36 @@ Elem* find_elem(Elem* hd, void* q, short v, char dir)	// Give list head, object 
 	{			// hd = (Elem*)(hd->nxt * (dir == NXTSEARCH) + hd->prev * (dir == PREVSEARCH)); ==> search along prevs or nxts depending on 'dir'
 		case LNUM    :  while(hd)
 				{ 
-					if (hd->lnum == ((long long int)q))	 return hd;
-					hd = (Elem*)((long long int)hd->nxt * (dir == NXTSEARCH) + (long long int)hd->prev * (dir == PREVSEARCH));
+					if (hd->lnum == ((i64)q))	 return hd;
+					hd = (Elem*)((i64)hd->nxt * (dir == NXTSEARCH) + (i64)hd->prev * (dir == PREVSEARCH));
 				}
 				  break;
 
 		case MNUM    :  while(hd)
 				{ 
-					if (hd->mnum == ((int)q))		 return hd;
-					hd = (Elem*)((long long int)hd->nxt * (dir == NXTSEARCH) + (long long int)hd->prev * (dir == PREVSEARCH));
+					if (hd->mnum == ((i32)q))		 return hd;
+					hd = (Elem*)((i64)hd->nxt * (dir == NXTSEARCH) + (i64)hd->prev * (dir == PREVSEARCH));
 				}
 				  break;
 
 		case SNUM    :  while(hd)
 				{ 
-					if (hd->snum == ((short)q))		 return hd;
-					hd = (Elem*)((long long int)hd->nxt * (dir == NXTSEARCH) + (long long int)hd->prev * (dir == PREVSEARCH));
+					if (hd->snum == ((i16)q))		 return hd;
+					hd = (Elem*)((i64)hd->nxt * (dir == NXTSEARCH) + (i64)hd->prev * (dir == PREVSEARCH));
 				}
 				  break;
 
 		case TYPE    :  while(hd)
 				{ 
-					if (hd->type == ((char)q))		 return hd;
-					hd = (Elem*)((long long int)hd->nxt * (dir == NXTSEARCH) + (long long int)hd->prev * (dir == PREVSEARCH));
+					if (hd->type == ((i8)q))		 return hd;
+					hd = (Elem*)((i64)hd->nxt * (dir == NXTSEARCH) + (i64)hd->prev * (dir == PREVSEARCH));
 				}
 				  break;
 
 		case HOLD    :  while(hd)
 				{ 
-					if (hd->hold == ((char)q))		 return hd;
-					hd = (Elem*)((long long int)hd->nxt * (dir == NXTSEARCH) + (long long int)hd->prev * (dir == PREVSEARCH));
+					if (hd->hold == ((i8)q))		 return hd;
+					hd = (Elem*)((i64)hd->nxt * (dir == NXTSEARCH) + (i64)hd->prev * (dir == PREVSEARCH));
 				}
 				  break;
 
@@ -234,34 +234,34 @@ Elem* find_elem(Elem* hd, void* q, short v, char dir)	// Give list head, object 
 				{ 
 					if (!hd->line) 				 goto thisonesnull;
 					if (eqbytes(hd->line, (Bytes*)(q)))	 return hd;
-					hd = (Elem*)((long long int)hd->nxt * (dir == NXTSEARCH) + (long long int)hd->prev * (dir == PREVSEARCH));
+					hd = (Elem*)((i64)hd->nxt * (dir == NXTSEARCH) + (i64)hd->prev * (dir == PREVSEARCH));
 				}
 				  break;
 		case LINEA   : 	while(hd)
 				{ 
 					if (!hd->line) 				 goto thisonesnull;
 					if (!hd->line->array) 			 goto thisonesnull;
-					if (eqstr(hd->line->array, (char*)(q)))	 return hd;
+					if (eqstr(hd->line->array, (u8*)(q)))	 return hd;
 				    thisonesnull:
-					hd = (Elem*)((long long int)hd->nxt * (dir == NXTSEARCH) + (long long int)hd->prev * (dir == PREVSEARCH));
+					hd = (Elem*)((i64)hd->nxt * (dir == NXTSEARCH) + (i64)hd->prev * (dir == PREVSEARCH));
 				}
 				  break;
 		case BRANCH  : 	while(hd)
 				{ 
 					if (hd->branch == q)			 return hd;
-					hd = (Elem*)((long long int)hd->nxt * (dir == NXTSEARCH) + (long long int)hd->prev * (dir == PREVSEARCH));
+					hd = (Elem*)((i64)hd->nxt * (dir == NXTSEARCH) + (i64)hd->prev * (dir == PREVSEARCH));
 				}
 				  break;
 		case NXT    : 	while(hd)
 				{ 
 					if (hd->nxt == q)			 return hd;
-					hd = (Elem*)((long long int)hd->nxt * (dir == NXTSEARCH) + (long long int)hd->prev * (dir == PREVSEARCH));
+					hd = (Elem*)((i64)hd->nxt * (dir == NXTSEARCH) + (i64)hd->prev * (dir == PREVSEARCH));
 				}
 				  break;
 		case PREV    : 	while(hd)
 				{ 
 					if (hd->prev == q)			 return hd;
-					hd = (Elem*)((long long int)hd->nxt * (dir == NXTSEARCH) + (long long int)hd->prev * (dir == PREVSEARCH));
+					hd = (Elem*)((i64)hd->nxt * (dir == NXTSEARCH) + (i64)hd->prev * (dir == PREVSEARCH));
 				}
 				  break;
 	}
@@ -269,7 +269,7 @@ Elem* find_elem(Elem* hd, void* q, short v, char dir)	// Give list head, object 
 }
 void print_elems(Elem* hd) // Debugging feature (can handle NULLPTR values)
 {
-	short i = 1;
+	u16 i = 1;
 	while(hd)
 	{ 
 		printf("################### Element %d ################## \n", i); 
@@ -284,7 +284,7 @@ void print_elems(Elem* hd) // Debugging feature (can handle NULLPTR values)
 		PRINT(hd->line->array);	// Could be long so commented out until needed for debugging
 		printf("path : ");
 		PRINT(hd->line->array + hd->line->len + 1);
-		printf("branch : "); PRINTX((long long int)hd->branch);
+		printf("branch : "); PRINTLLX((i64)hd->branch);
 		hd = (Elem*)(hd->nxt);
 		++i;
 	}

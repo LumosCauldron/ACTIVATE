@@ -24,7 +24,7 @@ Bytes* userstring(char* prompt)	// Gets user input until '\n' and returns a stri
 	}
 	char*  input = MALLOC(R_UNIT);		// Will hold input until (not including) '\n'
 	register char c = getchar();		// First character input
-	register long long int i;		// Will hold number of characters input by user
+	register u64 i;		// Will hold number of characters input by user
 	for (i = 1; c != '\n'; ++i)		// Until input is ended, collect characters into a string.
 	{
 		if (!MOD(i, R_UNIT))
@@ -55,11 +55,11 @@ void blink(char* msg)	// Assumes Nul-terminated string
 {
 	while (1)
 	{
-		int j = 0;
+		u64 j = 0;
 		while (++j != 100000000);
 		puts(msg);
 		fflush(stdout);
-		int i = 0;
+		u64 i = 0;
 		while (++i != 150000000);
 		system("clear");
 	}

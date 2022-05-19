@@ -6,17 +6,17 @@
 
 #include "read.h"
 
-void FWRITE(char* ptr, long long int amt, FILE* stream)
+void FWRITE(u8* ptr, u64 amt, FILE* stream)
 {
 	fwrite(ptr, 1, amt, stream);
 }
 
-void writefromnetwork(char* str, long long int len, long long int numbytes_handled, FILE* stream, char close)	// Writes bytes to a stream
+void writefromnetwork(u8* str, u64 len, u64 numbytes_handled, FILE* stream, u8 close)	// Writes bytes to a stream
 {
 	if (!stream)
 		THROW("NULL STREAM GIVEN TO WRITE_BYTES");
-	register int numbytes_fromprevsignal = numbytes_handled % (NETMEMLIMIT + FILEMEMLIMIT);
-	register int numbytes_tonextsignal   = (NETMEMLIMIT + FILEMEMLIMIT) - numbytes_fromprevsignal;
+	register u32 numbytes_fromprevsignal = numbytes_handled % (NETMEMLIMIT + FILEMEMLIMIT);
+	register i32 numbytes_tonextsignal   = (NETMEMLIMIT + FILEMEMLIMIT) - numbytes_fromprevsignal;
 	if (!numbytes_fromprevsignal)	// If last read was NETMEMLIMIT + FILEMEMLIMIT bytes long the return first byte
 		FWRITE(str + 1, len - 1, stream);
 	else				// If last read was less, check for signal in case signal character exists in the middle
@@ -34,7 +34,7 @@ void writefromnetwork(char* str, long long int len, long long int numbytes_handl
 		FCLOSE(stream);
 }
 
-void writefast(char* str, long long int len, FILE* stream, char close)	// Writes bytes to a stream
+void writefast(u8* str, u64 len, FILE* stream, u8 close)	// Writes bytes to a stream
 {
 	if (!stream)
 		THROW("NULL STREAM GIVEN TO WRITE_BYTES");
@@ -43,19 +43,19 @@ void writefast(char* str, long long int len, FILE* stream, char close)	// Writes
 		FCLOSE(stream);
 }
 
-void write_bytes(Bytes* str, FILE* stream, char close)	// Writes bytes to a stream
+void write_bytes(Bytes* str, FILE* stream, u8 close)	// Writes bytes to a stream
 {
 	if (!stream)
 		THROW("NULL STREAM GIVEN TO WRITE_BYTES");
-	register unsigned long long int len = str->len;
-	unsigned char* ptr = str->array;
-	register unsigned long long int i;
+	register u64 len = str->len;
+	u8* ptr = str->array;
+	register u64 i;
 	for (i = 0; i < len; ++i)
 		fputc(*(ptr + i), stream);
 	if (close)
 		FCLOSE(stream);
 }
-char overwritechar(FILE* stream, char c, unsigned long long int offset, int mode)		// Seeks file position and overwrites character
+char overwritechar(FILE* stream, u8 c, u64 offset, int mode)		// Seeks file position and overwrites character
 {
 	char check = fseek(stream, offset, mode);
 	if (check)
@@ -63,7 +63,7 @@ char overwritechar(FILE* stream, char c, unsigned long long int offset, int mode
 	fputc(c, stream);
 	return 1;
 }
-char overwritestr(FILE* stream, char* str, unsigned long long int offset, int mode)	// Seeks file position and overwrites string
+char overwritestr(FILE* stream, char* str, u64 offset, int mode)	// Seeks file position and overwrites string
 {
 	if (!str)
 		return 0;
@@ -76,7 +76,7 @@ char overwritestr(FILE* stream, char* str, unsigned long long int offset, int mo
 
 // CREATE 1 
 // APPEND 0
-void writefile(char* file, char create, Bytes* str)	// Opens/Creates file, writes string to it, the closes file
+void writefile(char* file, u8 create, Bytes* str)	// Opens/Creates file, writes string to it, the closes file
 {
 	FILE* stream = NULLPTR;				// Make stream
 	if (create) stream = FOPEN(file, "w+");		// Create file

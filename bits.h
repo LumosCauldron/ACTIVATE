@@ -2,10 +2,20 @@
 #define BITS_H
 #include <stdint.h>
 
-typedef uint8_t  U8;
-typedef uint16_t U16;
-typedef uint32_t U32;
-typedef uint64_t U64;
+#ifndef _TYPE_H_
+#define _TYPE_H_
+typedef u8   u8;
+typedef u16 u16;
+typedef u32 u32;
+typedef u64 u64;
+
+typedef int8_t    i8;
+typedef int16_t  i16;
+typedef int32_t  i32;
+typedef int64_t  i64;
+
+typedef char normchar; //enemychar
+#endif
 
 //************************************SETBIT************************************//
 
@@ -379,14 +389,14 @@ typedef uint64_t U64;
 
 //************************************SETBYTE************************************//
 
-#define SETBYTE0(val, reg) ((reg) | ( (uint64_t)(val)))
-#define SETBYTE1(val, reg) ((reg) | (((uint64_t)(val)) <<  8))
-#define SETBYTE2(val, reg) ((reg) | (((uint64_t)(val)) << 16))
-#define SETBYTE3(val, reg) ((reg) | (((uint64_t)(val)) << 24))
-#define SETBYTE4(val, reg) ((reg) | (((uint64_t)(val)) << 32))
-#define SETBYTE5(val, reg) ((reg) | (((uint64_t)(val)) << 40))
-#define SETBYTE6(val, reg) ((reg) | (((uint64_t)(val)) << 48))
-#define SETBYTE7(val, reg) ((reg) | (((uint64_t)(val)) << 56))
+#define SETBYTE0(val, reg) ((reg) | ( (u64)(val)))
+#define SETBYTE1(val, reg) ((reg) | (((u64)(val)) <<  8))
+#define SETBYTE2(val, reg) ((reg) | (((u64)(val)) << 16))
+#define SETBYTE3(val, reg) ((reg) | (((u64)(val)) << 24))
+#define SETBYTE4(val, reg) ((reg) | (((u64)(val)) << 32))
+#define SETBYTE5(val, reg) ((reg) | (((u64)(val)) << 40))
+#define SETBYTE6(val, reg) ((reg) | (((u64)(val)) << 48))
+#define SETBYTE7(val, reg) ((reg) | (((u64)(val)) << 56))
 
 //************************************CLEARBYTE************************************//
 
@@ -401,14 +411,14 @@ typedef uint64_t U64;
 
 //************************************CLEARSETBYTE************************************//
 
-#define CLEARSETBYTE0(val, reg) ((CLEARBYTE0((reg))) | (((uint64_t)(val))      )) 
-#define CLEARSETBYTE1(val, reg) ((CLEARBYTE1((reg))) | (((uint64_t)(val)) <<  8))
-#define CLEARSETBYTE2(val, reg) ((CLEARBYTE2((reg))) | (((uint64_t)(val)) << 16))
-#define CLEARSETBYTE3(val, reg) ((CLEARBYTE3((reg))) | (((uint64_t)(val)) << 24))
-#define CLEARSETBYTE4(val, reg) ((CLEARBYTE4((reg))) | (((uint64_t)(val)) << 32))
-#define CLEARSETBYTE5(val, reg) ((CLEARBYTE5((reg))) | (((uint64_t)(val)) << 40))
-#define CLEARSETBYTE6(val, reg) ((CLEARBYTE6((reg))) | (((uint64_t)(val)) << 48))
-#define CLEARSETBYTE7(val, reg) ((CLEARBYTE7((reg))) | (((uint64_t)(val)) << 56))
+#define CLEARSETBYTE0(val, reg) ((CLEARBYTE0((reg))) | (((u64)(val))      )) 
+#define CLEARSETBYTE1(val, reg) ((CLEARBYTE1((reg))) | (((u64)(val)) <<  8))
+#define CLEARSETBYTE2(val, reg) ((CLEARBYTE2((reg))) | (((u64)(val)) << 16))
+#define CLEARSETBYTE3(val, reg) ((CLEARBYTE3((reg))) | (((u64)(val)) << 24))
+#define CLEARSETBYTE4(val, reg) ((CLEARBYTE4((reg))) | (((u64)(val)) << 32))
+#define CLEARSETBYTE5(val, reg) ((CLEARBYTE5((reg))) | (((u64)(val)) << 40))
+#define CLEARSETBYTE6(val, reg) ((CLEARBYTE6((reg))) | (((u64)(val)) << 48))
+#define CLEARSETBYTE7(val, reg) ((CLEARBYTE7((reg))) | (((u64)(val)) << 56))
 
 //************************************GETBYTE************************************//
 			       
@@ -515,193 +525,193 @@ typedef uint64_t U64;
 //#define RADICALROTATERIGHT(reg, offset, fieldsz) ((reg) = (reg) >> (offset) | (reg) << ((fieldsz) - (offset)))
 //#define RADICALROTATELEFT(reg, offset, fieldsz)  ((reg) = (reg) << (offset) | (reg) >> ((fieldsz) - (offset)))
 
-static inline uint8_t ROTATERIGHT8(uint8_t* x, uint8_t offset)
+static inline u8 ROTATERIGHT8(u8* x, u8 offset)
 {
-	register uint8_t H0 = *x;
+	register u8 H0 = *x;
 	return ROTATERIGHT_8BIT(H0, offset);
 }
 
-static inline uint8_t ROTATELEFT8(uint8_t* x, uint8_t offset)
+static inline u8 ROTATELEFT8(u8* x, u8 offset)
 {
-	register uint8_t H0 = *x;
+	register u8 H0 = *x;
 	return ROTATELEFT_8BIT(H0, offset);
 }
 
-static inline uint16_t ROTATERIGHT16(uint16_t* x, uint8_t offset)
+static inline u16 ROTATERIGHT16(u16* x, u8 offset)
 {
-	register uint16_t H0 = *x;
+	register u16 H0 = *x;
 	return ROTATERIGHT_16BIT(H0, offset);
 }
 
-static inline uint16_t ROTATELEFT16(uint16_t* x, uint8_t offset)
+static inline u16 ROTATELEFT16(u16* x, u8 offset)
 {
-	register uint16_t H0 = *x;
+	register u16 H0 = *x;
 	return ROTATELEFT_16BIT(H0, offset);
 }
 
-static inline uint32_t ROTATERIGHT32(uint32_t* x, uint8_t offset)
+static inline u32 ROTATERIGHT32(u32* x, u8 offset)
 {
-	register uint32_t H0 = *x;
+	register u32 H0 = *x;
 	return ROTATERIGHT_32BIT(H0, offset);
 }
 
-static inline uint32_t ROTATELEFT32(uint32_t* x, uint8_t offset)
+static inline u32 ROTATELEFT32(u32* x, u8 offset)
 {
-	register uint32_t H0 = *x;
+	register u32 H0 = *x;
 	return ROTATELEFT_32BIT(H0, offset);
 }
 
-static inline uint64_t ROTATERIGHT64(uint64_t* x, uint8_t offset)
+static inline u64 ROTATERIGHT64(u64* x, u8 offset)
 {
-	register uint64_t H0 = *x;
+	register u64 H0 = *x;
 	return ROTATERIGHT_64BIT(H0, offset);
 }
 
-static inline uint64_t ROTATELEFT64(uint64_t* x, uint8_t offset)
+static inline u64 ROTATELEFT64(u64* x, u8 offset)
 {
-	register uint64_t H0 = *x;
+	register u64 H0 = *x;
 	return ROTATELEFT_64BIT(H0, offset);
 }
 
-uint8_t REVERSE8(uint8_t* x)	// Cool
+u8 REVERSE8(u8* x)	// Cool
 {
-	register uint8_t H0  = *x;
-	register uint8_t b0  = GETBIT0(H0);
-	register uint8_t b1  = GETBIT1(H0);
-	register uint8_t b2  = GETBIT2(H0);
-	register uint8_t b3  = GETBIT3(H0);
-	register uint8_t b4  = GETBIT4(H0);
-	register uint8_t b5  = GETBIT5(H0);
-	register uint8_t b6  = GETBIT6(H0);
-	register uint8_t b7  = GETBIT7(H0);
+	register u8 H0  = *x;
+	register u8 b0  = GETBIT0(H0);
+	register u8 b1  = GETBIT1(H0);
+	register u8 b2  = GETBIT2(H0);
+	register u8 b3  = GETBIT3(H0);
+	register u8 b4  = GETBIT4(H0);
+	register u8 b5  = GETBIT5(H0);
+	register u8 b6  = GETBIT6(H0);
+	register u8 b7  = GETBIT7(H0);
 	
 	return (b0 << 7) | (b1 << 5) | (b2 << 3) | (b3 << 1) 
 	     | (b4 >> 1) | (b5 >> 3) | (b6 >> 5) | (b7 >> 7);
 }
 
-uint16_t REVERSE16(uint16_t* x)	// Sheesh
+u16 REVERSE16(u16* x)	// Sheesh
 {
-	register uint16_t H0  = *x;
-	register uint16_t b0  = GETBIT0(H0);
-	register uint16_t b1  = GETBIT1(H0);
-	register uint16_t b2  = GETBIT2(H0);
-	register uint16_t b3  = GETBIT3(H0);
-	register uint16_t b4  = GETBIT4(H0);
-	register uint16_t b5  = GETBIT5(H0);
-	register uint16_t b6  = GETBIT6(H0);
-	register uint16_t b7  = GETBIT7(H0);
-	register uint16_t b8  = GETBIT8(H0);
-	register uint16_t b9  = GETBIT9(H0);
-	register uint16_t b10 = GETBIT10(H0);
-	register uint16_t b11 = GETBIT11(H0);
-	register uint16_t b12 = GETBIT12(H0);
-	register uint16_t b13 = GETBIT13(H0);
-	register uint16_t b14 = GETBIT14(H0);
-	register uint16_t b15 = GETBIT15(H0);
+	register u16 H0  = *x;
+	register u16 b0  = GETBIT0(H0);
+	register u16 b1  = GETBIT1(H0);
+	register u16 b2  = GETBIT2(H0);
+	register u16 b3  = GETBIT3(H0);
+	register u16 b4  = GETBIT4(H0);
+	register u16 b5  = GETBIT5(H0);
+	register u16 b6  = GETBIT6(H0);
+	register u16 b7  = GETBIT7(H0);
+	register u16 b8  = GETBIT8(H0);
+	register u16 b9  = GETBIT9(H0);
+	register u16 b10 = GETBIT10(H0);
+	register u16 b11 = GETBIT11(H0);
+	register u16 b12 = GETBIT12(H0);
+	register u16 b13 = GETBIT13(H0);
+	register u16 b14 = GETBIT14(H0);
+	register u16 b15 = GETBIT15(H0);
 	
 	return  (b0 << 15) | (b1 << 13) | (b2  << 11) | (b3  << 9) | (b4  << 7) | (b5  <<  5) | (b6  <<  3) | (b7  <<  1)
 	      | (b8 >>  1) | (b9 >>  3) | (b10 >>  5) | (b11 >> 7) | (b12 >> 9) | (b13 >> 11) | (b14 >> 13) | (b15 >> 15);
 }
 
-uint32_t REVERSE32(uint32_t* x)	// My hands hurt
+u32 REVERSE32(u32* x)	// My hands hurt
 {
-	register uint32_t H0  = *x;
-	register uint32_t b0  = GETBIT0(H0);
-	register uint32_t b1  = GETBIT1(H0);
-	register uint32_t b2  = GETBIT2(H0);
-	register uint32_t b3  = GETBIT3(H0);
-	register uint32_t b4  = GETBIT4(H0);
-	register uint32_t b5  = GETBIT5(H0);
-	register uint32_t b6  = GETBIT6(H0);
-	register uint32_t b7  = GETBIT7(H0);
-	register uint32_t b8  = GETBIT8(H0);
-	register uint32_t b9  = GETBIT9(H0);
-	register uint32_t b10 = GETBIT10(H0);
-	register uint32_t b11 = GETBIT11(H0);
-	register uint32_t b12 = GETBIT12(H0);
-	register uint32_t b13 = GETBIT13(H0);
-	register uint32_t b14 = GETBIT14(H0);
-	register uint32_t b15 = GETBIT15(H0);
-	register uint32_t b16 = GETBIT16(H0);
-	register uint32_t b17 = GETBIT17(H0);
-	register uint32_t b18 = GETBIT18(H0);
-	register uint32_t b19 = GETBIT19(H0);
-	register uint32_t b20 = GETBIT20(H0);
-	register uint32_t b21 = GETBIT21(H0);
-	register uint32_t b22 = GETBIT22(H0);
-	register uint32_t b23 = GETBIT23(H0);
-	register uint32_t b24 = GETBIT24(H0);
-	register uint32_t b25 = GETBIT25(H0);
-	register uint32_t b26 = GETBIT26(H0);
-	register uint32_t b27 = GETBIT27(H0);
-	register uint32_t b28 = GETBIT28(H0);
-	register uint32_t b29 = GETBIT29(H0);
-	register uint32_t b30 = GETBIT30(H0);
-	register uint32_t b31 = GETBIT31(H0);
+	register u32 H0  = *x;
+	register u32 b0  = GETBIT0(H0);
+	register u32 b1  = GETBIT1(H0);
+	register u32 b2  = GETBIT2(H0);
+	register u32 b3  = GETBIT3(H0);
+	register u32 b4  = GETBIT4(H0);
+	register u32 b5  = GETBIT5(H0);
+	register u32 b6  = GETBIT6(H0);
+	register u32 b7  = GETBIT7(H0);
+	register u32 b8  = GETBIT8(H0);
+	register u32 b9  = GETBIT9(H0);
+	register u32 b10 = GETBIT10(H0);
+	register u32 b11 = GETBIT11(H0);
+	register u32 b12 = GETBIT12(H0);
+	register u32 b13 = GETBIT13(H0);
+	register u32 b14 = GETBIT14(H0);
+	register u32 b15 = GETBIT15(H0);
+	register u32 b16 = GETBIT16(H0);
+	register u32 b17 = GETBIT17(H0);
+	register u32 b18 = GETBIT18(H0);
+	register u32 b19 = GETBIT19(H0);
+	register u32 b20 = GETBIT20(H0);
+	register u32 b21 = GETBIT21(H0);
+	register u32 b22 = GETBIT22(H0);
+	register u32 b23 = GETBIT23(H0);
+	register u32 b24 = GETBIT24(H0);
+	register u32 b25 = GETBIT25(H0);
+	register u32 b26 = GETBIT26(H0);
+	register u32 b27 = GETBIT27(H0);
+	register u32 b28 = GETBIT28(H0);
+	register u32 b29 = GETBIT29(H0);
+	register u32 b30 = GETBIT30(H0);
+	register u32 b31 = GETBIT31(H0);
 	
 	return (b0  << 31) | (b1  << 29) | (b2  << 27) | (b3  << 25) | (b4  << 23) | (b5  << 21) | (b6  << 19) | (b7  << 17) | (b8  << 15) | (b9  << 13) | (b10 << 11) | (b11 <<  9) | (b12 <<  7) | (b13 <<  5) | (b14 <<  3) | (b15 <<  1)
 	     | (b16 >>  1) | (b17 >>  3) | (b18 >>  5) | (b19 >>  7) | (b20 >>  9) | (b21 >> 11) | (b22 >> 13) | (b23 >> 15) | (b24 >> 17) | (b25 >> 19) | (b26 >> 21) | (b27 >> 23) | (b28 >> 25) | (b29 >> 27) | (b30 >> 29) | (b31 >> 31);
 }
 
-uint64_t REVERSE56(uint64_t* x)	// Hello arthritis
+u64 REVERSE56(u64* x)	// Hello arthritis
 {
-	register uint64_t H0  = *x;
-	register uint64_t b0  = GETBIT0(H0);
-	register uint64_t b1  = GETBIT1(H0);
-	register uint64_t b2  = GETBIT2(H0);
-	register uint64_t b3  = GETBIT3(H0);
-	register uint64_t b4  = GETBIT4(H0);
-	register uint64_t b5  = GETBIT5(H0);
-	register uint64_t b6  = GETBIT6(H0);
-	register uint64_t b7  = GETBIT7(H0);
-	register uint64_t b8  = GETBIT8(H0);
-	register uint64_t b9  = GETBIT9(H0);
-	register uint64_t b10 = GETBIT10(H0);
-	register uint64_t b11 = GETBIT11(H0);
-	register uint64_t b12 = GETBIT12(H0);
-	register uint64_t b13 = GETBIT13(H0);
-	register uint64_t b14 = GETBIT14(H0);
-	register uint64_t b15 = GETBIT15(H0);
-	register uint64_t b16 = GETBIT16(H0);
-	register uint64_t b17 = GETBIT17(H0);
-	register uint64_t b18 = GETBIT18(H0);
-	register uint64_t b19 = GETBIT19(H0);
-	register uint64_t b20 = GETBIT20(H0);
-	register uint64_t b21 = GETBIT21(H0);
-	register uint64_t b22 = GETBIT22(H0);
-	register uint64_t b23 = GETBIT23(H0);
-	register uint64_t b24 = GETBIT24(H0);
-	register uint64_t b25 = GETBIT25(H0);
-	register uint64_t b26 = GETBIT26(H0);
-	register uint64_t b27 = GETBIT27(H0);
-	register uint64_t b28 = GETBIT28(H0);
-	register uint64_t b29 = GETBIT29(H0);
-	register uint64_t b30 = GETBIT30(H0);
-	register uint64_t b31 = GETBIT31(H0);
-	register uint64_t b32 = GETBIT32(H0);
-	register uint64_t b33 = GETBIT33(H0);
-	register uint64_t b34 = GETBIT34(H0);
-	register uint64_t b35 = GETBIT35(H0);
-	register uint64_t b36 = GETBIT36(H0);
-	register uint64_t b37 = GETBIT37(H0);
-	register uint64_t b38 = GETBIT38(H0);
-	register uint64_t b39 = GETBIT39(H0);
-	register uint64_t b40 = GETBIT40(H0);
-	register uint64_t b41 = GETBIT41(H0);
-	register uint64_t b42 = GETBIT42(H0);
-	register uint64_t b43 = GETBIT43(H0);
-	register uint64_t b44 = GETBIT44(H0);
-	register uint64_t b45 = GETBIT45(H0);
-	register uint64_t b46 = GETBIT46(H0);
-	register uint64_t b47 = GETBIT47(H0);
-	register uint64_t b48 = GETBIT48(H0);
-	register uint64_t b49 = GETBIT49(H0);
-	register uint64_t b50 = GETBIT50(H0);
-	register uint64_t b51 = GETBIT51(H0);
-	register uint64_t b52 = GETBIT52(H0);
-	register uint64_t b53 = GETBIT53(H0);
-	register uint64_t b54 = GETBIT54(H0);
-	register uint64_t b55 = GETBIT55(H0);
+	register u64 H0  = *x;
+	register u64 b0  = GETBIT0(H0);
+	register u64 b1  = GETBIT1(H0);
+	register u64 b2  = GETBIT2(H0);
+	register u64 b3  = GETBIT3(H0);
+	register u64 b4  = GETBIT4(H0);
+	register u64 b5  = GETBIT5(H0);
+	register u64 b6  = GETBIT6(H0);
+	register u64 b7  = GETBIT7(H0);
+	register u64 b8  = GETBIT8(H0);
+	register u64 b9  = GETBIT9(H0);
+	register u64 b10 = GETBIT10(H0);
+	register u64 b11 = GETBIT11(H0);
+	register u64 b12 = GETBIT12(H0);
+	register u64 b13 = GETBIT13(H0);
+	register u64 b14 = GETBIT14(H0);
+	register u64 b15 = GETBIT15(H0);
+	register u64 b16 = GETBIT16(H0);
+	register u64 b17 = GETBIT17(H0);
+	register u64 b18 = GETBIT18(H0);
+	register u64 b19 = GETBIT19(H0);
+	register u64 b20 = GETBIT20(H0);
+	register u64 b21 = GETBIT21(H0);
+	register u64 b22 = GETBIT22(H0);
+	register u64 b23 = GETBIT23(H0);
+	register u64 b24 = GETBIT24(H0);
+	register u64 b25 = GETBIT25(H0);
+	register u64 b26 = GETBIT26(H0);
+	register u64 b27 = GETBIT27(H0);
+	register u64 b28 = GETBIT28(H0);
+	register u64 b29 = GETBIT29(H0);
+	register u64 b30 = GETBIT30(H0);
+	register u64 b31 = GETBIT31(H0);
+	register u64 b32 = GETBIT32(H0);
+	register u64 b33 = GETBIT33(H0);
+	register u64 b34 = GETBIT34(H0);
+	register u64 b35 = GETBIT35(H0);
+	register u64 b36 = GETBIT36(H0);
+	register u64 b37 = GETBIT37(H0);
+	register u64 b38 = GETBIT38(H0);
+	register u64 b39 = GETBIT39(H0);
+	register u64 b40 = GETBIT40(H0);
+	register u64 b41 = GETBIT41(H0);
+	register u64 b42 = GETBIT42(H0);
+	register u64 b43 = GETBIT43(H0);
+	register u64 b44 = GETBIT44(H0);
+	register u64 b45 = GETBIT45(H0);
+	register u64 b46 = GETBIT46(H0);
+	register u64 b47 = GETBIT47(H0);
+	register u64 b48 = GETBIT48(H0);
+	register u64 b49 = GETBIT49(H0);
+	register u64 b50 = GETBIT50(H0);
+	register u64 b51 = GETBIT51(H0);
+	register u64 b52 = GETBIT52(H0);
+	register u64 b53 = GETBIT53(H0);
+	register u64 b54 = GETBIT54(H0);
+	register u64 b55 = GETBIT55(H0);
 	
 	return (b0  << 55) | (b1  << 53) | (b2  << 51) | (b3  << 49) | (b4  << 47) | (b5  << 45) | (b6  << 43) | (b7  << 41) | (b8  << 39) | (b9  << 37) | (b10 << 35) | (b11 << 33) | (b12 << 31) | (b13 << 29) | (b14 << 27) | (b15 << 25)
 	     | (b16 << 23) | (b17 << 21) | (b18 << 19) | (b19 << 17) | (b20 << 15) | (b21 << 13) | (b22 << 11) | (b23 <<  9) | (b24 <<  7) | (b25 <<  5) | (b26 <<  3) | (b27 <<  1)
@@ -709,73 +719,73 @@ uint64_t REVERSE56(uint64_t* x)	// Hello arthritis
 	     | (b31 >> 33) | (b31 >> 35) | (b31 >> 37) | (b31 >> 39) | (b31 >> 41) | (b31 >> 43) | (b31 >> 45) | (b31 >> 47) | (b31 >> 49) | (b31 >> 51) | (b31 >> 53) | (b31 >> 55);
 }
 
-uint64_t REVERSE64(uint64_t* x)	// Hello arthritis
+u64 REVERSE64(u64* x)	// Hello arthritis
 {
-	register uint64_t H0  = *x;
-	register uint64_t b0  = GETBIT0(H0);
-	register uint64_t b1  = GETBIT1(H0);
-	register uint64_t b2  = GETBIT2(H0);
-	register uint64_t b3  = GETBIT3(H0);
-	register uint64_t b4  = GETBIT4(H0);
-	register uint64_t b5  = GETBIT5(H0);
-	register uint64_t b6  = GETBIT6(H0);
-	register uint64_t b7  = GETBIT7(H0);
-	register uint64_t b8  = GETBIT8(H0);
-	register uint64_t b9  = GETBIT9(H0);
-	register uint64_t b10 = GETBIT10(H0);
-	register uint64_t b11 = GETBIT11(H0);
-	register uint64_t b12 = GETBIT12(H0);
-	register uint64_t b13 = GETBIT13(H0);
-	register uint64_t b14 = GETBIT14(H0);
-	register uint64_t b15 = GETBIT15(H0);
-	register uint64_t b16 = GETBIT16(H0);
-	register uint64_t b17 = GETBIT17(H0);
-	register uint64_t b18 = GETBIT18(H0);
-	register uint64_t b19 = GETBIT19(H0);
-	register uint64_t b20 = GETBIT20(H0);
-	register uint64_t b21 = GETBIT21(H0);
-	register uint64_t b22 = GETBIT22(H0);
-	register uint64_t b23 = GETBIT23(H0);
-	register uint64_t b24 = GETBIT24(H0);
-	register uint64_t b25 = GETBIT25(H0);
-	register uint64_t b26 = GETBIT26(H0);
-	register uint64_t b27 = GETBIT27(H0);
-	register uint64_t b28 = GETBIT28(H0);
-	register uint64_t b29 = GETBIT29(H0);
-	register uint64_t b30 = GETBIT30(H0);
-	register uint64_t b31 = GETBIT31(H0);
-	register uint64_t b32 = GETBIT32(H0);
-	register uint64_t b33 = GETBIT33(H0);
-	register uint64_t b34 = GETBIT34(H0);
-	register uint64_t b35 = GETBIT35(H0);
-	register uint64_t b36 = GETBIT36(H0);
-	register uint64_t b37 = GETBIT37(H0);
-	register uint64_t b38 = GETBIT38(H0);
-	register uint64_t b39 = GETBIT39(H0);
-	register uint64_t b40 = GETBIT40(H0);
-	register uint64_t b41 = GETBIT41(H0);
-	register uint64_t b42 = GETBIT42(H0);
-	register uint64_t b43 = GETBIT43(H0);
-	register uint64_t b44 = GETBIT44(H0);
-	register uint64_t b45 = GETBIT45(H0);
-	register uint64_t b46 = GETBIT46(H0);
-	register uint64_t b47 = GETBIT47(H0);
-	register uint64_t b48 = GETBIT48(H0);
-	register uint64_t b49 = GETBIT49(H0);
-	register uint64_t b50 = GETBIT50(H0);
-	register uint64_t b51 = GETBIT51(H0);
-	register uint64_t b52 = GETBIT52(H0);
-	register uint64_t b53 = GETBIT53(H0);
-	register uint64_t b54 = GETBIT54(H0);
-	register uint64_t b55 = GETBIT55(H0);
-	register uint64_t b56 = GETBIT56(H0);
-	register uint64_t b57 = GETBIT57(H0);
-	register uint64_t b58 = GETBIT58(H0);
-	register uint64_t b59 = GETBIT59(H0);
-	register uint64_t b60 = GETBIT60(H0);
-	register uint64_t b61 = GETBIT61(H0);
-	register uint64_t b62 = GETBIT62(H0);
-	register uint64_t b63 = GETBIT63(H0);
+	register u64 H0  = *x;
+	register u64 b0  = GETBIT0(H0);
+	register u64 b1  = GETBIT1(H0);
+	register u64 b2  = GETBIT2(H0);
+	register u64 b3  = GETBIT3(H0);
+	register u64 b4  = GETBIT4(H0);
+	register u64 b5  = GETBIT5(H0);
+	register u64 b6  = GETBIT6(H0);
+	register u64 b7  = GETBIT7(H0);
+	register u64 b8  = GETBIT8(H0);
+	register u64 b9  = GETBIT9(H0);
+	register u64 b10 = GETBIT10(H0);
+	register u64 b11 = GETBIT11(H0);
+	register u64 b12 = GETBIT12(H0);
+	register u64 b13 = GETBIT13(H0);
+	register u64 b14 = GETBIT14(H0);
+	register u64 b15 = GETBIT15(H0);
+	register u64 b16 = GETBIT16(H0);
+	register u64 b17 = GETBIT17(H0);
+	register u64 b18 = GETBIT18(H0);
+	register u64 b19 = GETBIT19(H0);
+	register u64 b20 = GETBIT20(H0);
+	register u64 b21 = GETBIT21(H0);
+	register u64 b22 = GETBIT22(H0);
+	register u64 b23 = GETBIT23(H0);
+	register u64 b24 = GETBIT24(H0);
+	register u64 b25 = GETBIT25(H0);
+	register u64 b26 = GETBIT26(H0);
+	register u64 b27 = GETBIT27(H0);
+	register u64 b28 = GETBIT28(H0);
+	register u64 b29 = GETBIT29(H0);
+	register u64 b30 = GETBIT30(H0);
+	register u64 b31 = GETBIT31(H0);
+	register u64 b32 = GETBIT32(H0);
+	register u64 b33 = GETBIT33(H0);
+	register u64 b34 = GETBIT34(H0);
+	register u64 b35 = GETBIT35(H0);
+	register u64 b36 = GETBIT36(H0);
+	register u64 b37 = GETBIT37(H0);
+	register u64 b38 = GETBIT38(H0);
+	register u64 b39 = GETBIT39(H0);
+	register u64 b40 = GETBIT40(H0);
+	register u64 b41 = GETBIT41(H0);
+	register u64 b42 = GETBIT42(H0);
+	register u64 b43 = GETBIT43(H0);
+	register u64 b44 = GETBIT44(H0);
+	register u64 b45 = GETBIT45(H0);
+	register u64 b46 = GETBIT46(H0);
+	register u64 b47 = GETBIT47(H0);
+	register u64 b48 = GETBIT48(H0);
+	register u64 b49 = GETBIT49(H0);
+	register u64 b50 = GETBIT50(H0);
+	register u64 b51 = GETBIT51(H0);
+	register u64 b52 = GETBIT52(H0);
+	register u64 b53 = GETBIT53(H0);
+	register u64 b54 = GETBIT54(H0);
+	register u64 b55 = GETBIT55(H0);
+	register u64 b56 = GETBIT56(H0);
+	register u64 b57 = GETBIT57(H0);
+	register u64 b58 = GETBIT58(H0);
+	register u64 b59 = GETBIT59(H0);
+	register u64 b60 = GETBIT60(H0);
+	register u64 b61 = GETBIT61(H0);
+	register u64 b62 = GETBIT62(H0);
+	register u64 b63 = GETBIT63(H0);
 	
 	return (b0  << 63) | (b1  << 61) | (b2  << 59) | (b3  << 57) | (b4  << 55) | (b5  << 53) | (b6  << 51) | (b7  << 49) | (b8  << 47) | (b9  << 45) | (b10 << 43) | (b11 << 41) | (b12 << 39) | (b13 << 37) | (b14 << 35) | (b15 << 33)
 	     | (b16 << 31) | (b17 << 29) | (b18 << 27) | (b19 << 25) | (b20 << 23) | (b21 << 21) | (b22 << 19) | (b23 << 17) | (b24 << 15) | (b25 << 13) | (b26 << 11) | (b27 <<  9) | (b28 <<  7) | (b29 <<  5) | (b30 <<  3) | (b31 <<  1)
@@ -783,7 +793,7 @@ uint64_t REVERSE64(uint64_t* x)	// Hello arthritis
 	     | (b47 >> 31) | (b46 >> 29) | (b45 >> 27) | (b44 >> 25) | (b43 >> 23) | (b42 >> 21) | (b41 >> 19) | (b40 >> 17) | (b39 >> 15) | (b38 >> 13) | (b37 >> 11) | (b36 >>  9) | (b35 >>  7) | (b34 >>  5) | (b33 >>  3) | (b32 >>  1);
 }
 
-void printbits_debug(uint64_t i)	
+void printbits_debug(u64 i)	
 {
 	register char j;
 	for (j = 63; j >= 0; --j)

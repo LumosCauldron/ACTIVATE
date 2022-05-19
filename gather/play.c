@@ -120,13 +120,13 @@ int main(int argc, char** argv)
 	//Mission* mptr = missionplan(missionwrapper, assign1tool(atoi(argv[1])), 1, FREEMISSION);
 	//timer(&mptr);	        // Frees 'mptr'
 	free_bytes(&bptr);	// Frees 'bptr'
-	U64 data = 0x00ffaabbddeecc17;
-	register U64 cpy = data;
-	U8* ptr8 = (U8*)(&data);
+	u64 data = 0x00ffaabbddeecc17;
+	register u64 cpy = data;
+	u8* ptr8 = (u8*)(&data);
 	PRINTLLX(data);
-	register U8 i;
-	register U64 x = 0;
-	register U64 y = 0;
+	register u8 i;
+	register u64 x = 0;
+	register u64 y = 0;
 	while (1)
 	{
 		for (i = 0; i < 1; ++i)

@@ -4,11 +4,6 @@
 #include <stdint.h>
 #include "bytes.h"
 
-#define CHAR	  1
-#define SHORT     2
-#define INT       4
-#define LONGLONG  8
-
 // **************************************************************** WRAPPER FUNCTIONS
 
 static inline void PRINTC(char chr)             { printf("%c\n", chr);   	 }	 // CHAR
@@ -36,48 +31,37 @@ static inline void PRINTD(double num)           { printf("%llf\n", num);  	 }   
 		printf("%lln", (unsigned long long int)(num));
 } */
 
-void PRINTNUMARRAY(long long int* arr, int sz) 
+void PRINTNUMARRAY(i64* arr, u32 sz) 
 {
 	goodptr(arr, "NULLPTR GIVEN TO PRINTNUMARRAY", NOFUNC_RETURN);
-	register int i; 
+	register u32 i; 
 	for (i = 0; i < sz; ++i)
-		printf("%lld ", arr[i]); 
+		printf("%lld ", *(arr + i)); 
 	printf("\n"); 
 }
 
-char* dynamic_string(char* str)		// Make string in heap [ACCESSIBLE]
-{
-	if (!goodptr(str, NOMSG, FUNC_RETURN))
-		return NULLPTR;
-	register int len = countuntilnul(str);		// Get length		
-	char* neword = MALLOC(countuntilnul(str) + 1); // Make space
-	neword = nbytesto(neword, str, len);	// Copy string into place
-	neword[len] = '\0';			// Nul-terminate
-	return neword;				// Return new string
-}
-
-void* dynamic_obj(void* obj, unsigned int type, unsigned int sz)
+void* dynamic_obj(void* obj, u8 type, u32 sz)
 {
 	if (!goodptr(obj, NOMSG, FUNC_RETURN) || !type || !sz)		// Error checking
 		return NULLPTR;
-	register unsigned int i;
+	register u32 i;
 	switch(type)				// This makes 2 pointer of the correct "type", then fills dynamic array with object elements, then returns new obj
 	{
-		case sizeof(char)          : ; char* ptr1           = MALLOC(type * sz);
-					       char* optr1          = (char*)obj;
-					       for (i = 0; i < sz; ++i) { ptr1[i] = optr1[i]; }
+		case sizeof(i8)          : ;   i8* ptr1     = MALLOC(type * sz);
+					       i8* optr1    = (i8*)obj;
+					       for (i = 0; i < sz; ++i) { *(ptr1 + i) = *(optr1 + i); }
 			 		       return ptr1;
-		case sizeof(short)         : ; short* ptr2          = MALLOC(type * sz);
-					       short* optr2         = (short*)obj;
-					       for (i = 0; i < sz; ++i) { ptr2[i] = optr2[i]; }
+		case sizeof(i16)         : ;   i16* ptr2    = MALLOC(type * sz);
+					       i16* optr2   = (i16*)obj;
+					       for (i = 0; i < sz; ++i) { *(ptr2 + i) = *(optr2 + i); }
 			                       return ptr2;
-		case sizeof(int)           : ; int* ptr4            = MALLOC(type * sz);
-					       int* optr4           = (int*)obj;
-					       for (i = 0; i < sz; ++i) { ptr4[i] = optr4[i]; }
+		case sizeof(i32)         : ;   i32* ptr4    = MALLOC(type * sz);
+					       i32* optr4   = (i32*)obj;
+					       for (i = 0; i < sz; ++i) { *(ptr4 + i) = *(optr4 + i); }
 			                       return ptr4;
-		case sizeof(long long int) : ; long long int* ptr8  = MALLOC(type * sz);
-					       long long int* optr8 = (long long int*)obj;
-					       for (i = 0; i < sz; ++i) { ptr8[i] = optr8[i]; }
+		case sizeof(i64) 	 : ;   i64* ptr8    = MALLOC(type * sz);
+					       i64* optr8   = (i64*)obj;
+					       for (i = 0; i < sz; ++i) { *(ptr8 + i) = *(optr8 + i); }
 			                       return ptr8;
 	}
 	return NULLPTR;

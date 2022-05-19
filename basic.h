@@ -13,7 +13,24 @@
 
 #define ERRORCHECKING
 
-char bssstart;		// Keep this, this gets put in the first portion of the BSS section as uninitialized data
+#include <stdint.h>
+
+#ifndef _TYPE_H_
+#define _TYPE_H_
+typedef uint8_t   u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef uint64_t u64;
+
+typedef int8_t    i8;
+typedef int16_t  i16;
+typedef int32_t  i32;
+typedef int64_t  i64;
+
+typedef char normchar; //enemychar
+#endif
+
+u8 bssstart;		// Keep this, this gets put in the first portion of the BSS section as uninitialized data
 
 // _____ WIN32 AND UNIX DIFFERENCES _____ 
 
@@ -22,7 +39,7 @@ char bssstart;		// Keep this, this gets put in the first portion of the BSS sect
 	#include <sysinfoapi.h>
 	
 	#define SLASH '\\'	// For tacking on file names to file paths and concatenating paths
-	char* ROOTHEAD;
+	char* DRIVELABEL;
 #endif
 
 #ifdef UNIXCODE
@@ -33,7 +50,6 @@ char bssstart;		// Keep this, this gets put in the first portion of the BSS sect
 	
 #endif
 
-//#include <stdint.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <stdio.h>
@@ -49,8 +65,6 @@ char bssstart;		// Keep this, this gets put in the first portion of the BSS sect
 #endif
 // _____ ERROR CHECKING ______________________________
 
-#include "crucialcode/apex.h"
-
 #define NULLPTR 	 (void*)(0)
 #define at(x) 		 (&x)
 #define EMPTY 		 -1
@@ -58,27 +72,30 @@ char bssstart;		// Keep this, this gets put in the first portion of the BSS sect
 #define FUNC_RETURN    	 101
 #define NOFUNC_RETURN 	 0
 
-#define STEALTH	     0
+#define STEALTH	         0
 #define SCRUB		 1	// FORENSIC RESISTANCE 
 #define NOSCRUB		 0
 
 #define STACK_ABOVE_HEAP 1	// Meaning ESP subtracts to make space 
 #define HEAP_ABOVE_STACK 2	// Meaning ESP adds to make space
 
-char orientation  = 0;
-char architecture = 0;
-char cores = 0;
+u8 orientation  = 0;
+u8 architecture = 0;
+u8 cores = 0;
 
-int MOD(long long int x, long long int y) { return ((x % y) * (x >= 0)) + ((y - (abs(x) % y)) * (x < 0)); }
+int MOD(u64 x, u64 y) 
+{ 
+	return x % y;
+}
 
 void THROW(char* str); /* PROTO */
 void PRINT(char* str)                     { if (!str) THROW("NULLPTR GIVEN TO PRINT"); printf("%s\n", str); }
 
-void EXIT(char stop)  { if (stop) exit(0); }
+void EXIT(u8 stop)  { if (stop) exit(0); }
 
 void THROW(char* str) { PRINT(str); exit(9); }
 
-void* MALLOC(long long int space)
+void* MALLOC(u64 space)
 {
 	//PRINT("MALLOCED SPACE");
 	void* ptr = NULLPTR; ptr = malloc(space);
@@ -86,7 +103,7 @@ void* MALLOC(long long int space)
 	return ptr;
 }
 
-void* REALLOC(void* ptr, long long int space)
+void* REALLOC(void* ptr, u64 space)
 {
 	//PRINT("REALLOCED SPACE");
 	ptr = realloc(ptr, space);
@@ -94,7 +111,7 @@ void* REALLOC(void* ptr, long long int space)
 	return ptr;
 }
 
-void* CALLOC(long long int space)
+void* CALLOC(u64 space)
 {
 	//PRINT("CALLOCED SPACE");
 	void* ptr = NULLPTR; ptr = calloc(1, space);
@@ -104,7 +121,7 @@ void* CALLOC(long long int space)
 
 
 // ** ENVIRONMENT DETECTING ** //
-char setarch()
+void setarch()
 {
 	switch(sizeof(void*))
 	{
@@ -118,8 +135,8 @@ char setarch()
 
 void stackorient()
 {
-	volatile char unsigned stackptr;
-	char* heapptr = MALLOC(1);
+	volatile u8 stackptr;
+	u8* heapptr = MALLOC(1);
 	if ((void*)heapptr < (void*)&stackptr)
 		orientation = STACK_ABOVE_HEAP;	// 'ABOVE' MEANING IN DIAGRAM (LOOK UP COMMON STACK/HEAP DIAGRAM) <-- most common architecture
 	else		
@@ -131,10 +148,10 @@ void setcores()
 	#ifdef WINCODE
 		SYSTEM_INFO sysinfo;
 		GetSystemInfo(&sysinfo);
-		cores = (char)(sysinfo.dwNumberOfProcessors);
+		cores = (u8)(sysinfo.dwNumberOfProcessors);
 	#endif // _______________________________________________________________________
 	#ifdef UNIXCODE
-		cores = (char)get_nprocs();
+		cores = (u8)get_nprocs();
 	#endif // _______________________________________________________________________
 
 	if (!cores)
@@ -144,11 +161,11 @@ void setcores()
 void setfilesysenv()
 {
 	#ifdef WINCODE
-		ROOTHEAD = MALLOC(4);
-		ROOTHEAD[0] = 'C';
-		ROOTHEAD[1] = ':';
-		ROOTHEAD[2] = SLASH;
-		ROOTHEAD[3] = 0;
+		DRIVELABEL    = MALLOC(4);
+		DRIVELABEL[0] = 'C';
+		DRIVELABEL[1] = ':';
+		DRIVELABEL[2] = SLASH;
+		DRIVELABEL[3] = 0;
 	#endif // _______________________________________________________________________
 }
 
@@ -162,7 +179,7 @@ void CALIBRATE()
 void DECALIBRATE()
 {
 	#ifdef WINCODE
-		FREE(&ROOTHEAD);
+		FREE(&DRIVELABEL);
 	#endif // _______________________________________________________________________
 }
 
@@ -174,32 +191,32 @@ void FREE(void* ptr)	// Can cast to any pointer type because we are just freeing
 {
 	if (!orientation)	// If not initialized initialize
 		stackorient();
-	if (*((char**)(ptr))) 
+	if (*((u8**)(ptr))) 
 	{
-		volatile unsigned char stackptr;	
-		if (orientation == STACK_ABOVE_HEAP && *((char**)(ptr)) < (char*)(&stackptr) && *((char**)(ptr)) > (char*)(&bssstart))
+		volatile u8 stackptr;	
+		if (orientation == STACK_ABOVE_HEAP && *((u8**)(ptr)) < (u8*)(&stackptr) && *((u8**)(ptr)) > (u8*)(&bssstart))
 			goto freepointer;
-		else if (orientation == HEAP_ABOVE_STACK && *((char**)(ptr)) < (char*)(&stackptr) && *((char**)(ptr)) < (char*)(&bssstart))
+		else if (orientation == HEAP_ABOVE_STACK && *((u8**)(ptr)) < (u8*)(&stackptr) && *((u8**)(ptr)) < (u8*)(&bssstart))
 			goto freepointer;
 		else if (!orientation)
 			goto freepointer;
 		else
 			return;
 		freepointer:
-			free(*((char**)(ptr)));
-			*((char**)(ptr)) = NULLPTR;	// For safety and reuse of the pointer passed in by reference
+			free(*((u8**)(ptr)));
+			*((u8**)(ptr)) = NULLPTR;	// For safety and reuse of the pointer passed in by reference
 			//PRINT("FREED SPACE");
 	}
 }
 
-void PLN(char num)          	  
+void PLN(u8 num)          	  
 { 
 	for (num; num > 0; --num) 
 		putchar('\n');  
 }       	   // NEW LINES
 
 // Error checking
-static inline char goodptr(void* ptr, char* errormsg, char ret) // Checks given pointer, if error message != NOMSG 'errormsg' will be printed, 
+static inline u8 goodptr(void* ptr, char* errormsg, u8 ret) // Checks given pointer, if error message != NOMSG 'errormsg' will be printed, 
 {						 	 // 'ret' determines whether or not to print and exit, or return a notifying value to its caller
 	if (!ptr)
 	{

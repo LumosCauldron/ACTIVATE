@@ -30,7 +30,7 @@
 #define DIRNUM(x) 	  (x->mnum)
 #define FORENSICOPTION(x) (x->type)
 #define DIRCHAIN(x) 	  (x->line) // Bytes* pointer
-#define NUMFILES(x) 	  ((unsigned long long int)(x->branch))
+#define NUMFILES(x) 	  ((u64)(x->branch))
 #define DIRPATH(x)	  ((char*)(x->line->array + x->line->len + 1))
 
 #define BACKTRACE   1		// For 'trackobject'
@@ -54,12 +54,12 @@
 typedef Elem Portal;
 
 // Globals
-char objmark[NUM_MARKS] = { RESTRICTEDOBJECT, DIRECTORYOBJECT, FILEOBJECT, SYMBOLICOBJECT, SOCKETOBJECT, 0 };
-char dirfilemark[3]     = { DIRECTORYOBJECT, FILEOBJECT, 0 };
+u8 objmark[NUM_MARKS] = { RESTRICTEDOBJECT, DIRECTORYOBJECT, FILEOBJECT, SYMBOLICOBJECT, SOCKETOBJECT, 0 };
+u8 dirfilemark[3]     = { DIRECTORYOBJECT, FILEOBJECT, 0 };
 Elem* dirhdr = NULLPTR;
-int DIRECTORIESOPEN = 0;
+u32 DIRECTORIESOPEN = 0;
 
-char objectis(const char* target)
+u8 objectis(const char* target)
 {
    struct stat statbuf;
    if (lstat(target, &statbuf) == EMPTY)
@@ -87,21 +87,21 @@ char objectis(const char* target)
   }
 }
 
-unsigned long long int objectsize(const char* target)
+u64 objectsize(const char* target)
 {
    struct stat statbuf;
    if (lstat(target, &statbuf) == EMPTY)
 	return 0;
-  return ((unsigned long long int)(statbuf.st_size));
+  return ((u64)(statbuf.st_size));
 }
 
-Bytes* recondir(Bytes* path, DIR* stream, unsigned int* numfiles, unsigned int* numdirs, unsigned int* numrestricted) // Makes chain of marked file/directory names, counts files and directories in opened directory
+Bytes* recondir(Bytes* path, DIR* stream, u32 * numfiles, u32 * numdirs, u32 * numrestricted) // Makes chain of marked file/directory names, counts files and directories in opened directory
 {
-	register unsigned long long int dnamelen = 0;				// Hold directory/filename length
-	register unsigned long long int totallen = 0;				// Hold chain length
-	register unsigned char object 		 = DIRECTORYOBJECT;		// Hold object type
-	Bytes* newchain 			 = dynamic_bytes(NULLPTR, 1);	// Initialize bytes
-	struct dirent* entry 			 = NULLPTR;			// Holds file/directory name
+	register u64 dnamelen   = 0;				// Hold directory/filename length
+	register u64 totallen   = 0;				// Hold chain length
+	register u8 object 	= DIRECTORYOBJECT;		// Hold object type
+	Bytes* newchain 	= dynamic_bytes(NULLPTR, 1);	// Initialize bytes
+	struct dirent* entry 	= NULLPTR;			// Holds file/directory name
 
 	while (entry = readdir(stream))						// Do until all files/directory names read
 	{	
@@ -131,9 +131,9 @@ Elem* OPENDIR(Bytes* pathname)		// Will FREE the given pathname
 {
 	if (!pathname)
 		return NULLPTR;
-	unsigned int numfiles      = 0;
-	unsigned int numdirs       = 0;
-	unsigned int numrestricted = 0;
+	u32  numfiles      = 0;
+	u32  numdirs       = 0;
+	u32  numrestricted = 0;
 	Elem* newdir = NULLPTR;
 	DIR*  stream = opendir(pathname->array);
 	if (!stream)
@@ -141,15 +141,15 @@ Elem* OPENDIR(Bytes* pathname)		// Will FREE the given pathname
 	else				// Else add to list of open directories
 	{		
 		Bytes* chain = recondir(pathname, stream, &numfiles, &numdirs, &numrestricted);
-		register long long int chainsz = chain->len;
+		register u64 chainsz = chain->len;
 		chain = concatbytes(chain, pathname, NULTERMINATOR, FREEFRONT);	// Concatenate object path to end of chain (changes chain->len, corrected in the next statement)
 		chain->len = chainsz;	// Reset chain length back to only children files and directories
-		newdir = make_elem(&dirhdr, (long long int)(stream), ++DIRECTORIESOPEN, numdirs, NOSCRUB, numrestricted, chain, (void*)((unsigned long long int)numfiles), ADDNODE); 
+		newdir = make_elem(&dirhdr, (u64)(stream), ++DIRECTORIESOPEN, numdirs, NOSCRUB, numrestricted, chain, (void*)((u64)numfiles), ADDNODE); 
 	}
 	return newdir;
 }
 
-int CLOSEDIR(Elem** dirobj)
+u32 CLOSEDIR(Elem** dirobj)
 {
 	if (!goodptr(*dirobj, "NULLPTR DIROBJ ADDRESS GIVEN TO CLOSEDIR", FUNC_RETURN))	// Check pointers
 		return 0; 
@@ -161,7 +161,7 @@ int CLOSEDIR(Elem** dirobj)
 	return 1;								// Keeps this function compatible with the 'foreach_elem' function
 }
 
-int MKDIR(char* path)	// Makes 3 attempts to create a directory based on the given path
+u32 MKDIR(char* path)	// Makes 3 attempts to create a directory based on the given path
 {
 	if (mkdir(path, COMFYPERMISSIONS)   != EMPTY)
 		return COMFYPERMISSIONS;
@@ -172,7 +172,7 @@ int MKDIR(char* path)	// Makes 3 attempts to create a directory based on the giv
 	return 0;
 }
 
-char CHDIR(char* path)
+u8 CHDIR(char* path)
 {
 	goodptr(path, "NULLPTR STREAM GIVEN TO CHDIR", NOFUNC_RETURN);
 	if (chdir(path) == EMPTY)
@@ -180,15 +180,15 @@ char CHDIR(char* path)
 	return 1;
 }
 
-char RMDIR(char* path)
+u8 RMDIR(char* path)
 {
 	// 
 }
 
 // ** UNDER MAINTENANCE ** //
-char FAST_CHDIR(char* path)	// Path must be good, better to use always
+u8 FAST_CHDIR(char* path)	// Path must be good, better to use always
 {
-	int fd = open(path, O_RDONLY | __O_NOATIME, S_IRUSR | S_IWUSR | S_IXUSR);	 // Try with rwx permissions
+	i32 fd = open(path, O_RDONLY | __O_NOATIME, S_IRUSR | S_IWUSR | S_IXUSR);	 // Try with rwx permissions
 	if (!fd)
 		if (!(fd = open(path, O_RDONLY | __O_NOATIME, S_IRUSR | S_IXUSR))) // Try with rx  permissions
 			return 0;
@@ -217,7 +217,7 @@ void closealldirs()
 	foreach_elem(&dirhdr, CLOSEDIR, NXTDIRECTION);
 }
 
-Bytes* getdir(char** position, unsigned long long int bytesleft)		// Changes position that was passed in directly 
+Bytes* getdir(char** position, u64 bytesleft)		// Changes position that was passed in directly 
 {
 	goodptr( position, "NULLPTR POSITION GIVEN TO GETDIR", NOFUNC_RETURN);	// Check pointer
 	goodptr(*position, "NULLPTR POSITION GIVEN TO GETDIR", NOFUNC_RETURN);	// Check pointer
@@ -236,7 +236,7 @@ Bytes* getdir(char** position, unsigned long long int bytesleft)		// Changes pos
 	return extractstr(++startmark, (*position = endmark));			// Else return extracted directory name
 }
 
-Bytes* getfile(char** position, unsigned long long int bytesleft)		// Changes position that was passed in directly 
+Bytes* getfile(char** position, u64 bytesleft)		// Changes position that was passed in directly 
 {
 	goodptr( position, "NULLPTR POSITION GIVEN TO GETFILE", NOFUNC_RETURN);	// Check pointer
 	goodptr(*position, "NULLPTR POSITION GIVEN TO GETFILE", NOFUNC_RETURN);	// Check pointer
@@ -255,7 +255,7 @@ Bytes* getfile(char** position, unsigned long long int bytesleft)		// Changes po
 	return extractstr(++startmark, (*position = endmark));			// Else return extracted directory name
 }
 
-Bytes* getdirorfile(char** position, unsigned long long int bytesleft, char* type)	// Changes position that was passed in directly and sets type found, type must be checked and declared as a variable
+Bytes* getdirorfile(char** position, u64 bytesleft, u8* type)	// Changes position that was passed in directly and sets type found, type must be checked and declared as a variable
 {
 	goodptr( position, "NULLPTR POSITION GIVEN TO GETDIRORFILE", NOFUNC_RETURN);	// Check pointer
 	goodptr(*position, "NULLPTR POSITION GIVEN TO GETDIRORFILE", NOFUNC_RETURN);	// Check pointer
@@ -276,14 +276,14 @@ Bytes* getdirorfile(char** position, unsigned long long int bytesleft, char* typ
 	return extractstr(++startmark, (*position = endmark));			// Else return extracted directory name
 }
 
-Bytes* huntobject(Elem** directory, Bytes* file, unsigned char objecttype, unsigned char closedirectory)	// Returns file string if found
+Bytes* huntobject(Elem** directory, Bytes* file, u8 objecttype, u8 closedirectory)	// Returns file string if found
 {
 	if (!directory)
 		return NULLPTR;
 	goodptr(*directory, "NULLPTR DIRECTORY ELEMENT GIVEN TO HUNTOBJECT", NOFUNC_RETURN);
 	goodptr(file, "NULLPTR FILE STRING GIVEN TO HUNTOBJECT", NOFUNC_RETURN);
 	file = prependctostr(objecttype, file);
-	char object = 0;
+	u8 object = 0;
 	char* found = substr_loc(file, DIRCHAIN((*directory)));
 	file = unpendleft(file);
 	if (closedirectory)
@@ -295,22 +295,22 @@ Bytes* huntobject(Elem** directory, Bytes* file, unsigned char objecttype, unsig
 
 // CLOSEDIRECTORY   1
 // NOCLOSEDIRECTORY 0
-Bytes* openhuntclose(Bytes* path, Bytes* filename, unsigned char objecttype)
+Bytes* openhuntclose(Bytes* path, Bytes* filename, u8 objecttype)
 {
 	Elem* dir = OPENDIR(path);
 	Bytes* filefound = huntobject(&dir, filename, objecttype, CLOSEDIRECTORY);
 	return filefound;
 }
 
-int collectalldirs(Elem* dir, Bytes* cwd, Svect* vector, Svect* prunelist, unsigned char backtrace)	// Frees 'cwd'
+u32 collectalldirs(Elem* dir, Bytes* cwd, Svect* vector, Svect* prunelist)	// Frees 'cwd'
 {
 	goodptr(dir, "NULLPTR DIRECTORY ELEMENT GIVEN TO COLLECTALLDIRS", NOFUNC_RETURN);	// Check pointer
 	if (!goodptr(cwd, "NO ACCESS TO CWD IN COLLECTALLDIRS", FUNC_RETURN))			// Check pointer
 		return 0;
 	char* position  = DIRCHAIN(dir)->array;							// Holds position in chain of files/directories
-	register unsigned long long int bytesleft = DIRCHAIN(dir)->len;				// Holds number of bytes left before the end of the chain
+	register u64 bytesleft = DIRCHAIN(dir)->len;				// Holds number of bytes left before the end of the chain
 	Bytes* dirfound = NULLPTR;								// Holds any directory object found
-	register unsigned int numcollected = 0;
+	register u32  numcollected = 0;
 	while(position)										// While not at end of chain
 	{	
 		if (!(*position))
@@ -320,7 +320,7 @@ int collectalldirs(Elem* dir, Bytes* cwd, Svect* vector, Svect* prunelist, unsig
 		if (dirfound)
 		{
 			// If wanting to avoid infinite searching of previous directories and pruned directory paths
-			if ((!backtrace && eqstr(dirfound->array + ((dirfound->len - 2) * (dirfound->len > 2)), "..")) || vectcontains(prunelist, dirfound) || eqstr(dirfound->array, "/run"))// || eqstr(dirfound->array, "/proc")) 
+			if ((eqstr(dirfound->array + ((dirfound->len - 2) * (dirfound->len > 2)), "..")) || vectcontains(prunelist, dirfound) || eqstr(dirfound->array, "/run"))// || eqstr(dirfound->array, "/proc")) 
 			{
 				free_bytes(&dirfound);
 				continue;
@@ -333,15 +333,15 @@ int collectalldirs(Elem* dir, Bytes* cwd, Svect* vector, Svect* prunelist, unsig
 	return numcollected;
 }
 
-int collectallfiles_toread(Elem* dir, Bytes* cwd, Svect* vector, Svect* largevector, unsigned char backtrace)	// Must check large-file vector after (This function frees 'cwd')
+u32 collectallfiles_toread(Elem* dir, Bytes* cwd, Svect* vector, Svect* largevector)	// Must check large-file vector after (This function frees 'cwd')
 {
 	goodptr(dir, "NULLPTR DIRECTORY ELEMENT GIVEN TO COLLECTALLFILESTOREAD", NOFUNC_RETURN);  	// Check pointer
 	if (!goodptr(cwd, "NO ACCESS TO CWD IN COLLECTALLDIRS", FUNC_RETURN))			 	// Check pointer
 		return 0;
 	char* position  		   = DIRCHAIN(dir)->array;				 	// Holds position in chain of files/directories
-	register unsigned long long int bytesleft   = DIRCHAIN(dir)->len;			 	// Holds number of bytes left before the end of the chain
+	register u64 bytesleft   = DIRCHAIN(dir)->len;			 	// Holds number of bytes left before the end of the chain
 	Bytes* filefound 	   	   = NULLPTR;						 	// Holds any directory object found
-	register unsigned int numcollected = 0;
+	register u32  numcollected = 0;
 	while(position)										 	// While not at end of chain
 	{	
 		if (!(*position))
@@ -350,12 +350,6 @@ int collectallfiles_toread(Elem* dir, Bytes* cwd, Svect* vector, Svect* largevec
 		filefound = concatbytes(cwd, getfile(&position, bytesleft - abs((char*)position - DIRCHAIN(dir)->array)), SLASH * (!eqstr(cwd->array, "/")), FREEBACK);
 		if (filefound)
 		{
-			// If wanting to avoid infinite searching of previous directories and pruned directory paths
-			if ((!backtrace && eqstr(filefound->array + ((filefound->len - 2) * (filefound->len > 2)), "..")))
-			{
-				free_bytes(&filefound);
-				continue;
-			}
 			if (objectsize(filefound->array) > FILEMEMLIMIT)
 			{
 				vectpush(largevector, filefound);
@@ -369,16 +363,16 @@ int collectallfiles_toread(Elem* dir, Bytes* cwd, Svect* vector, Svect* largevec
 	return numcollected;
 }
 
-int collectallfiles_tochange(Elem* dir, Bytes* cwd, Svect* vector, Svect* prunelist, unsigned char backtrace)	// Frees 'cwd'
+u32 collectallfiles_tochange(Elem* dir, Bytes* cwd, Svect* vector, Svect* prunelist)	// Frees 'cwd'
 {
 	goodptr(dir, "NULLPTR DIRECTORY ELEMENT GIVEN TO COLLECTALLFILESTOCHANGE", NOFUNC_RETURN);	// Check pointer
 	if (!goodptr(cwd, "NO ACCESS TO CWD IN COLLECTALLFILESTOCHANGE", FUNC_RETURN))			// Check pointer
 		return 0;
-	char* position  		   = DIRCHAIN(dir)->array;				// Holds position in chain of files/directories
-	register long long int bytesleft   = DIRCHAIN(dir)->len;					// Holds number of bytes left before the end of the chain
-	Bytes* filefound 	   	   = NULLPTR;						// Holds any directory object found
-	register unsigned int numcollected = 0;
-	while(position)										// While not at end of chain
+	char* position  	 = DIRCHAIN(dir)->array;	// Holds position in chain of files/directories
+	register u64 bytesleft   = DIRCHAIN(dir)->len;		// Holds number of bytes left before the end of the chain
+	Bytes* filefound 	 = NULLPTR;			// Holds any directory object found
+	register u32  numcollected = 0;
+	while(position)						// While not at end of chain
 	{	
 		if (!(*position))
 			break;
@@ -386,12 +380,6 @@ int collectallfiles_tochange(Elem* dir, Bytes* cwd, Svect* vector, Svect* prunel
 		filefound = concatbytes(cwd, getfile(&position, bytesleft - abs((char*)position - DIRCHAIN(dir)->array)), SLASH * (!eqstr(cwd->array, "/")), FREEBACK);
 		if (filefound)
 		{
-			// If wanting to avoid infinite searching of previous directories and pruned directory paths
-			if ((!backtrace && eqstr(filefound->array + ((filefound->len - 2) * (filefound->len > 2)), "..")) || vectcontains(prunelist, filefound))
-			{
-				free_bytes(&filefound);
-				continue;
-			}
 			vectpush(vector, filefound);	// Collect file path
 			++numcollected;
 		}
@@ -400,7 +388,7 @@ int collectallfiles_tochange(Elem* dir, Bytes* cwd, Svect* vector, Svect* prunel
 	return numcollected;
 }
 
-void filescanmodule(char* start, unsigned int depth, unsigned char objecttype, Svect* prunelist, char (*fileop)(Portal*, Bytes**, Bytes**, char), Portal* portal, Bytes* asprefix) // Returns path
+void filescanmodule(char* start, u32  depth, u8 objecttype, Svect* prunelist, u8 (*fileop)(Portal*, Bytes**, Bytes**, u8), Portal* portal, Bytes* asprefix) // Returns path
 {
 	// *** ** * SETUP * ** *** //
 	if (!CHDIR(start))
@@ -416,7 +404,7 @@ void filescanmodule(char* start, unsigned int depth, unsigned char objecttype, S
 		return;
 	Svect* vector      = vectgrab(NULLPTR, NO_OPTAMT);
 	Svect* filevector  = vectgrab(NULLPTR, NO_OPTAMT);
-	register unsigned long long int xxt = 0;
+	register u64 xxt = 0;
 	Bytes* finalpath;
 	// *** ** * SETUP * ** *** //					
 
@@ -425,8 +413,8 @@ void filescanmodule(char* start, unsigned int depth, unsigned char objecttype, S
 	++depth; // Calibrate
 
 	register Bytes** vheadinitial  = vector->head;
-	register unsigned int tracker  = 0;
-	register unsigned int numnodes = 0;
+	register u32  tracker  = 0;
+	register u32  numnodes = 0;
 	Elem* ptr = startdir;
 	do
 	{
@@ -441,7 +429,7 @@ void filescanmodule(char* start, unsigned int depth, unsigned char objecttype, S
 				finalpath = *vector->vptr;						// Actual path
 			fileop(portal, vector->vptr, &finalpath, NOFREEOLD);				// File operation function
 */
-			collectallfiles_tochange(ptr, dynamic_bytes(DIRPATH(ptr), countuntilnul(DIRPATH(ptr))), filevector, prunelist, NOBACKTRACE);
+			collectallfiles_tochange(ptr, dynamic_bytes(DIRPATH(ptr), countuntilnul(DIRPATH(ptr))), filevector, prunelist);
 			while(VECTITEMS(filevector))
 			{
 				printf("%s\n", VECTTOPELEM(filevector)->array);	// file op goes here...
@@ -450,7 +438,7 @@ void filescanmodule(char* start, unsigned int depth, unsigned char objecttype, S
 				
 		}	
 							// Gets freed			// Record number of directories opened
-		tracker += collectalldirs(ptr, dynamic_bytes(DIRPATH(ptr), countuntilnul(DIRPATH(ptr))), vector, prunelist, NOBACKTRACE);
+		tracker += collectalldirs(ptr, dynamic_bytes(DIRPATH(ptr), countuntilnul(DIRPATH(ptr))), vector, prunelist);
 		CLOSEDIR(&ptr);
 		if (!numnodes)								// If no more jobs get newset
 		{
@@ -460,7 +448,7 @@ void filescanmodule(char* start, unsigned int depth, unsigned char objecttype, S
 		}
 		else
 			--numnodes;
-		//volatile int g = 0;		// DEBUGGING (SETS RATE OF COMPUTATION ARTIFICIALLY)
+		//volatile u64 g = 0;		// DEBUGGING (SETS RATE OF COMPUTATION ARTIFICIALLY)
 		//while (++g < 1000000);
 		while (!(ptr = OPENDIR(*(vector->vptr))))				// Move vptr along until next directory path opens
 		{
@@ -478,7 +466,7 @@ void filescanmodule(char* start, unsigned int depth, unsigned char objecttype, S
 	PRINT("----------------------- DONE -----------------------");
 }
 
-Svect* trackobject(char* start, char* name, unsigned int depth, unsigned char objecttype, Svect* prunelist) // Returns path
+Svect* trackobject(char* start, char* name, u32  depth, u8 objecttype, Svect* prunelist) // Returns path
 {
 	// *** ** * SETUP * ** *** //
 	if (!CHDIR(start))
@@ -493,7 +481,7 @@ Svect* trackobject(char* start, char* name, unsigned int depth, unsigned char ob
 	Bytes* find        = NULLPTR;
 	Svect* vector      = vectgrab(NULLPTR, NO_OPTAMT);
 	Svect* pathsfound  = vectgrab(NULLPTR, NO_OPTAMT);
-	volatile register long long int xxt = 0;
+	volatile register u64 xxt = 0;
 	// *** ** * SETUP * ** *** //					
 
 	if (!depth)	
@@ -501,8 +489,8 @@ Svect* trackobject(char* start, char* name, unsigned int depth, unsigned char ob
 	++depth; // Calibrate
 
 	register Bytes** vheadinitial = vector->head;
-	register unsigned int tracker  = 0;
-	register unsigned int numnodes = 0;
+	register u32  tracker  = 0;
+	register u32  numnodes = 0;
 	Elem* ptr = startdir;
 	do
 	{
@@ -523,7 +511,7 @@ Svect* trackobject(char* start, char* name, unsigned int depth, unsigned char ob
 		if (find)
 			vectpush(pathsfound, find);	
 							// Gets freed			// Record number of directories opened
-		tracker += collectalldirs(ptr, dynamic_bytes(DIRPATH(ptr), countuntilnul(DIRPATH(ptr))), vector, prunelist, NOBACKTRACE);
+		tracker += collectalldirs(ptr, dynamic_bytes(DIRPATH(ptr), countuntilnul(DIRPATH(ptr))), vector, prunelist);
 		CLOSEDIR(&ptr);
 		if (!numnodes)								// If no more jobs get newset
 		{
@@ -533,7 +521,7 @@ Svect* trackobject(char* start, char* name, unsigned int depth, unsigned char ob
 		}
 		else
 			--numnodes;
-		//volatile int g = 0;	// DEBUGGING (SETS RATE OF COMPUTATION ARTIFICIALLY)
+		//volatile u64 g = 0;	// DEBUGGING (SETS RATE OF COMPUTATION ARTIFICIALLY)
 		//while (++g < 1000000);
 		while (!(ptr = OPENDIR(*(vector->vptr))))				// Move vptr along until next directory path opens
 		{
@@ -558,7 +546,7 @@ Svect* trackobject(char* start, char* name, unsigned int depth, unsigned char ob
 // NOFREEPATH 	 0
 // PATHAPPEAR    1 --> Create path
 // PATHDISAPPEAR 0 --> Delete path
-void pathmaker(Bytes** filepath, unsigned char pathaction, unsigned char freepath)
+void pathmaker(Bytes** filepath, u8 pathaction, u8 freepath)
 {							   // 'MAKEFROM' option here is imperative 
 	Svect* dirvect = strtovect((*filepath), SLASH, SKIPFIRST, MAKEFROM);	// Make vector of strings all pointing to different parts of the large filepath string (one huge string with no nul-terminators incorporated)
 	if (!dirvect)
@@ -578,9 +566,9 @@ void pathmaker(Bytes** filepath, unsigned char pathaction, unsigned char freepat
 		// Initialize vector pointer with first directory name pushed into 'dirvect'
 	register char* ptr;  				// On initialization: will point equal-to or 1 byte forward of (*filepath)->array pointer (e.g. either '(*filepath)->array' and 'ptr' --> "firstdirinpath" OR 'filepath->array' --> "/firstdirinpath")
 	register char* front = (*filepath)->array;	// Is the equivalent of '(*filepath)->array'
-	register unsigned int vlen;			// Holds length of vector element
+	register u32  vlen;				// Holds length of vector element
 	register char  hold;				// Saves character in byte slot that will be nullfied so that it can be put back later
-	while (vptr != doneptr)		// Make all directory names and paths except don't make and name a directory from the actual filename at the end of the filepath 
+	while (vptr != doneptr)				// Make all directory names and paths except don't make and name a directory from the actual filename at the end of the filepath 
 	{						// (e.g. "/home/user/Documents/file.txt" --> Don't make 'file.txt' a directory) [Vector contains all directory names + a filename as the last 'Bytes' object (aka string object)]
 		ptr           = VECTELEM(vptr)->array;	// Get bytes array
 		vlen  	      = VECTELEM(vptr)->len;	// Get bytes array length

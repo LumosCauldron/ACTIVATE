@@ -15,13 +15,13 @@ typedef void (*MISSION7)(void*, void*, void*, void*, void*, void*, void*);
 struct mission
 {
 	void* objective;			// Holds function to call
-	unsigned long long int* equipment;	// Holds parameters as 8 byte integers OR sizeof(unsigned long long int) byte integers
-	char numtools;				// Indicates number of parameters in 'equipment' array (up to 7 parameters allowed)
-	char cleanaction;			// Indicates what structures to free after finishing execution
+	u64* equipment;				// Holds parameters as 8 byte integers OR sizeof(u64) byte integers
+	u8 numtools;				// Indicates number of parameters in 'equipment' array (up to 7 parameters allowed)
+	u8 cleanaction;				// Indicates what structures to free after finishing execution
 };
 
 typedef struct mission Mission;
-typedef unsigned long long int MISSIONTOOL;
+typedef u64 MISSIONTOOL;
 
 #define TOOL1 (*((*order)->equipment))	// Used for fast indexing of parameters given to function
 #define TOOL2 (*((*order)->equipment + 1))
@@ -38,39 +38,39 @@ typedef unsigned long long int MISSIONTOOL;
 #define EMPTYTOOLSET   NULLPTR
 #define ZEROTOOLS      0
 
-MISSIONTOOL* assign1tool(unsigned long long int item1)
+MISSIONTOOL* assign1tool(u64 item1)
 {
-	unsigned long long int* ptr = MALLOC(sizeof(unsigned long long int));
+	u64* ptr = MALLOC(sizeof(u64));
 	*ptr = item1;
 	return ptr;
 }
 // ** 2 ** //
-MISSIONTOOL* assign2tools(unsigned long long int item1,
-				     unsigned long long int item2)
+MISSIONTOOL* assign2tools(u64 item1,
+			  u64 item2)
 {
-	unsigned long long int* ptr = MALLOC(sizeof(unsigned long long int) * 2);
+	u64* ptr = MALLOC(sizeof(u64) * 2);
 	*ptr       = item1;
 	*(ptr + 1) = item2;
 	return ptr;
 }
 // ** 3 ** //
-MISSIONTOOL* assign3tools(unsigned long long int item1,
-				     unsigned long long int item2,
-				     unsigned long long int item3)
+MISSIONTOOL* assign3tools(u64 item1,
+			  u64 item2,
+			  u64 item3)
 {
-	unsigned long long int* ptr = MALLOC(sizeof(unsigned long long int) * 3);
+	u64* ptr = MALLOC(sizeof(u64) * 3);
 	*ptr       = item1;
 	*(ptr + 1) = item2;
 	*(ptr + 2) = item3;
 	return ptr;
 }
 // ** 4 ** //
-MISSIONTOOL* assign4tools(unsigned long long int item1,
-				     unsigned long long int item2,
-				     unsigned long long int item3,
-				     unsigned long long int item4)
+MISSIONTOOL* assign4tools(u64 item1,
+			  u64 item2,
+			  u64 item3,
+			  u64 item4)
 {
-	unsigned long long int* ptr = MALLOC(sizeof(unsigned long long int) * 4);
+	u64* ptr = MALLOC(sizeof(u64) * 4);
 	*ptr       = item1;
 	*(ptr + 1) = item2;
 	*(ptr + 2) = item3;
@@ -78,13 +78,13 @@ MISSIONTOOL* assign4tools(unsigned long long int item1,
 	return ptr;
 }
 // ** 5 ** //
-MISSIONTOOL* assign5tools(unsigned long long int item1,
-				     unsigned long long int item2,
-				     unsigned long long int item3,
-				     unsigned long long int item4,
-				     unsigned long long int item5)
+MISSIONTOOL* assign5tools(u64 item1,
+			  u64 item2,
+			  u64 item3,
+			  u64 item4,
+			  u64 item5)
 {
-	unsigned long long int* ptr = MALLOC(sizeof(unsigned long long int) * 5);
+	u64* ptr = MALLOC(sizeof(u64) * 5);
 	*ptr       = item1;
 	*(ptr + 1) = item2;
 	*(ptr + 2) = item3;
@@ -93,14 +93,14 @@ MISSIONTOOL* assign5tools(unsigned long long int item1,
 	return ptr;
 }
 // ** 6 ** //
-MISSIONTOOL* assign6tools(unsigned long long int item1,
-				     unsigned long long int item2,
-				     unsigned long long int item3,
-				     unsigned long long int item4,
-				     unsigned long long int item5,
-				     unsigned long long int item6)
+MISSIONTOOL* assign6tools(u64 item1,
+			  u64 item2,
+			  u64 item3,
+			  u64 item4,
+			  u64 item5,
+			  u64 item6)
 {
-	unsigned long long int* ptr = MALLOC(sizeof(unsigned long long int) * 6);
+	u64* ptr = MALLOC(sizeof(u64) * 6);
 	*ptr       = item1;
 	*(ptr + 1) = item2;
 	*(ptr + 2) = item3;
@@ -110,15 +110,15 @@ MISSIONTOOL* assign6tools(unsigned long long int item1,
 	return ptr;
 }
 // ** 7 ** //
-MISSIONTOOL* assign7tools(unsigned long long int item1,
-				     unsigned long long int item2,
-				     unsigned long long int item3,
-				     unsigned long long int item4,
-				     unsigned long long int item5,
-				     unsigned long long int item6,
-				     unsigned long long int item7)
+MISSIONTOOL* assign7tools(u64 item1,
+			  u64 item2,
+			  u64 item3,
+			  u64 item4,
+			  u64 item5,
+			  u64 item6,
+			  u64 item7)
 {
-	unsigned long long int* ptr = MALLOC(sizeof(unsigned long long int) * 7);
+	u64* ptr = MALLOC(sizeof(u64) * 7);
 	*ptr       = item1;
 	*(ptr + 1) = item2;
 	*(ptr + 2) = item3;
@@ -129,11 +129,11 @@ MISSIONTOOL* assign7tools(unsigned long long int item1,
 	return ptr;
 }
 
-Mission* missionplan(void* function, unsigned long long int* equipment, char numtools, char cleanaction) // Create a mission package 
+Mission* missionplan(void* function, u64* equipment, u8 numtools, u8 cleanaction) // Create a mission package 
 {													 // Ensure numtools == number of equipment elements
 	Mission* ptr     = MALLOC(sizeof(Mission));
 	ptr->objective   = function;	// Holds address of function
-	ptr->equipment   = equipment;	// Holds pointer to array of unsigned long long integers
+	ptr->equipment   = equipment;	// Holds pointer to array of u64 integers
 	ptr->numtools    = numtools;	// Records number of elements in large integer array
 	ptr->cleanaction = cleanaction;	// What actions to take to free memory when done
 	return ptr;

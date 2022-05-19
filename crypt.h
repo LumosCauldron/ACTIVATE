@@ -32,7 +32,7 @@
 
 
 // SBOX FROM AES
-uint8_t aes[BOXSZ] = 
+u8 aes[BOXSZ] = 
 // 	00 	01 	02 	03 	04 	05 	06 	07 	08 	09 	0a 	0b 	0c 	0d 	0e 	0f
 /*00*/{	0x63, 	0x7c, 	0x77, 	0x7b, 	0xf2, 	0x6b, 	0x6f, 	0xc5, 	0x30, 	0x01, 	0x67, 	0x2b, 	0xfe, 	0xd7, 	0xab, 	0x76,
 /*10*/ 	0xca, 	0x82, 	0xc9, 	0x7d, 	0xfa, 	0x59, 	0x47, 	0xf0, 	0xad, 	0xd4, 	0xa2, 	0xaf, 	0x9c, 	0xa4, 	0x72, 	0xc0,
@@ -52,7 +52,7 @@ uint8_t aes[BOXSZ] =
 /*f0*/ 	0x8c, 	0xa1, 	0x89, 	0x0d, 	0xbf, 	0xe6, 	0x42, 	0x68, 	0x41, 	0x99, 	0x2d, 	0x0f, 	0xb0, 	0x54, 	0xbb, 	0x16 }; 
 
 // INVERSE SBOX FROM AES
-uint8_t aesinv[BOXSZ] =
+u8 aesinv[BOXSZ] =
 // 	00 	01 	02 	03 	04 	05 	06 	07 	08 	09 	0a 	0b 	0c 	0d 	0e 	0f
 /*00*/{ 0x52, 	0x09, 	0x6a, 	0xd5, 	0x30, 	0x36, 	0xa5, 	0x38, 	0xbf, 	0x40, 	0xa3, 	0x9e, 	0x81, 	0xf3, 	0xd7, 	0xfb,
 /*10*/ 	0x7c, 	0xe3, 	0x39, 	0x82, 	0x9b, 	0x2f, 	0xff, 	0x87, 	0x34, 	0x8e, 	0x43, 	0x44, 	0xc4, 	0xde, 	0xe9,	0xcb,
@@ -71,7 +71,7 @@ uint8_t aesinv[BOXSZ] =
 /*e0*/ 	0xa0, 	0xe0, 	0x3b, 	0x4d, 	0xae, 	0x2a, 	0xf5, 	0xb0, 	0xc8, 	0xeb, 	0xbb, 	0x3c, 	0x83, 	0x53, 	0x99,	0x61,
 /*f0*/ 	0x17, 	0x2b, 	0x04, 	0x7e, 	0xba, 	0x77, 	0xd6, 	0x26, 	0xe1, 	0x69, 	0x14, 	0x63, 	0x55, 	0x21, 	0x0c,	0x7d };
 
-uint8_t seal[BOXSZ]   = { 71  , 130 , 34  , 219 , 212 , 209 , 24  , 44  , 120 , 11  , 181 , 168 , 223 , 103 , 217 , 220 ,
+u8 seal[BOXSZ]   = { 71  , 130 , 34  , 219 , 212 , 209 , 24  , 44  , 120 , 11  , 181 , 168 , 223 , 103 , 217 , 220 ,
                           26  , 159 , 73  , 225 , 8   , 197 , 151 , 161 , 233 , 132 , 97  , 226 , 31  , 90  , 137 , 47  ,
                           205 , 22  , 243 , 189 , 50  , 51  , 185 , 110 , 140 , 88  , 231 , 85  , 250 , 145 , 228 , 142 ,
                           182 , 188 , 221 , 74  , 27  , 30  , 86  , 204 , 229 , 94  , 119 , 242 , 37  , 203 , 170 , 213 ,
@@ -88,7 +88,7 @@ uint8_t seal[BOXSZ]   = { 71  , 130 , 34  , 219 , 212 , 209 , 24  , 44  , 120 , 
                           179 , 5   , 144 , 80  , 116 , 176 , 198 , 101 , 155 , 194 , 13  , 236 , 158 , 135 , 166 , 169 ,
                           227 , 235 , 165 , 115 , 222 , 112 , 49  , 178 , 174 , 60  , 153 , 118 , 139 , 177 , 143 , 149 };
                       
-uint8_t unseal[BOXSZ] = { 165 , 198 , 96  , 144 , 180 , 225 , 174 , 176 , 20  , 199 , 214 , 9   , 99  , 234 , 208 , 112 , 
+u8 unseal[BOXSZ] = { 165 , 198 , 96  , 144 , 180 , 225 , 174 , 176 , 20  , 199 , 214 , 9   , 99  , 234 , 208 , 112 , 
 			  215 , 195 , 127 , 81  , 194 , 221 , 33  , 160 , 6   , 64  , 16  , 52  , 196 , 173 , 53  , 28  , 
 			  175 , 78  , 2   , 222 , 168 , 60  , 138 , 171 , 146 , 203 , 164 , 158 , 7   , 83  , 179 , 31  , 
 			  177 , 246 , 36  , 37  , 206 , 152 , 155 , 148 , 163 , 161 , 190 , 139 , 249 , 0   , 220 , 149 , 
@@ -105,7 +105,7 @@ uint8_t unseal[BOXSZ] = { 165 , 198 , 96  , 144 , 180 , 225 , 174 , 176 , 20  , 
 			  116 , 19  , 27  , 240 , 46  , 56  , 185 , 42  , 92  , 24  , 75  , 241 , 235 , 107 , 109 , 154 , 
 			  113 , 87  , 59  , 34  , 218 , 204 , 79  , 187 , 110 , 122 , 44  , 157 , 205 , 101 , 210 , 136 };
                       
-uint8_t darkofnight[BOXSZ] = { 130 , 181 , 146 , 11  , 143 , 99  , 155 , 89  , 201 , 87  , 27  , 158 , 202 , 16  , 153 , 157 , 
+u8 darkofnight[BOXSZ] = { 130 , 181 , 146 , 11  , 143 , 99  , 155 , 89  , 201 , 87  , 27  , 158 , 202 , 16  , 153 , 157 , 
 			       165 , 206 , 248 , 178 , 10  , 44  , 237 , 7   , 5   , 247 , 119 , 208 , 73  , 40  , 31  , 232 , 
 			       184 , 29  , 90  , 207 , 82  , 57  , 145 , 141 , 219 , 170 , 32  , 144 , 148 , 172 , 15  , 140 , 
 			       97  , 188 , 42  , 41  , 118 , 107 , 228 , 253 , 111 , 204 , 62  , 17  , 242 , 189 , 183 , 231 , 
@@ -122,7 +122,7 @@ uint8_t darkofnight[BOXSZ] = { 130 , 181 , 146 , 11  , 143 , 99  , 155 , 89  , 2
 			       54  , 88  , 114 , 214 , 227 , 152 , 67  , 0   , 72  , 225 , 105 , 26  , 50  , 221 , 113 , 3   , 
 			       4   , 6   , 59  , 68  , 77  , 223 , 58  , 186 , 81  , 125 , 252 , 166 , 159 , 49  , 224 , 120 };
 
-uint8_t lightofday[BOXSZ]  = { 231 , 183 , 184 , 239 , 240 , 24  , 241 , 23  , 161 , 105 , 20  , 3   , 196 , 158 , 187 , 46  , 
+u8 lightofday[BOXSZ]  = { 231 , 183 , 184 , 239 , 240 , 24  , 241 , 23  , 161 , 105 , 20  , 3   , 196 , 158 , 187 , 46  , 
 			       13  , 59  , 83  , 94  , 192 , 221 , 173 , 204 , 157 , 115 , 235 , 10  , 120 , 33  , 87  , 30  , 
 			       42  , 122 , 118 , 92  , 100 , 151 , 166 , 201 , 29  , 51  , 50  , 219 , 21  , 150 , 65  , 215 , 
 			       125 , 253 , 236 , 116 , 185 , 165 , 224 , 143 , 72  , 37  , 246 , 242 , 181 , 126 , 58  , 174 , 
@@ -164,45 +164,45 @@ uint8_t lightofday[BOXSZ]  = { 231 , 183 , 184 , 239 , 240 , 24  , 241 , 23  , 1
 // 12 and 21 indicate bits format from binary direction perspective (not array direction)
 #define COMBINEHALVES12(reg1, reg2)	((SECONDHALF(reg1)) | (FIRSTHALF(reg2)))
 #define COMBINEHALVES21(reg1, reg2)	((SECONDHALF(reg2)) | (FIRSTHALF(reg1)))
-static inline void POSITION_HALFBYTES_FROM12(uint8_t* byte1, uint8_t* byte2, uint8_t halves)
+static inline void POSITION_HALFBYTES_FROM12(u8* byte1, u8* byte2, u8 halves)
 {
 	*byte1 = COMBINEHALVES12(halves, *byte1);
 	*byte2 = COMBINEHALVES12(*byte2, halves);
 }
-static inline void POSITION_HALFBYTES_FROM21(uint8_t* byte1, uint8_t* byte2, uint8_t halves)
+static inline void POSITION_HALFBYTES_FROM21(u8* byte1, u8* byte2, u8 halves)
 {
 	*byte2 = COMBINEHALVES21(*byte2, halves);
 	*byte1 = COMBINEHALVES21(halves, *byte1);
 }
 
 // Weave top part of first byte and bottom part of second byte together
-static inline void switchlock12(uint8_t* blackbox, uint8_t* byte1, uint8_t* byte2)
+static inline void switchlock12(u8* blackbox, u8* byte1, u8* byte2)
 {
-	register uint8_t halves = permute8bits_byte0(COMBINEHALVES12(*byte1, *byte2));
+	register u8 halves = permute8bits_byte0(COMBINEHALVES12(*byte1, *byte2));
 			 halves = DYNAMICBOX(blackbox, halves);
 	POSITION_HALFBYTES_FROM12(byte1, byte2, halves);
 }
 // Weave bottom part of first byte and top part of second byte together
-static inline void switchlock21(uint8_t* blackbox, uint8_t* byte1, uint8_t* byte2)
+static inline void switchlock21(u8* blackbox, u8* byte1, u8* byte2)
 {
-	register uint8_t halves = unify8bits_byte0(COMBINEHALVES21(*byte1, *byte2));
+	register u8 halves = unify8bits_byte0(COMBINEHALVES21(*byte1, *byte2));
 			 halves = DYNAMICBOX(blackbox, halves);
 	POSITION_HALFBYTES_FROM21(byte1, byte2, halves);
 }
 
 /*
 // MATRIX FROM AES
-unsigned long long int mix[MIXERSZ] = { 0x0000000000000002, 0x0000000000000003, 0x0000000000000001, 0x0000000000000001, 
+u64 mix[MIXERSZ] = { 0x0000000000000002, 0x0000000000000003, 0x0000000000000001, 0x0000000000000001, 
 			      		0x0000000000000001, 0x0000000000000002, 0x0000000000000003, 0x0000000000000001, 
 			       		0x0000000000000001, 0x0000000000000001, 0x0000000000000002, 0x0000000000000003, 
 			       		0x0000000000000003, 0x0000000000000001, 0x0000000000000001, 0x0000000000000002, };
 // INVERSE MATRIX FROM AES
-unsigned long long int demix[MIXERSZ] = { 0x000000000000000e, 0x000000000000000b, 0x000000000000000d, 0x0000000000000009, 
+u64 demix[MIXERSZ] = { 0x000000000000000e, 0x000000000000000b, 0x000000000000000d, 0x0000000000000009, 
 			         	  0x0000000000000009, 0x000000000000000e, 0x000000000000000b, 0x000000000000000d, 
 			         	  0x000000000000000d, 0x0000000000000009, 0x000000000000000e, 0x000000000000000b, 
 			         	  0x000000000000000b, 0x000000000000000d, 0x0000000000000009, 0x000000000000000e, };
 			         	  
-char bytemult(uint8_t first, uint8_t arrval)	// Executes Galois Field Multiplication [Only applicable to AES]
+char bytemult(u8 first, u8 arrval)	// Executes Galois Field Multiplication [Only applicable to AES]
 {
 	first &= 0x00000000000000ff;
 	arrval &= 0x00000000000000ff;
@@ -231,14 +231,14 @@ char bytemult(uint8_t first, uint8_t arrval)	// Executes Galois Field Multiplica
 	return 0; // Unreachable
 }
 
-char bytesubadd(uint8_t first, uint8_t second) { return (0x00000000000000ff & first) ^ (0x00000000000000ff & second); }
+char bytesubadd(u8 first, u8 second) { return (0x00000000000000ff & first) ^ (0x00000000000000ff & second); }
 
 */
 
-void sow(uint64_t* x, uint64_t* k, uint64_t decree)
+void sow(u64* x, u64* k, u64 decree)
 {
-	register uint64_t C     = *k; 	//5514838803201;
-	register uint64_t faith = 0b0000000000000000000000000000000000000000000000000000000000000000 | (decree << 48);	// Places decree value into 6th byte
+	register u64 C     = *k; 	//5514838803201;
+	register u64 faith = 0b0000000000000000000000000000000000000000000000000000000000000000 | (decree << 48);	// Places decree value into 6th byte
 	
 	switch(decree % 7)
 	{
@@ -308,40 +308,40 @@ void sow(uint64_t* x, uint64_t* k, uint64_t decree)
 	*x ^= faith;
 }
 
-void til(uint64_t* x, uint64_t* y, uint64_t* z)
+void til(u64* x, u64* y, u64* z)
 {
-	register uint64_t regx = *x;
-	register uint64_t regy = *y;
-	register uint64_t regz = *z;
+	register u64 regx = *x;
+	register u64 regy = *y;
+	register u64 regz = *z;
 	
 	*x = regx ^ regy;
 	*y = regy ^ regz;
 	*z = regz ^ regx;
 }
 
-void weave(uint8_t* field, uint8_t k)
+void weave(u8* field, u8 k)
 {
 	// 0,0
 }
 
-void weaver(uint8_t* field, uint8_t k)
+void weaver(u8* field, u8 k)
 {
 	// 0 3 6 2 5 1 4
 	// 4 1 5 2 6 3 0
-	uint64_t* ptr0 = (uint64_t*)(field);
-	uint64_t* ptr1 = (uint64_t*)(field + 7);
-	uint64_t* ptr2 = (uint64_t*)(field + 14);
-	uint64_t* ptr3 = (uint64_t*)(field + 21);
-	uint64_t* ptr4 = (uint64_t*)(field + 28);
-	uint64_t* ptr5 = (uint64_t*)(field + 35);
-	uint64_t* ptr6 = (uint64_t*)(field + 42);
-	register uint64_t area0 = *ptr0;
-	register uint64_t area1 = *ptr1;
-	register uint64_t area2 = *ptr2;
-	register uint64_t area3 = *ptr3;
-	register uint64_t area4 = *ptr4;
-	register uint64_t area5 = *ptr5;
-	register uint64_t area6 = *ptr6;
+	u64* ptr0 = (u64*)(field);
+	u64* ptr1 = (u64*)(field + 7);
+	u64* ptr2 = (u64*)(field + 14);
+	u64* ptr3 = (u64*)(field + 21);
+	u64* ptr4 = (u64*)(field + 28);
+	u64* ptr5 = (u64*)(field + 35);
+	u64* ptr6 = (u64*)(field + 42);
+	register u64 area0 = *ptr0;
+	register u64 area1 = *ptr1;
+	register u64 area2 = *ptr2;
+	register u64 area3 = *ptr3;
+	register u64 area4 = *ptr4;
+	register u64 area5 = *ptr5;
+	register u64 area6 = *ptr6;
 	
 //	ptr0 = GETBYTE();
 //	ptr1 = GETBYTE0(area4) ^ GETBYTE3(area1) ^ GETBYTE6(area5) ^ GETBYTE2(area2) ^ GETBYTE5(area6) ^ GETBYTE1(area3) ^ GETBYTE4(area0);
@@ -353,14 +353,14 @@ void weaver(uint8_t* field, uint8_t k)
 
 	
 	// 0 3 6 2 5 1 4
-	register uint8_t S = k;
+	register u8 S = k;
 	
 }
 
-void flesh(uint64_t* x)
+void flesh(u64* x)
 {
-	register uint64_t hold = *x;
-	register uint64_t work = TRANSPOSE(GETBYTE0(hold)) | 
+	register u64 hold = *x;
+	register u64 work = TRANSPOSE(GETBYTE0(hold)) | 
 				 TRANSPOSE(GETBYTE1(hold)) | 
 				 TRANSPOSE(GETBYTE2(hold)) | 
 				 TRANSPOSE(GETBYTE3(hold)) | 
@@ -370,10 +370,10 @@ void flesh(uint64_t* x)
 				 TRANSPOSE(GETBYTE7(hold));
 	*x = work;
 }
-void stone(uint64_t* x)
+void stone(u64* x)
 {
-	register uint64_t hold = *x;
-	register uint64_t work = TRANSLATE(GETBYTE0(hold)) | 
+	register u64 hold = *x;
+	register u64 work = TRANSLATE(GETBYTE0(hold)) | 
 				 TRANSLATE(GETBYTE1(hold)) | 
 				 TRANSLATE(GETBYTE2(hold)) | 
 				 TRANSLATE(GETBYTE3(hold)) | 

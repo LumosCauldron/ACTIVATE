@@ -16,13 +16,13 @@
 struct tid
 {
 	pthread_t tid;		// Holds thread id
-	unsigned int mark;	// Used to identify groups of threads to join (no zero values allowed)
+	u32 mark;	// Used to identify groups of threads to join (no zero values allowed)
 };
 
 typedef struct tid Tid;
 
 // ******************* PROTOTYPES START ******************* //
-void addtid(pthread_t, unsigned int);
+void addtid(pthread_t, u32);
 // *******************  PROTOTYPES END  ******************* //
 
 Tid joinarray[MAXTHREADS_S + 1];
@@ -37,7 +37,7 @@ void* blackbox(void* package)
 
 // WRAPPERS
 
-char INIT_THREADATTR(pthread_attr_t* attrptr, int attachedstate)
+u8 INIT_THREADATTR(pthread_attr_t* attrptr, i32  attachedstate)
 {
 	if (pthread_attr_init(attrptr) == EMPTY)
 		return 0;
@@ -47,14 +47,14 @@ char INIT_THREADATTR(pthread_attr_t* attrptr, int attachedstate)
 	return 1;
 } 
 
-char DESTROY_THREADATTR(pthread_attr_t* attrptr)
+u8 DESTROY_THREADATTR(pthread_attr_t* attrptr)
 {
 	if (pthread_attr_destroy(attrptr) == EMPTY)
 		return 0;
 	return 1;
 }
 
-char DETACHTHREAD(pthread_t tid)
+u8 DETACHTHREAD(pthread_t tid)
 {
 	if (pthread_detach(tid) == EMPTY)
 	{
@@ -65,10 +65,10 @@ char DETACHTHREAD(pthread_t tid)
 }
 
 // Touches 'tidptr'
-char CREATETHREAD(Mission* package, int attachedstate, unsigned int mark, pthread_t* tidaddr)	// Creates a thread, handles thread creation fail, places a tid value in '*tidaddr'
+i8 CREATETHREAD(Mission* package, i32  attachedstate, u32 mark, pthread_t* tidaddr)	// Creates a thread, handles thread creation fail, places a tid value in '*tidaddr'
 {												// (modifies 'joinarray' if attachedstate == PTHREAD_CREATE_JOINABLE)
 	const pthread_attr_t attributes;
-	register unsigned char errorstatus = 0;
+	register u8 errorstatus = 0;
 	INIT_THREADATTR((pthread_attr_t*)(&attributes), attachedstate);	 					// Make attribute set (initializes 'attributes')
 	if (errorstatus = pthread_create(tidaddr,(pthread_attr_t*)(&attributes), &blackbox, (void*)(package)))	// Execute new thread (initializes 'tid')
 	{
@@ -81,9 +81,9 @@ char CREATETHREAD(Mission* package, int attachedstate, unsigned int mark, pthrea
 	return (!errorstatus);	// Return if success, else return 0
 }
 
-char JOINTHREAD(pthread_t tid)
+u8 JOINTHREAD(pthread_t tid)
 {
-	char hold = pthread_join(tid, NULL);
+	u8 hold = pthread_join(tid, NULL);
 	if (hold)
 	{
 		PRINTN((int)(hold));
@@ -97,12 +97,12 @@ char JOINTHREAD(pthread_t tid)
 // Touches 'tidptr'
 void clearjoinarray()	// Clear all data in 'joinarray' and set 'tidptr' back to beginning of the 'joinarray'
 {
-	zeroarray((char*)(joinarray), sizeof(Tid) * MAXTHREADS_S + 1);	// Zero out this portion of the array
+	zeroarray((u8*)(joinarray), sizeof(Tid) * MAXTHREADS_S + 1);	// Zero out this portion of the array
 	tidptr = joinarray;
 }
 
 // Touches 'tidptr'
-void addtid(pthread_t tid, unsigned int mark) // Will add a thread id to a 32-byte array (MAXTHREADS_S-byte array), will detach thread if no space is found
+void addtid(pthread_t tid, u32 mark) // Will add a thread id to a 32-byte array (MAXTHREADS_S-byte array), will detach thread if no space is found
 {
 	if (!tidptr)						  // If first time use
 		clearjoinarray();				  // Initialize 'joinarray' to all zeros and set 'tidptr' to beginning of 'joinarray'
@@ -138,10 +138,10 @@ void addtid(pthread_t tid, unsigned int mark) // Will add a thread id to a 32-by
 void unaddtid()	// Must be done soon after a thread is added
 {
 	--tidptr;				 // Point back to the new initialized 'Tid' element within 'joinarray'
-	zeroarray((char*)(tidptr), sizeof(Tid)); // Zero out slot that was initialized with a 'Tid' element
+	zeroarray((u8*)(tidptr), sizeof(Tid)); // Zero out slot that was initialized with a 'Tid' element
 }
 
-void jointidgroup(unsigned int mark) // Will join all threads or a specified group and will free all their mission objects regardless of 'mission_object.cleanaction'
+void jointidgroup(u32 mark) // Will join all threads or a specified group and will free all their mission objects regardless of 'mission_object.cleanaction'
 {
 	register Tid* boundary = joinarray + MAXTHREADS_S;	// Can be held in register as it is never dereferenced
 	Tid* ptr;
@@ -149,7 +149,7 @@ void jointidgroup(unsigned int mark) // Will join all threads or a specified gro
 		if (ptr->mark == mark)
 		{
 			JOINTHREAD(ptr->tid);			// Join thread id (no need to accept a return value as functions.h has that capability)
-			zeroarray((char*)(ptr), sizeof(Tid));	// Zero out this portion of the array
+			zeroarray((u8*)(ptr), sizeof(Tid));	// Zero out this portion of the array
 		}
 }
 
@@ -173,7 +173,7 @@ void printtidarray()
 	{ printf("_____________________\nTID   |%ld|  ", ptr->tid); printf("GROUP |%d|\n", ptr->mark); }	  
 }
 
-void conquermission(Mission* package, int policy, unsigned int mark)	// Creates a thread and sends in a 'Mission' as a package to be executed 
+void conquermission(Mission* package, i32 policy, u32 mark)	// Creates a thread and sends in a 'Mission' as a package to be executed 
 {									// 'attr' only used to indicate attached or detached state
      if (!mark)
 	THROW("THREAD MARK IS ZERO...NOT ALLOWED, WILL CAUSE MULTIPLE JOINS OF THREAD ID 0");
@@ -191,19 +191,19 @@ void conquermission(Mission* package, int policy, unsigned int mark)	// Creates 
 }
 
 // Access granted to global variable 'cores'
-void conquer_nbytesto(char* dest, char* src, unsigned long long int len)	// Same as 'nbytesto' but uses multithreading
+void conquer_nbytesto(u8* dest, u8* src, u64 len)	// Same as 'nbytesto' but uses multithreading
 {
-	register unsigned long long int blocks = len / cores;
+	register u64 blocks = len / cores;
 	if (blocks < (LARGEBUFFERSZ / cores))
 	{
 		nbytesto(dest, src, len);
 		return;
 	}
-	register unsigned long long int remainder = len % cores; // Holds remainder of bytes to add in
-	register unsigned long long int holdcalc;		 // Holds offset calculation for what segment of memory to assign "nbytesto"
+	register u64 remainder = len % cores; 			 // Holds remainder of bytes to add in
+	register u64 holdcalc;				 	 // Holds offset calculation for what segment of memory to assign "nbytesto"
 	Mission* holder;					 // Placeholder for mission pointer returned by 'missionplan()'
-	register unsigned char holdcorescalc = cores - 1;	 // Calculation before loop to optimize speed
-	register unsigned char i;
+	register u8 holdcorescalc = cores - 1;	 // Calculation before loop to optimize speed
+	register u8 i;
 	for (i = 0; i < holdcorescalc; ++i)
 	{
 		holdcalc = (i * blocks);

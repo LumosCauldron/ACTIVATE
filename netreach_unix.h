@@ -92,7 +92,7 @@
 // Type 'Elem' is typdef'ed to 'Portal' in "dir.h"
 
 Portal* portalhdr   = NULLPTR; // Used to hold current file being worked on
-short PORTALSOPEN = 0;
+u16 PORTALSOPEN     = 0;
 // One Portal stores 
 //	lnum   = allocated space for buffer
 //	mnum   = tunnel
@@ -103,21 +103,19 @@ short PORTALSOPEN = 0;
 //	branch = struct sockaddr_in* ptr (connection settings)
 //	nxt    = nxt portal element thats open
 
-int addrlen = ADDRLEN;
-
 // ******************************** Prototypes ****************************************** //
-Portal* portalize(char* ipstr, char* iface_ipstr, int port, char role, char encryptflag); // 
+Portal* portalize(char* ipstr, char* iface_ipstr, u32 port, u8 role, u8 encryptflag);     // 
 											  //
-long long int perceptnum(Portal* portal);		 				  //
-Bytes* perceptbytes(Portal* portal, unsigned long long int limit);			 			  //
-char perceptfile(Portal* portal); 							  //
-//char perceptdir(Portal* portal);					 		  //
+i64  perceptnum(Portal* portal);		 				  	  //
+Bytes* perceptbytes(Portal* portal, u64  limit);			 	          //
+u8 perceptfile(Portal* portal); 							  //
+//u8 perceptdir(Portal* portal);					 		  //
 											  //
-char inceptnum(Portal* portal, long long int object);			 		  //
-char inceptcstr(Portal* portal, char* object);			 			  //
-char inceptbytes(Portal* portal, Bytes** object);					  //
-char inceptfile(Portal* portal, char* object, char* as);				  //
-//char inceptdir(Portal* portal, char* object);						  //
+u8 inceptnum(Portal* portal, i64  object);			 		  	  //
+u8 inceptcstr(Portal* portal, char* object);			 			  //
+u8 inceptbytes(Portal* portal, Bytes** object);					  //
+u8 inceptfile(Portal* portal, char* object, char* as);				  //
+//u8 inceptdir(Portal* portal, char* object);						  //
 // ******************************** Prototypes ****************************************** //
 
 Bytes* extractforeignip(Portal* portal)	// Returns dynamically allocated ip address string of connected party
@@ -133,7 +131,7 @@ Bytes* getmac(char* interface)	// Returns dynamic object of MAC address values (
     int fd = socket(PF_INET, SOCK_DGRAM, IPPROTO_IP);
 
     nbytesto(s.ifr_name, interface, countuntilnul(interface));
-    if (0 == ioctl(fd, SIOCGIFHWADDR, &s)) 
+    if (!(ioctl(fd, SIOCGIFHWADDR, &s)))
         return dynamic_bytes(s.ifr_addr.sa_data, 6);
     close(fd);
 }
@@ -142,11 +140,11 @@ Bytes* getmac(char* interface)	// Returns dynamic object of MAC address values (
 // RAW	  0
 // IPV4	  4	IP address family type to search for
 // IPV6   6
-Bytes* getip(char* interface, char strform, char iptype)	// Returns dynamic object of an IP address (either raw or string format)
+Bytes* getip(char* interface, u8 strform, u8 iptype)	// Returns dynamic object of an IP address (either raw or string format)
 {
     	struct ifaddrs *ifa, *ifa_tmp;
 	Bytes* found = NULLPTR;
-	char addr[IP6STRLEN];
+	u8 addr[IP6STRLEN];
 	zeroarray(addr, IP6STRLEN);
 
 	if (getifaddrs(&ifa) == -1) 
@@ -174,7 +172,7 @@ Bytes* getip(char* interface, char strform, char iptype)	// Returns dynamic obje
 					}
 					else			// If user wanted ipv4 in raw form
 					{
-						found = dynamic_bytes((char*)(&in->sin_addr), IP4ADDRLEN);
+						found = dynamic_bytes((u8*)(&in->sin_addr), IP4ADDRLEN);
 						goto address_searching_done;	// Go to free ifaddrs before returning
 					}
 				}
@@ -194,7 +192,7 @@ Bytes* getip(char* interface, char strform, char iptype)	// Returns dynamic obje
 					}
 					else			// If user wanted ipv6 in raw form
 					{
-						found = dynamic_bytes((char*)(&in6->sin6_addr), IP6ADDRLEN);
+						found = dynamic_bytes((u8*)(&in6->sin6_addr), IP6ADDRLEN);
 						goto address_searching_done;	// Go to free ifaddrs before returning
 					}
 				}
@@ -211,7 +209,7 @@ Bytes* getip(char* interface, char strform, char iptype)	// Returns dynamic obje
 
 void printbox(struct sockaddr_in* netbox_ptr)
 {
-	char str[INET_ADDRSTRLEN];
+	u8 str[INET_ADDRSTRLEN];
 	zeroarray(str, INET_ADDRSTRLEN);
 	inet_ntop(AF_INET, &(netbox_ptr->sin_addr), str, INET_ADDRSTRLEN);
 	PRINT("------------ BOX --------------");
@@ -223,7 +221,6 @@ void printbox(struct sockaddr_in* netbox_ptr)
 	PRINT("-------------------------------");
 	PLN(0);
 }
-unsigned long long int 
 void setfamily(int family, struct sockaddr_in* netbox_ptr) 	 // Set to IPv4 mode (usually the case)
 { 
 	goodptr(netbox_ptr, "NULLPTR BOX GIVEN TO SETFAMILY", NOFUNC_RETURN);		// Pointer checking
@@ -241,14 +238,14 @@ void setip(unsigned char* ipstr, struct sockaddr_in* netbox_ptr) // Set ip addre
 	inet_pton(AF_INET, ipstr, &(netbox_ptr->sin_addr.s_addr)); // (deprecated) netbox_ptr->sin_addr.s_addr = inet_addr(ipstr); 
 }
 
-void setport(int port, struct sockaddr_in* netbox_ptr) // Set port number to connect on or bind to
+void setport(u32 port, struct sockaddr_in* netbox_ptr) // Set port number to connect on or bind to
 { 
 	goodptr(netbox_ptr, "NULLPTR BOX GIVEN TO SETPORT", NOFUNC_RETURN);		// Pointer checking
 	netbox_ptr->sin_port = htons(port); 
 }
 
 // *** INIT BOX FUNCTIONS *** //
-struct sockaddr_in* init_tcpbox(char* ipstr, int port)	// Returns a netbox
+struct sockaddr_in* init_tcpbox(char* ipstr, u32 port)	// Returns a netbox
 {
 	struct sockaddr_in* newbox = CALLOC(sizeof(struct sockaddr_in));	// Make space
 	setfamily(AF_INET, newbox);						// Set family (NEED TO UPDATE FOR IPV6)
@@ -288,12 +285,12 @@ int SOCKET(int proto)
 int CONNECT(int tunnel, struct sockaddr_in* netbox_ptr)	// Lower level
 {
 	goodptr(netbox_ptr, "NULLPTR BOX GIVEN TO CONNECT", NOFUNC_RETURN);	// Pointer checking
-	register int c = connect(tunnel, (struct sockaddr*)netbox_ptr, addrlen);
+	register int c = connect(tunnel, (struct sockaddr*)netbox_ptr, ADDRLEN);
 	if (c)
 	{
 		register int i = TRIES;
 		while(i-- > 0)	// Post decrement purposeful
-			if (!connect(tunnel, (struct sockaddr*)netbox_ptr, addrlen))
+			if (!connect(tunnel, (struct sockaddr*)netbox_ptr, ADDRLEN))
 				return c;
 		perror("connect");
 		THROW("CONNECT ERROR");
@@ -301,16 +298,16 @@ int CONNECT(int tunnel, struct sockaddr_in* netbox_ptr)	// Lower level
 	return c;
 }
 
-int CONNECT_TO(int tunnel, unsigned char* ipstr, int port, struct sockaddr_in* netbox_ptr)	// Connects to specified IP and PORT
+int CONNECT_TO(int tunnel, unsigned char* ipstr, u32 port, struct sockaddr_in* netbox_ptr)	// Connects to specified IP and PORT
 {
 	goodptr(netbox_ptr, "NULLPTR BOX GIVEN TO CONNECT_TO", NOFUNC_RETURN);	// Pointer checking
 	setip(ipstr, netbox_ptr); setport(port, netbox_ptr);
 	register int c = connect(tunnel, (struct sockaddr*)netbox_ptr, addrlen);
 	if(c)
 	{
-		register int i = TRIES;
+		register u32 i = TRIES;
 		while(i-- > 0)	// Post decrement purposeful
-			if (!connect(tunnel, (struct sockaddr*)netbox_ptr, addrlen))
+			if (!connect(tunnel, (struct sockaddr*)netbox_ptr, ADDRLEN))
 				return c;
 		perror("connect");
 		THROW("CONNECT_TO ERROR");
@@ -321,7 +318,7 @@ int CONNECT_TO(int tunnel, unsigned char* ipstr, int port, struct sockaddr_in* n
 int BIND(int tunnel, struct sockaddr_in* netbox_ptr)
 {
 	goodptr(netbox_ptr, "NULLPTR BOX GIVEN TO BIND", NOFUNC_RETURN);	// Pointer checking
-	register int b = bind(tunnel, (struct sockaddr*)netbox_ptr, addrlen);
+	register int b = bind(tunnel, (struct sockaddr*)netbox_ptr, ADDRLEN);
 	if (b)
 	{
 		perror("bind");
@@ -345,6 +342,7 @@ int LISTEN(int tunnel)
 int ACCEPT(int tunnel, struct sockaddr_in* netbox_ptr)
 {
 	goodptr(netbox_ptr, "NULLPTR BOX GIVEN TO ACCEPT", NOFUNC_RETURN);	// Pointer checking
+	int addrlen = ADDRLEN;
 	register int a = accept(tunnel, (struct sockaddr*)netbox_ptr, &addrlen);
 	if(a == EMPTY)
 	{
@@ -356,7 +354,7 @@ int ACCEPT(int tunnel, struct sockaddr_in* netbox_ptr)
 
 // CLEARBUFFER   1
 // NOCLEARBUFFER 0
-int READ(Portal* portal, long long int offset, int amount, char clearbufferflag)
+u32 READ(Portal* portal, i64  offset, u32 amount, u8 clearbufferflag)
 {
 	goodptr(portal, "NULLPTR PORTAL GIVEN TO READ", NOFUNC_RETURN);		// Pointer checking
 	if (offset + amount > PORTAL_ALLOCATION(portal))
@@ -378,16 +376,20 @@ int READ(Portal* portal, long long int offset, int amount, char clearbufferflag)
 		{
 			perror("read");
 			THROW("READ ERROR");
+			r = 0; // Unreachable for now
 		}
-		PORTALBUFFER(portal)->len += r;		// Update byte string length
-		if (PORTALENCRYPTED(portal))		// If encrypted then decrypt
-			decrypt7(PORTALBUFFER(portal));
+		else
+		{
+			PORTALBUFFER(portal)->len += r;		// Update byte string length
+			if (PORTALENCRYPTED(portal))		// If encrypted then decrypt
+				decrypt7(PORTALBUFFER(portal));
+		}
 	return r;
 }
 
 // FREEOLD   1
 // NOFREEOLD 0
-char SENDSTR(Portal* portal, char* str, char freeold)	// Will free sent in string if specified
+u8 SENDSTR(Portal* portal, char* str, u8 freeold)	// Will free sent in string if specified
 {
 	goodptr(portal, "NULLPTR PORTAL GIVEN TO SENDSTR", NOFUNC_RETURN);	// Pointer checking
 	if (!goodptr(str, "NULLPTR STR GIVEN TO SEND", FUNC_RETURN))		// Pointer checking
@@ -411,7 +413,7 @@ char SENDSTR(Portal* portal, char* str, char freeold)	// Will free sent in strin
 	return 1;
 }
 
-char SEND(Portal* portal, Bytes** str, char freeold)	// Will free sent in string if specified
+u8 SEND(Portal* portal, Bytes** str, u8 freeold)	// Will free sent in string if specified
 {
 	goodptr(portal, "NULLPTR PORTAL GIVEN TO SEND", NOFUNC_RETURN);				// Pointer checking
 	if (!goodptr(*str, "NULLPTR *STR GIVEN TO SEND", FUNC_RETURN))				// Pointer checking		
@@ -434,7 +436,7 @@ char SEND(Portal* portal, Bytes** str, char freeold)	// Will free sent in string
 	return 1;
 }
 
-char SENDWITHOFFSET(Portal* portal, Bytes** str, long long int offset, char freeold)	// Will free sent in string if specified
+u8 SENDWITHOFFSET(Portal* portal, Bytes** str, i64  offset, u8 freeold)	// Will free sent in string if specified
 {
 	goodptr(portal, "NULLPTR PORTAL GIVEN TO SEND", NOFUNC_RETURN);				// Pointer checking
 	if (!goodptr(*str, "NULLPTR *STR GIVEN TO SEND", FUNC_RETURN))				// Pointer checking		
@@ -475,10 +477,10 @@ void CLEARPORTALBUFFER(Portal* portal)
 
 // *** COMM TOOLS *** //
 
-int blindrecv(Portal* portal, int numbytes)	// Reads blind amount of bytes into portal buffer and returns that amount
+u32 blindrecv(Portal* portal, u32 numbytes)	// Reads blind amount of bytes into portal buffer and returns that amount
 {
-	register int num = 0;
-	register int amt = 0;
+	register u32 num = 0;
+	register u32 amt = 0;
 	do
 	{
 	  num += (amt = READ(portal, num, numbytes, CLEARBUFFER));
@@ -486,18 +488,18 @@ int blindrecv(Portal* portal, int numbytes)	// Reads blind amount of bytes into 
 	return num;
 }
 
-void devotedrecv(Portal* portal, int numbytes)
+void devotedrecv(Portal* portal, u32 numbytes)
 {
 	while (numbytes)	// Zero for no portal buffer offset
 		numbytes -= READ(portal, 0, numbytes, CLEARBUFFER);
 }
 
-long long int recvmodule(Portal* portal)	// Does NOT clear portal buffer AFTERWARDS and returns current portal buffer length
+u64  recvmodule(Portal* portal)	// Does NOT clear portal buffer AFTERWARDS and returns current portal buffer length
 {
 	if (!portal)						 // Check if portal open
 		return 0;
-	register int readlimit  = NETMEMLIMIT + FILEMEMLIMIT;	 // Stores max amount that can be read
-	register int actualread = 0; 				 // Stores amount actually read
+	register i32 readlimit  = NETMEMLIMIT + FILEMEMLIMIT;	 // Stores max amount that can be read
+	register u32 actualread = 0; 				 // Stores amount actually read
 	while (readlimit > 0)					 // While reading limit is not reached (actual value is subtracted by actual read number until zero)
 	{
 		if (readlimit < STREAM_LIMIT)
@@ -515,10 +517,10 @@ long long int recvmodule(Portal* portal)	// Does NOT clear portal buffer AFTERWA
 	return PORTALBUFFER(portal)->len;
 }
 
-char sigmodule(Portal* portal, long long int numbytes_handled)	// Checks for signal bytes to know if sender will end or continue the network stream
+u8 sigmodule(Portal* portal, u64 numbytes_handled)	// Checks for signal bytes to know if sender will end or continue the network stream
 {
-	register long long int amtread = PORTALBUFFER(portal)->len;
-	register int numbytes_fromprevsignal = numbytes_handled % (NETMEMLIMIT + FILEMEMLIMIT);
+	register u64  amtread = PORTALBUFFER(portal)->len;
+	register u32 numbytes_fromprevsignal = numbytes_handled % (NETMEMLIMIT + FILEMEMLIMIT);
 	if (!numbytes_fromprevsignal)	// If last read was NETMEMLIMIT + FILEMEMLIMIT bytes long the return first byte
 		return *(PORTALBUFFER(portal)->array);
 	else				// If last read was less, check for signal in case signal character exists in the middle
@@ -533,7 +535,7 @@ char sigmodule(Portal* portal, long long int numbytes_handled)	// Checks for sig
 	} 
 }
 
-Portal* setup_tcp_sender(char* ipstr, char* iface_ipstr, int port, char encryptflag)
+Portal* setup_tcp_sender(char* ipstr, char* iface_ipstr, u32 port, u8 encryptflag)
 {
 	struct sockaddr_in* box = init_tcpbox(ipstr, port);
 	register int tunnel = SOCKET(IPPROTO_TCP);
@@ -556,7 +558,7 @@ Portal* setup_tcp_sender(char* ipstr, char* iface_ipstr, int port, char encryptf
 	return newportal;
 }
 
-Portal* setup_tcp_receiver(char* ipstr, int port, char encryptflag) 
+Portal* setup_tcp_receiver(char* ipstr, u32 port, u8 encryptflag) 
 {
 	struct sockaddr_in* box = init_tcpbox(ipstr, port);
 	register int tunnel = SOCKET(IPPROTO_TCP);
@@ -580,7 +582,7 @@ Portal* setup_tcp_receiver(char* ipstr, int port, char encryptflag)
 
 // INCEIVER  1
 // PERCEIVER 0
-Portal* portalize(char* ipstr, char* iface_ipstr, int port, char role, char encryptflag)
+Portal* portalize(char* ipstr, char* iface_ipstr, u32 port, u8 role, u8 encryptflag)
 {
 	switch (role)
 	{
@@ -590,17 +592,17 @@ Portal* portalize(char* ipstr, char* iface_ipstr, int port, char role, char encr
 	}
 }
 
-long long int perceptnum(Portal* portal)	// Receives 8 (a.k.a. NETWORK_NUMSZ) bytes from sender and get integer of type 'long long int'
+i64  perceptnum(Portal* portal)	// Receives 8 (a.k.a. NETWORK_NUMSZ) bytes from sender and get integer of type 'i64 '
 {
 	goodptr(portal, "NULLPTR PORTAL GIVEN TO PERCEPTNUM", NOFUNC_RETURN);
-	devotedrecv(portal, NETWORK_NUMSZ);							// Will not return until number is received
-	          long long int*  numptr = (long long int*)(PORTALBUFFER(portal)->array);	// Get correct pointer type
-	register  long long int   number = (long long int)(numptr);				// Get integer received in portal buffer (NETWORK_NUMSZ == 8 bytes)			
-	zeroarray(PORTALBUFFER(portal)->array, NETWORK_NUMSZ);	 	 			// Clean buffer after 'devotedrecv' use
+	devotedrecv(portal, NETWORK_NUMSZ);					// Will not return until number is received
+	          i64 *  numptr = (i64 *)(PORTALBUFFER(portal)->array);		// Get correct pointer type
+	register  i64    number = (i64 )(numptr);				// Get integer received in portal buffer (NETWORK_NUMSZ == 8 bytes)			
+	zeroarray(PORTALBUFFER(portal)->array, NETWORK_NUMSZ);	 	 	// Clean buffer after 'devotedrecv' use
 	return number;
 }
 
-Bytes* perceptbytes(Portal* portal, unsigned long long int limit)
+Bytes* perceptbytes(Portal* portal, u64 limit)
 {
 	goodptr(portal, "NULLPTR PORTAL GIVEN TO PERCEPTBYTES", NOFUNC_RETURN);
 	devotedrecv(portal, limit);						  // Will not return until byte limit to read has been reached
@@ -610,7 +612,7 @@ Bytes* perceptbytes(Portal* portal, unsigned long long int limit)
 }
 
 // START HERE (TRY READ THAT BLOCKS AFTER NOT READING ENOUGH BYTES)
-char perceptfile(Portal* portal)
+u8 perceptfile(Portal* portal)
 {
 	goodptr(portal, "NULLPTR PORTAL GIVEN TO PERCEPTFILE", NOFUNC_RETURN);
 	
@@ -622,9 +624,9 @@ char perceptfile(Portal* portal)
 		return 0;
 	}
 	
-	register long long int numbytes_handled = 0; 
-	register char firstloopdone = 0;
-	char sighold = 0;
+	register u64 numbytes_handled = 0; 
+	register u8 firstloopdone = 0;
+	u8 sighold = 0;
 	do 
 	{
 		if (!recvmodule(portal))					// Receive upto 6MB and handle
@@ -660,7 +662,7 @@ char perceptfile(Portal* portal)
 }
 
 // ****************** UNDER CONSTRUCTION ******************
-/*char perceptdir(Portal* portal)
+/*u8 perceptdir(Portal* portal)
 {
 	goodptr(portal, "NULLPTR PORTAL GIVEN TO PERCEPTDIR", NOFUNC_RETURN);
 	Bytes* holdcurrentpath = NULLPTR;
@@ -673,7 +675,7 @@ char perceptfile(Portal* portal)
 	zeroarray(PORTALBUFFER(portal)->array, NETMEMLIMIT + FILEMEMLIMIT);		// Clean portal buffer
 	Bytes* holdname = NULLPTR;							// Initialize file-path-name holder
 	Bytes* holdtop  = dynamic_bytes(recv_as_name, countuntilnul(recv_as_name));	// Initialize parent-path-name holder with a string
-	register int initialtopsz = holdtop->len;					// Initialize parent-path-name string length
+	register u64 initialtopsz = holdtop->len;					// Initialize parent-path-name string length
 	appendctostr(holdtop, SLASH);							// Append a '/'
 	do										// Read and write all large files coming in from the network
 	{
@@ -688,10 +690,10 @@ char perceptfile(Portal* portal)
 	return 1;
 }*/
 
-char inceptnum(Portal* portal, long long int number)		// DOES NOT FREE ANY MEMORY
+u8 inceptnum(Portal* portal, i64  number)		// DOES NOT FREE ANY MEMORY
 {
-	char numstr[NETWORK_NUMSZ];				// Use stack memory to store number value
-	long long int* numptr = (long long int*)(numstr);	// Make a large integer pointer point to beginning of 8 byte array
+	u8 numstr[NETWORK_NUMSZ];				// Use stack memory to store number value
+	i64 * numptr = (i64 *)(numstr);				// Make a large integer pointer point to beginning of 8 byte array
 	Bytes imitate_bytes;					// Make space for Bytes object on stack
 	Bytes* bytes_ptr      = &imitate_bytes;
 	imitate_bytes.array   = numstr;			 	// Assign string to array position in Bytes struct
@@ -701,23 +703,23 @@ char inceptnum(Portal* portal, long long int number)		// DOES NOT FREE ANY MEMOR
 	return SEND(portal, &bytes_ptr, NOFREEOLD);		// Send number over network
 }
 
-char inceptcstr(Portal* portal, char* object)		// FREES 'OBJECT'
+u8 inceptcstr(Portal* portal, char* object)		// FREES 'OBJECT'
 {
 	Bytes imitate_bytes;				 // Make space for Bytes object on stack
 	Bytes* bytes_ptr    = &imitate_bytes;
 	imitate_bytes.array = object;			 // Assign string to array position in Bytes struct
 	imitate_bytes.len   = countuntilnul(object);	 // Assign string length to len position in Bytes struct
-	char hold = SEND(portal, &bytes_ptr, NOFREEOLD); // Does not attempt to free Bytes object ('FREE()' would figure it out but this is healthier))
+	u8 hold = SEND(portal, &bytes_ptr, NOFREEOLD); // Does not attempt to free Bytes object ('FREE()' would figure it out but this is healthier))
 	FREE(&object);				 	 // Frees c-string if 'object' is NOT a literal or stack value 
 	return hold;					 // Successful send over network
 }
 
-char inceptbytes(Portal* portal, Bytes** object)	// FREES 'OBJECT'
+u8 inceptbytes(Portal* portal, Bytes** object)	// FREES 'OBJECT'
 {
 	return SEND(portal, object, FREEOLD);		// Send bytes
 }
 
-char inceptfile(Portal* portal, Bytes** object, Bytes** as, char freeobject)	// (Like inception the movie) inject an "idea" into another computers mind (in this case send a file)	|	FREES 'AS'
+u8 inceptfile(Portal* portal, Bytes** object, Bytes** as, u8 freeobject)	// (Like inception the movie) inject an "idea" into another computers mind (in this case send a file)	|	FREES 'AS'
 {										// Sends file in blocks, each block is prefixed by a signal/marker byte (either MORETOCOME or ALLDONE)	|
 	FILE* stream = fopen((*object)->array, "r");				// Opens object as file
 	if (!stream)								// Checks stream
@@ -728,7 +730,7 @@ char inceptfile(Portal* portal, Bytes** object, Bytes** as, char freeobject)	// 
 	}
 	
 	SEND(portal, as, FREEOLD);				    // Send specified filepath name to be installed on other computer
-	register long long int amtread = 0; 			    // The rest of the code opens and sends all of the file content over the network
+	register u64  amtread = 0; 			    // The rest of the code opens and sends all of the file content over the network
 	char* ptr_plusabyte = PORTALBUFFER(portal)->array + 1;
 	while (amtread = FREAD(&ptr_plusabyte, NETMEMLIMIT + FILEMEMLIMIT - 1, stream))	// -1 --> one for signal char at beginning
 	{
@@ -760,7 +762,7 @@ char inceptfile(Portal* portal, Bytes** object, Bytes** as, char freeobject)	// 
 
 /*
 // ************************ UNDER CONSTRUCTION ************************
-char inceptdir(Portal* portal, char* object)
+u8 inceptdir(Portal* portal, char* object)
 {
 	// *** ** * SETUP * ** *** //
 	if (!CHDIR(object))
