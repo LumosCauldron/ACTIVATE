@@ -5,33 +5,13 @@
 #include <immintrin.h> //AVX
 #include <stdint.h>
 
-
-#define xmmload(p) _mm_load_si128((__m128i const*)(p))
-// 16byte aligned down:
-// _mm_loadu_si128
-// _mm_storeu_si128
-#define xmmloadu(p) _mm_loadu_si128((__m128i const*)(p))
-
- 
-
-// -D_gcc_mumbo_jumbo_
-// Change accordingly from command line:
-#define _icl_mumbo_jumbo_
-
 #define _rotl_KAZE(x, n) (((x) << (n)) | ((x) >> (32-(n))))
-#define _rotl_KAZE64(x, n) (((x) << (n)) | ((x) >> (64-(n))))
-#define _rotl_KAZE128(x, n) _mm_or_si128(_mm_slli_si128(x, n) , _mm_srli_si128(x, 128-n))
-
-#define HashSizeInBits 26 //256MB
-#define ReportAtEvery (1<<HashSizeInBits)-1 //1000000
-
-int PrintTheFirstKTvariants=0;
 
 #undef  _rotl
 #define _rotl(x,r) ((x << r) | (x >> (64 - r)))
-#define PRIMExx 11400714819323198393ULL
  
-uint32_t FNV1A_Hash_YoshimitsuTRIAD(const char *str, uint32_t wrdlen)
+// FNV1A_Hash_YoshimitsuTRIAD HASH
+uint32_t signature(const char *str, uint32_t wrdlen)
 {
     const uint32_t PRIME = 709607;
     uint32_t hash32      = 2166136261;

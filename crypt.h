@@ -145,7 +145,9 @@ u8 lightofday[BOXSZ]  = { 231 , 183 , 184 , 239 , 240 , 24  , 241 , 23  , 161 , 
 #define LIGHT(reg) 	((*(lightofday + (reg))))
 */
 
-#define ROUNDCOUNT 21
+#define KEYLEN	   	21
+#define AREALEN	 	 7
+#define ROUNDCOUNT 	21
 #define DYNAMICBOX(box, reg)    ((*((box) + (reg))))
 
 #define FIRSTHALF_MASK  0b00001111
@@ -164,6 +166,15 @@ u8 lightofday[BOXSZ]  = { 231 , 183 , 184 , 239 , 240 , 24  , 241 , 23  , 161 , 
 #define COMBINEHALVES21(reg1, reg2)	((SECONDHALF(reg2)) | (FIRSTHALF(reg1)))
 
 u8* sboxarray[ROUNDCOUNT];
+u64 G	  = 0x0000000000000000;
+u64 S	  = 0x0000000000000000;
+u64 H	  = 0x0000000000000000;
+u32 GSHh  = 0x00000000;
+u32 Gh    = 0x00000000;
+u32 Sh    = 0x00000000;
+u32 Hh    = 0x00000000;
+u8  order = 0x00;
+u8  trikey[KEYLEN + 1];
 
 static inline void POSITION_HALFBYTES_FROM12(u8* byte1, u8* byte2, u8 halves)
 {
@@ -191,6 +202,97 @@ static inline void switchlock21(u8* blackbox, u8* byte1, u8* byte2)
 	POSITION_HALFBYTES_FROM21(byte1, byte2, halves);
 }
 
+static inline void achieveorder()	// Determine order, determine & hide hashes, and hide order
+{
+	zeroarray(trikey, KEYLEN + 1);
+	order = *(trikey + MOD(*(trikey)      + *(trikey +  1) + *(trikey +  2) + *(trikey +  3) + *(trikey +  4) + *(trikey +  5) + *(trikey +  6) +
+		   	       *(trikey +  7) + *(trikey +  8) + *(trikey +  9) + *(trikey + 10) + *(trikey + 11) + *(trikey + 12) + *(trikey + 13) +
+		   	       *(trikey + 14) + *(trikey + 15) + *(trikey + 16) + *(trikey + 17) + *(trikey + 18) + *(trikey + 19) + *(trikey + 20), KEYLEN));
+	
+	u64* kptr1 = (u64)(trikey); 
+	u64* kptr2 = (u64)(trikey + AREALEN); 
+	u64* kptr3 = (u64)(trikey + AREALEN + AREALEN); 
+	switch(order % 3)
+	{
+		case 0:	
+			G    = CLEARBYTE7(*kptr1);
+			S    = CLEARBYTE7(*kptr2);
+			H    = CLEARBYTE7(*kptr3);
+			Gh   = MOD(order * signature(kptr1, AREALEN), 0x100000000);
+			Sh   = MOD(order * signature(kptr2, AREALEN), 0x100000000);
+			Hh   = MOD(order * signature(kptr3, AREALEN), 0x100000000);
+			break;
+		case 1:
+			G    = CLEARBYTE7(*kptr2);
+			S    = CLEARBYTE7(*kptr3);
+			H    = CLEARBYTE7(*kptr1);
+			Gh   = MOD(order * signature(kptr2, AREALEN), 0x100000000);
+			Sh   = MOD(order * signature(kptr3, AREALEN), 0x100000000);
+			Hh   = MOD(order * signature(kptr1, AREALEN), 0x100000000);
+			break;
+		case 2:
+			G    = CLEARBYTE7(*kptr3);
+			S    = CLEARBYTE7(*kptr1);
+			H    = CLEARBYTE7(*kptr2);
+			Gh   = MOD(order * signature(kptr3, AREALEN), 0x100000000);
+			Sh   = MOD(order * signature(kptr1, AREALEN), 0x100000000);
+			Hh   = MOD(order * signature(kptr2, AREALEN), 0x100000000); // 4,294,967,296
+	}
+	GSHh  = signature(trikey, KEYLEN);
+	order = MOD(order + GSHh + Gh + Sh + Hh, 0x100); // 256
+}
+
+void generator()
+{
+	register double input = 0.0;
+	register double adder = 1.0;
+	register double e     = 2.71828182845905;
+	register double pi    = 3.14159265358979;
+	register double phi   = 1.61803398874989;
+	u8 hit[256];
+	register i16 i = 0;
+	register u8  boxcount = 0;
+	
+	for (boxcount = 0; boxcount < 21, ++boxcount)
+	{
+		zeroarray(hit, BOXSZ);	// Zero out array
+		
+		// Create sbox from equation
+		while(i < BOXSZ)
+		{
+			register double first  = tan(pow(sqrt(input), input));
+			register double second = pow(e, cos(input));
+			register double third  = pow(pi, sin(input));
+		
+			register double chaos = (first * second) / third;
+			register double answer = 128 * sin(chaos) + 128;
+			
+			u16 candidate = (u16)(ceil(answer));
+			if (candidate > BOXSZ - 1)
+				goto keepgoing;
+			if (!(*(hit + candidate)))
+			{
+				*(hit + candidate) = 1;
+				*(box + i)         = candidate;
+				++i;
+			}
+			
+			keepgoing:
+			input += adder;
+			if (input >= BOXSZ)
+			{
+				adder /= 10.0;
+				input = 0.0;
+				input += adder;
+			}
+		}
+		
+		// Create inverse of generated sbox
+		for (i = 0; i < BOXSZ; ++i)
+			BOXINVERSE(*(box + i)) = i;
+	}
+}
+
 void triangle(u64* G, u64* S, u64* HS)
 {
 	register u64 all    = *G;
@@ -202,75 +304,74 @@ void triangle(u64* G, u64* S, u64* HS)
 	*G  = things ^  all;
 }
 
-void sow(u64* x, u64* k, u8 decree)
+void sow(u64* x, u64 decree) // decree is actually a 'u8' type
 {
-	register u64 C     = *k; 	//5514838803201;
-	register u64 faith = 0b0000000000000000000000000000000000000000000000000000000000000000 | (decree << 48);	// Places decree value into 6th byte
+	register u64 faith = 0x0000000000000000 | (decree << 48);	// Places decree value into 6th byte
 	
-	switch(decree % 7)
+	switch(decree % AREALEN)
 	{
 		case 0 : ;
-			 faith = GETBYTE0_ASBYTE4(C) |
-			 	 GETBYTE4_ASBYTE1(C) |
-			 	 GETBYTE1_ASBYTE5(C) |
-			 	 GETBYTE5_ASBYTE2(C) |
-			 	 GETBYTE2_ASBYTE6(C) |
-			 	 GETBYTE6_ASBYTE3(C) ^
-			 	 GETBYTE3_ASBYTE0(C);
+			 faith = GETBYTE0_ASBYTE4(S) |
+			 	 GETBYTE4_ASBYTE1(S) |
+			 	 GETBYTE1_ASBYTE5(S) |
+			 	 GETBYTE5_ASBYTE2(S) |
+			 	 GETBYTE2_ASBYTE6(S) |
+			 	 GETBYTE6_ASBYTE3(S) ^
+			 	 GETBYTE3_ASBYTE0(S);
 			 break;
 		case 1 : ;
-			 faith = GETBYTE0(C) |
-			 	 GETBYTE1(C) |
-			 	 GETBYTE2(C) |
-			 	 GETBYTE3(C) |
-			 	 GETBYTE4(C) |
-			 	 GETBYTE5(C) ^
-			 	 GETBYTE6(C);
+			 faith = GETBYTE0(S) |
+			 	 GETBYTE1(S) |
+			 	 GETBYTE2(S) |
+			 	 GETBYTE3(S) |
+			 	 GETBYTE4(S) |
+			 	 GETBYTE5(S) ^
+			 	 GETBYTE6(S);
 			 break;
 		case 2 : ;
-			 faith = GETBYTE0_ASBYTE5(C) |
-			 	 GETBYTE5_ASBYTE3(C) |
-			 	 GETBYTE3_ASBYTE1(C) |
-			 	 GETBYTE1_ASBYTE6(C) |
-			 	 GETBYTE6_ASBYTE4(C) |
-			 	 GETBYTE4_ASBYTE2(C) ^
-			 	 GETBYTE2_ASBYTE0(C);
+			 faith = GETBYTE0_ASBYTE5(S) |
+			 	 GETBYTE5_ASBYTE3(S) |
+			 	 GETBYTE3_ASBYTE1(S) |
+			 	 GETBYTE1_ASBYTE6(S) |
+			 	 GETBYTE6_ASBYTE4(S) |
+			 	 GETBYTE4_ASBYTE2(S) ^
+			 	 GETBYTE2_ASBYTE0(S);
 			 break;
 		case 3 : ;
-			 faith = GETBYTE0_ASBYTE2(C) |
-			 	 GETBYTE2_ASBYTE4(C) |
-			 	 GETBYTE4_ASBYTE6(C) |
-			 	 GETBYTE6_ASBYTE1(C) |
-			 	 GETBYTE1_ASBYTE3(C) |
-			 	 GETBYTE3_ASBYTE5(C) ^
-			 	 GETBYTE5_ASBYTE0(C);
+			 faith = GETBYTE0_ASBYTE2(S) |
+			 	 GETBYTE2_ASBYTE4(S) |
+			 	 GETBYTE4_ASBYTE6(S) |
+			 	 GETBYTE6_ASBYTE1(S) |
+			 	 GETBYTE1_ASBYTE3(S) |
+			 	 GETBYTE3_ASBYTE5(S) ^
+			 	 GETBYTE5_ASBYTE0(S);
 			 break;
 		case 4 : ;
-			 faith = GETBYTE0_ASBYTE6(C) |
-			 	 GETBYTE6_ASBYTE5(C) |
-			 	 GETBYTE5_ASBYTE4(C) |
-			 	 GETBYTE4_ASBYTE3(C) |
-			 	 GETBYTE3_ASBYTE2(C) |
-			 	 GETBYTE2_ASBYTE1(C) ^
-			 	 GETBYTE1_ASBYTE0(C);
+			 faith = GETBYTE0_ASBYTE6(S) |
+			 	 GETBYTE6_ASBYTE5(S) |
+			 	 GETBYTE5_ASBYTE4(S) |
+			 	 GETBYTE4_ASBYTE3(S) |
+			 	 GETBYTE3_ASBYTE2(S) |
+			 	 GETBYTE2_ASBYTE1(S) ^
+			 	 GETBYTE1_ASBYTE0(S);
 			 break;
 		case 5 : ;
-			 faith = GETBYTE0_ASBYTE6(C) |
-			 	 GETBYTE6_ASBYTE5(C) |
-			 	 GETBYTE5_ASBYTE4(C) |
-			 	 GETBYTE4_ASBYTE3(C) |
-			 	 GETBYTE3_ASBYTE2(C) |
-			 	 GETBYTE2_ASBYTE1(C) ^
-			 	 GETBYTE1_ASBYTE0(C);
+			 faith = GETBYTE0_ASBYTE6(S) |
+			 	 GETBYTE6_ASBYTE5(S) |
+			 	 GETBYTE5_ASBYTE4(S) |
+			 	 GETBYTE4_ASBYTE3(S) |
+			 	 GETBYTE3_ASBYTE2(S) |
+			 	 GETBYTE2_ASBYTE1(S) ^
+			 	 GETBYTE1_ASBYTE0(S);
 			 break;
 		case 6 : ;
-			 faith = GETBYTE0_ASBYTE3(C) |
-			 	 GETBYTE3_ASBYTE6(C) |
-			 	 GETBYTE6_ASBYTE2(C) |
-			 	 GETBYTE2_ASBYTE5(C) |
-			 	 GETBYTE5_ASBYTE1(C) |
-			 	 GETBYTE1_ASBYTE4(C) ^
-			 	 GETBYTE4_ASBYTE0(C);
+			 faith = GETBYTE0_ASBYTE3(S) |
+			 	 GETBYTE3_ASBYTE6(S) |
+			 	 GETBYTE6_ASBYTE2(S) |
+			 	 GETBYTE2_ASBYTE5(S) |
+			 	 GETBYTE5_ASBYTE1(S) |
+			 	 GETBYTE1_ASBYTE4(S) ^
+			 	 GETBYTE4_ASBYTE0(S);
 	}
 	*x ^= faith;
 }
