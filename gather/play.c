@@ -6,6 +6,7 @@
 #include "../crypt.h"
 #include "../bytes.h"
 #include "../write.h"
+#include <math.h>
 
 
 #define ARGWANTED 1	// Set for whats needed
@@ -28,85 +29,65 @@ uint64_t rand64(void)
 }
 
 
-void missionwrapper(long long int revoff)	// Varies from test case to test case [strtovect(Bytes* str, char dlim, char skipfirst, char opt)]
+void missionwrapper(u8* box)	// Varies from test case to test case [strtovect(Bytes* str, char dlim, char skipfirst, char opt)]
 {
-	//PRINTBYTES(*((Bytes**)filepathaddr));
-	//printf("\n|||||||||||||||||||||||||||||||||||||||||||||||\n\n");
-	//pathmaker((Bytes**)filepathaddr, (char)pathaction, (char)freepath);
-    double time_taken; clock_t t = clock();
-    uint64_t decree = 0xab;
-    uint64_t key  = rand64();
-    key  = rand64();
-    key  = rand64();
-    key  = CLEARBYTE7(rand64());
-    unsigned long long int x = 0;
-    unsigned long long int y = 0;
-    unsigned long long int max = 0;
-    unsigned long long int maxrds = 0;
-    unsigned long long int maxrev = revoff;
-    uint64_t data = 0x7632abe5f2a3f1;
-    uint64_t cpy = data;
-    uint32_t* ptr32 = (uint32_t*)(&data);
-    uint16_t* ptr16 = (uint16_t*)(&data);
-    uint8_t*  ptr8  = (uint8_t*)(&data);
-    PRINTLLX(cpy);
-    while (--revoff > 0)
-    {
-    while(y < 64)
-    {
-    while (++x)
-    {
-
-	//if (x % check != 0)
-	//ROTATELEFT_32BIT(data, y);
-	//else
-	data = ROTATERIGHT_56BIT(data, revoff);
-	*ptr8 = REVERSE8(ptr8);
-	*(ptr8 + 1) = REVERSE8(ptr8 + 1);
-	*(ptr8 + 3) = REVERSE8(ptr8 + 3);
-	if (cpy == data || !data)
-	{
-		if (maxrds <= x)
-		{
-			printf("MAX -------------------------------------------> %llu | %llu\n", y, x);
-			max    = y;
-			if (x != maxrds)
-				maxrds = x;
-			maxrev = revoff;
-		}
-		PRINTLLX(data);
-		break;
-	}
-	//printbits_debug(data);
-	//REVERSE16(ptr16 + 2);
-	//REVERSE32(ptr32);
-	//REVERSE64(&data);
+	register double input = 0.0;
+	register double adder = 1.0;
+	register double e     = 2.71828182845905;
+	register double pi    = 3.14159265358979;
+	register double phi   = 1.61803398874989;
+	u8 hit[256];
+	register i16 i = 0;
 	
-	//printbits_debug(data);
-    }
-    x = 0;
-    ++y;
-    }
-    y = x = 0;
-    }
-    PLN(1);
-    PRINTLLX(cpy);
-    printf("%llu revoff, %llu bits with %llu rounds\n", maxrev, max, maxrds);
-    t = clock() - t;
-    time_taken = ((double)t) / CLOCKS_PER_SEC; // in seconds
+	zeroarray(hit, BOXSZ);	// Zero out array
+	
+	// Create sbox from equation
+	while(i < BOXSZ)
+	{
+		register double first  = tan(pow(sqrt(input), input));
+		register double second = pow(e, cos(input));
+		register double third  = pow(pi, sin(input));
+	
+		register double chaos = (first * second) / third;
+		register double answer = 128 * sin(chaos) + 128;
+		
+		u16 candidate = (u16)(ceil(answer));
+		if (candidate > BOXSZ - 1)
+			goto keepgoing;
+		if (!(*(hit + candidate)))
+		{
+			*(hit + candidate) = 1;
+			*(box + i)         = candidate;
+			++i;
+		}
+		
+		keepgoing:
+		input += adder;
+		if (input >= BOXSZ)
+		{
+			adder /= 10.0;
+			input = 0.0;
+			input += adder;
+		}
+	}
+	
+	// Create inverse of generated sbox
+	//for (i = 0; i < BOXSZ; ++i)
+	//	BOXINVERSE(*(box + i)) = i;
 }
 
 void timer(Mission** mission)
 {
     double time_taken;
     clock_t t = clock();
-    
-    missionstart(mission);
+    int argc;
+    for (argc = 0; argc < 256; ++argc)
+    	missionstart(mission);
     
     t = clock() - t;
     time_taken = ((double)t) / CLOCKS_PER_SEC; // in seconds
 
-    //printf("\n[+] timer took %f seconds to execute [+]\n", time_taken);
+    printf("\n[+] timer took %f seconds to execute [+]\n", time_taken);
 }
 
 // Global
@@ -114,44 +95,10 @@ void timer(Mission** mission)
 int main(int argc, char** argv)
 {
     CALIBRATE();
-	char* hardcoded = "hello";
-	char* cptr = (char*)((long long int)hardcoded * (argc != 2) + (argc == 2) * (long long int)argv[1]);
-	Bytes* bptr = dynamic_bytes(cptr, countuntilnul(cptr));
-	//Mission* mptr = missionplan(missionwrapper, assign1tool(atoi(argv[1])), 1, FREEMISSION);
-	//timer(&mptr);	        // Frees 'mptr'
-	free_bytes(&bptr);	// Frees 'bptr'
-	u64 data = 0x00ffaabbddeecc17;
-	register u64 cpy = data;
-	u8* ptr8 = (u8*)(&data);
-	PRINTLLX(data);
-	register u8 i;
-	register u64 x = 0;
-	register u64 y = 0;
-	while (1)
-	{
-		for (i = 0; i < 1; ++i)
-		{
-			//*(ptr8 + i) = TRANSPOSE(*(ptr8 + i));
-			//*(ptr8 + i) = SEAL(*(ptr8 + i));
-			*(ptr8 + i) = DARKNESS(*(ptr8 + i));
-		}
-		++x;
-		
-		if (*(ptr8 + 0) == 0x17)
-			break;
-		if (x % 1000 == y)
-			PRINTLLX(data);
-	}
-	/*for (i = 0; i < 7; ++i)
-	{
-		*(ptr8 + i) = LIGHT(*(ptr8 + i));
-		*(ptr8 + i) = UNSEAL(*(ptr8 + i));
-		*(ptr8 + i) = TRANSLATE(*(ptr8 + i));
-	}*/			
-	PRINTLLX(data);
-	PRINTLLN(x);
-
-     DECALIBRATE();
+    Mission* mptr = missionplan(missionwrapper, EMPTYTOOLSET, ZEROTOOLS, NOFREEMISSION);
+    timer(&mptr);
+    missionscruball(&mptr);
+    DECALIBRATE();
 }
 
 // filescanmodule("/", 0, 0, NULLPTR, NULLPTR, NULLPTR, NULLPTR); //(char* start, unsigned int depth, char objecttype, Svect* prunelist, char (*fileop)(Portal*, Bytes**, Bytes**, char), Portal* portal, Bytes* asprefix)

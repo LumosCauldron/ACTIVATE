@@ -139,9 +139,24 @@ Mission* missionplan(void* function, u64* equipment, u8 numtools, u8 cleanaction
 	return ptr;
 }
 
-void missionscrub(Mission** ptr)	// Force frees a mission object (SAME AS 'missionclean()' WHEN FREEMISSION FLAG IS SET)
+static inline void missionscrubequip(Mission** ptr)	// Force frees a mission object (SAME AS 'missionclean()' WHEN FREEMISSION FLAG IS SET)
 {
-	FREE(&((*ptr)->equipment));	// Frees 'mission_object.equipment' by address of pointer to mission object (in short, frees equipment array and zeros out the pointer)
+	if (!goodptr(ptr, "NULLPTR PTR ADDRESS GIVEN TO MISSIONSCRUB", FUNC_RETURN))
+		return;
+	if (!goodptr(*ptr, "NULLPTR PTR GIVEN TO MISSIONSCRUB", FUNC_RETURN))
+		return;
+	if ((*ptr)->equipment)
+		FREE(&((*ptr)->equipment));	// Frees 'mission_object.equipment' by address of pointer to mission object (in short, frees equipment array and zeros out the pointer)
+}
+
+static inline void missionscruball(Mission** ptr)	// Force frees a mission object (SAME AS 'missionclean()' WHEN FREEMISSION FLAG IS SET)
+{
+	if (!goodptr(ptr, "NULLPTR PTR ADDRESS GIVEN TO MISSIONSCRUB", FUNC_RETURN))
+		return;
+	if (!goodptr(*ptr, "NULLPTR PTR GIVEN TO MISSIONSCRUB", FUNC_RETURN))
+		return;
+	if ((*ptr)->equipment)
+		FREE(&((*ptr)->equipment));	// Frees 'mission_object.equipment' by address of pointer to mission object (in short, frees equipment array and zeros out the pointer)
 	FREE(ptr);
 }
 
@@ -149,20 +164,21 @@ void missionclean(Mission** ptr)	// Frees mission object based off set parameter
 {
 	switch((*ptr)->cleanaction)
 	{
-		case NOFREEMISSION : break;
-		case FREEEQUIP     : FREE(&((*ptr)->equipment));	// Frees 'mission_object.equipment' by address of pointer to mission object 
-				     break;				// (in short, frees equipment array and zeros out the pointer)
-		case FREEMISSION   : FREE(&((*ptr)->equipment));	// Frees 'mission_object.equipment' by address of pointer to mission object
-				     FREE(ptr);				// (in short, frees equipment array and zeros out the pointer)
-	}
+		case FREEEQUIP     : missionscrubequip(ptr);	// Frees 'mission_object.equipment' by address of pointer to mission object 
+				     break;			// (in short, frees equipment array and zeros out the pointer)
+		case FREEMISSION   : missionscruball(ptr);	// Frees 'mission_object.equipment' by address of pointer to mission object
+	}			     				// (in short, frees equipment array and zeros out the pointer)
 }
 
 void missionstart(Mission** order)	// Executes whatever function is passed in as a "module" (Usually for executing on elements handled in larger functions that loop through filesystems or arrays)
 {					// Equipment array and numtools MUST be consistent (e.g 3 elements in 'equipment' means numtools == 3) !!! IMPERATIVE !!!
-	goodptr(order, "NULLPTR ORDER ADDRESS GIVEN TO MISSIONSTART", NOFUNC_RETURN);
-	goodptr(*order, "NULLPTR ORDER GIVEN TO MISSIONSTART", NOFUNC_RETURN);
+	if (!goodptr(order, "NULLPTR ORDER ADDRESS GIVEN TO MISSIONSTART", FUNC_RETURN))
+		return;
+	if (!goodptr(*order, "NULLPTR ORDER GIVEN TO MISSIONSTART", FUNC_RETURN))
+		return;
 	if ((*order)->numtools)
-		goodptr((*order)->equipment, "NULLPTR ORDER->EQUIPMENT GIVEN TO MISSIONSTART", NOFUNC_RETURN);
+		if (!goodptr((*order)->equipment, "NULLPTR ORDER->EQUIPMENT GIVEN TO MISSIONSTART", FUNC_RETURN))
+			return;
 	switch((*order)->numtools)	// Casts and executes function
 	{
 		case 0 : ;

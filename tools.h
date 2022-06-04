@@ -18,18 +18,70 @@ static inline void PRINTLLX(long long int num)  { printf("0x%llx\n", num); 	 }	 
 static inline void PRINTF(float num)            { printf("%llf\n", num);  	 }       // FLOAT
 static inline void PRINTD(double num)           { printf("%llf\n", num);  	 }       // DOUBLE
 
+void print_space_format256(u8 x, u8 sign)
+{
+	switch(sign)
+	{
+		case 2:
+			if (x > 0x0f)
+				printf(" 0x%x,",   x);
+			else
+				printf(" 0x0%x,",  x);
+			break;
+		case 1:	
+			if (x > 100)
+				printf(" %d,",   (i8)x);
+			else if (x > 10)
+				printf("  %d,",  (i8)x);
+			else
+				printf("   %d,", (i8)x);
+			break;
+		case 0:
+			if (x > 100)
+				printf(" %u,",   x);
+			else if (x > 10)
+				printf("  %u,",  x);
+			else
+				printf("   %u,", x);
+	}
+}
 
 // UNDER DEVELOPMENT
-/* void PRINTN_LEFT_ALIGNED(long long int num, char sign)
-{
-	register long long int holder = num;
-	while(holder /= 10)
-		putc(' ');
-	if (sign)
-		printf("%lln", (long long int)(num));
-	else
-		printf("%lln", (unsigned long long int)(num));
-} */
+ void printsboxes(u8* box)
+ {
+ 	register u16 x = 0;
+ 	register u16 y;
+ 	u8 inverse[256];
+ 	zeroarray(inverse, 256);
+ 	printf("u8 sbox[BOXSZ] = {");
+	for (y = 0; y < 256; ++y)
+	{
+		print_space_format256(box[y], 2);
+		++x;
+		if (x == 16 && x != 256)
+		{
+			PLN(1);
+			printf("                  ");
+			x = 0;
+		}
+		
+		inverse[box[y]] = y;
+	}
+	PLN(2);
+	printf("u8 sboxinverse[BOXSZ] = {");
+	x = 0;
+	for (y = 0; y < 256; ++y)
+	{
+		print_space_format256(inverse[y], 2);
+		++x;
+		if (x == 16)
+		{
+			PLN(1);
+			printf("                         ");
+			x = 0;
+		}
+	}
+ }
 
 void PRINTNUMARRAY(i64* arr, u32 sz) 
 {

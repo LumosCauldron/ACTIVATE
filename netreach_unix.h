@@ -597,7 +597,7 @@ i64  perceptnum(Portal* portal)	// Receives 8 (a.k.a. NETWORK_NUMSZ) bytes from 
 	goodptr(portal, "NULLPTR PORTAL GIVEN TO PERCEPTNUM", NOFUNC_RETURN);
 	devotedrecv(portal, NETWORK_NUMSZ);					// Will not return until number is received
 	          i64 *  numptr = (i64 *)(PORTALBUFFER(portal)->array);		// Get correct pointer type
-	register  i64    number = (i64 )(numptr);				// Get integer received in portal buffer (NETWORK_NUMSZ == 8 bytes)			
+	register  i64    number = (i64 )(*numptr);				// Get integer received in portal buffer (NETWORK_NUMSZ == 8 bytes)			
 	zeroarray(PORTALBUFFER(portal)->array, NETWORK_NUMSZ);	 	 	// Clean buffer after 'devotedrecv' use
 	return number;
 }
