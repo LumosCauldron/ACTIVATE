@@ -6,7 +6,6 @@
 #include "../crypt.h"
 #include "../bytes.h"
 #include "../write.h"
-#include <math.h>
 
 #define ARGWANTED 1	// Set for whats needed
 #define NUMARGS	  2
@@ -80,6 +79,7 @@ int main(int argc, char** argv)
     Mission* mptr = missionplan(missionwrapper, EMPTYTOOLSET, ZEROTOOLS, NOFREEMISSION);
     //timer(&mptr);
     //missionscruball(&mptr);
+    generator();
 
     DECALIBRATE();
 }

@@ -359,7 +359,7 @@ u32 READ(Portal* portal, i64  offset, u32 amount, u8 clearbufferflag)
 	goodptr(portal, "NULLPTR PORTAL GIVEN TO READ", NOFUNC_RETURN);		// Pointer checking
 	if (offset + amount > PORTAL_ALLOCATION(portal))
 	{
-		PORTALBUFFER(portal) = REALLOC(PORTALBUFFER(portal), offset + amount + 1);	// If more than preset limit, enlarge portal buffer (can crash embedded devices)
+		PORTALBUFFER(portal)->array = REALLOC(PORTALBUFFER(portal)->array, offset + amount + 1);	// If more than preset limit, enlarge portal buffer (can crash embedded devices)
 		zeroarray(PORTALBUFFER(portal)->array + offset, amount + 1);			// Includes Nul-terminator for all 'Bytes' objects
 		PORTAL_ALLOCATION(portal) = offset + amount + 1;
 		goto startreading;

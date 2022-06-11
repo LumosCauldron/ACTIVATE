@@ -3,6 +3,7 @@
 
 #include "bits.h"
 #include "hash.h"
+#include <math.h>
 
 #define BOXSZ 256
 #define MSGSZ  49
@@ -165,7 +166,7 @@ u8 lightofday[BOXSZ]  = { 231 , 183 , 184 , 239 , 240 , 24  , 241 , 23  , 161 , 
 #define COMBINEHALVES12(reg1, reg2)	((SECONDHALF(reg1)) | (FIRSTHALF(reg2)))
 #define COMBINEHALVES21(reg1, reg2)	((SECONDHALF(reg2)) | (FIRSTHALF(reg1)))
 
-u8* sboxarray[ROUNDCOUNT];
+u8 sboxarray[ROUNDCOUNT * BOXSZ * 2];
 u64 G	  = 0x0000000000000000;
 u64 S	  = 0x0000000000000000;
 u64 H	  = 0x0000000000000000;
@@ -209,34 +210,34 @@ static inline void achieveorder()	// Determine order, determine & hide hashes, a
 		   	       *(trikey +  7) + *(trikey +  8) + *(trikey +  9) + *(trikey + 10) + *(trikey + 11) + *(trikey + 12) + *(trikey + 13) +
 		   	       *(trikey + 14) + *(trikey + 15) + *(trikey + 16) + *(trikey + 17) + *(trikey + 18) + *(trikey + 19) + *(trikey + 20), KEYLEN));
 	
-	u64* kptr1 = (u64)(trikey); 
-	u64* kptr2 = (u64)(trikey + AREALEN); 
-	u64* kptr3 = (u64)(trikey + AREALEN + AREALEN); 
+	u64* kptr1 = (u64*)(trikey); 
+	u64* kptr2 = (u64*)(trikey + AREALEN); 
+	u64* kptr3 = (u64*)(trikey + AREALEN + AREALEN); 
 	switch(order % 3)
 	{
 		case 0:	
 			G    = CLEARBYTE7(*kptr1);
 			S    = CLEARBYTE7(*kptr2);
 			H    = CLEARBYTE7(*kptr3);
-			Gh   = MOD(order * signature(kptr1, AREALEN), 0x100000000);
-			Sh   = MOD(order * signature(kptr2, AREALEN), 0x100000000);
-			Hh   = MOD(order * signature(kptr3, AREALEN), 0x100000000);
+			Gh   = MOD(order * signature((const char*)kptr1, AREALEN), 0x100000000);
+			Sh   = MOD(order * signature((const char*)kptr2, AREALEN), 0x100000000);
+			Hh   = MOD(order * signature((const char*)kptr3, AREALEN), 0x100000000);
 			break;
 		case 1:
 			G    = CLEARBYTE7(*kptr2);
 			S    = CLEARBYTE7(*kptr3);
 			H    = CLEARBYTE7(*kptr1);
-			Gh   = MOD(order * signature(kptr2, AREALEN), 0x100000000);
-			Sh   = MOD(order * signature(kptr3, AREALEN), 0x100000000);
-			Hh   = MOD(order * signature(kptr1, AREALEN), 0x100000000);
+			Gh   = MOD(order * signature((const char*)kptr2, AREALEN), 0x100000000);
+			Sh   = MOD(order * signature((const char*)kptr3, AREALEN), 0x100000000);
+			Hh   = MOD(order * signature((const char*)kptr1, AREALEN), 0x100000000);
 			break;
 		case 2:
 			G    = CLEARBYTE7(*kptr3);
 			S    = CLEARBYTE7(*kptr1);
 			H    = CLEARBYTE7(*kptr2);
-			Gh   = MOD(order * signature(kptr3, AREALEN), 0x100000000);
-			Sh   = MOD(order * signature(kptr1, AREALEN), 0x100000000);
-			Hh   = MOD(order * signature(kptr2, AREALEN), 0x100000000); // 4,294,967,296
+			Gh   = MOD(order * signature((const char*)kptr3, AREALEN), 0x100000000);
+			Sh   = MOD(order * signature((const char*)kptr1, AREALEN), 0x100000000);
+			Hh   = MOD(order * signature((const char*)kptr2, AREALEN), 0x100000000); // 4,294,967,296
 	}
 	GSHh  = signature(trikey, KEYLEN);
 	order = MOD(order + GSHh + Gh + Sh + Hh, 0x100); // 256
@@ -250,15 +251,15 @@ void generator()
 	register double pi    = 3.14159265358979;
 	register double phi   = 1.61803398874989;
 	u8 hit[256];
-	register i16 i = 0;
+	register u16 i = 0;
+	register u16 j = 0;
 	register u8  boxcount = 0;
 	
-	for (boxcount = 0; boxcount < 21, ++boxcount)
+	for (boxcount = 0; boxcount < 42; boxcount += 2)
 	{
 		zeroarray(hit, BOXSZ);	// Zero out array
-		
 		// Create sbox from equation
-		while(i < BOXSZ)
+		while(j < 256)
 		{
 			register double first  = tan(pow(sqrt(input), input));
 			register double second = pow(e, cos(input));
@@ -272,24 +273,29 @@ void generator()
 				goto keepgoing;
 			if (!(*(hit + candidate)))
 			{
+								print_space_format256(candidate, 0);
+				PRINTN(j);
 				*(hit + candidate) = 1;
-				*(box + i)         = candidate;
+				*(sboxarray + (boxcount * BOXSZ) + i) = candidate;
 				++i;
+				++j;
+
 			}
-			
 			keepgoing:
 			input += adder;
 			if (input >= BOXSZ)
 			{
 				adder /= 10.0;
-				input = 0.0;
+				input  = 0.0;
 				input += adder;
 			}
 		}
-		
+		j     = 0;
+		adder = 1.0;
 		// Create inverse of generated sbox
 		for (i = 0; i < BOXSZ; ++i)
-			BOXINVERSE(*(box + i)) = i;
+			*(sboxarray + ((boxcount + 1) * BOXSZ) + i) = i;
+		exit(0);
 	}
 }
 
