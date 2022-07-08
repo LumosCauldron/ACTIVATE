@@ -5,35 +5,6 @@
 #include "hash.h"
 #include <math.h>
 
-#define BOXSZ 256
-#define MSGSZ  49
-#define BLKSZ   7
-
-// Call 8 times on same byte to get back to original byte value
-#define permute8bits_byte0(H0) ((GETBIT0_ASBIT3((H0))   | GETBIT3_ASBIT6((H0))   | GETBIT6_ASBIT1((H0))   | GETBIT1_ASBIT4((H0))   | GETBIT4_ASBIT7((H0))   | GETBIT7_ASBIT2((H0))   | GETBIT2_ASBIT5((H0))   | GETBIT5_ASBIT0((H0)))) 	 
-#define permute8bits_byte1(H0) ((GETBIT8_ASBIT11((H0))  | GETBIT11_ASBIT14((H0)) | GETBIT14_ASBIT9((H0))  | GETBIT9_ASBIT12((H0))  | GETBIT12_ASBIT15((H0)) | GETBIT15_ASBIT10((H0)) | GETBIT10_ASBIT13((H0)) | GETBIT13_ASBIT8((H0))))	 
-#define permute8bits_byte2(H0) ((GETBIT16_ASBIT19((H0)) | GETBIT19_ASBIT22((H0)) | GETBIT22_ASBIT17((H0)) | GETBIT17_ASBIT20((H0)) | GETBIT20_ASBIT23((H0)) | GETBIT23_ASBIT18((H0)) | GETBIT18_ASBIT21((H0)) | GETBIT21_ASBIT16((H0)))) 
-#define permute8bits_byte3(H0) ((GETBIT24_ASBIT27((H0)) | GETBIT27_ASBIT30((H0)) | GETBIT30_ASBIT25((H0)) | GETBIT25_ASBIT28((H0)) | GETBIT28_ASBIT31((H0)) | GETBIT31_ASBIT26((H0)) | GETBIT26_ASBIT29((H0)) | GETBIT29_ASBIT24((H0)))) 
-#define permute8bits_byte4(H0) ((GETBIT32_ASBIT35((H0)) | GETBIT35_ASBIT38((H0)) | GETBIT38_ASBIT33((H0)) | GETBIT33_ASBIT36((H0)) | GETBIT36_ASBIT39((H0)) | GETBIT39_ASBIT34((H0)) | GETBIT34_ASBIT37((H0)) | GETBIT37_ASBIT32((H0)))) 
-#define permute8bits_byte5(H0) ((GETBIT40_ASBIT43((H0)) | GETBIT43_ASBIT46((H0)) | GETBIT46_ASBIT41((H0)) | GETBIT41_ASBIT44((H0)) | GETBIT44_ASBIT47((H0)) | GETBIT47_ASBIT42((H0)) | GETBIT42_ASBIT45((H0)) | GETBIT45_ASBIT40((H0)))) 
-#define permute8bits_byte6(H0) ((GETBIT48_ASBIT51((H0)) | GETBIT51_ASBIT54((H0)) | GETBIT54_ASBIT49((H0)) | GETBIT49_ASBIT52((H0)) | GETBIT52_ASBIT55((H0)) | GETBIT55_ASBIT50((H0)) | GETBIT50_ASBIT53((H0)) | GETBIT53_ASBIT48((H0)))) 
-#define permute8bits_byte7(H0) ((GETBIT56_ASBIT59((H0)) | GETBIT59_ASBIT62((H0)) | GETBIT62_ASBIT57((H0)) | GETBIT57_ASBIT60((H0)) | GETBIT60_ASBIT63((H0)) | GETBIT63_ASBIT58((H0)) | GETBIT58_ASBIT61((H0)) | GETBIT61_ASBIT56((H0))))   
-
-// Call 8 times on same byte to get back to original byte value
-#define unify8bits_byte0(H0) ((GETBIT3_ASBIT0((H0))   | GETBIT6_ASBIT3((H0))   | GETBIT1_ASBIT6((H0))   | GETBIT4_ASBIT1((H0))   | GETBIT7_ASBIT4((H0))   | GETBIT2_ASBIT7((H0))   | GETBIT5_ASBIT2((H0))   | GETBIT0_ASBIT5((H0)))) 	 
-#define unify8bits_byte1(H0) ((GETBIT11_ASBIT8((H0))  | GETBIT14_ASBIT11((H0)) | GETBIT9_ASBIT14((H0))  | GETBIT12_ASBIT9((H0))  | GETBIT15_ASBIT12((H0)) | GETBIT10_ASBIT15((H0)) | GETBIT13_ASBIT10((H0)) | GETBIT8_ASBIT13((H0))))	 
-#define unify8bits_byte2(H0) ((GETBIT19_ASBIT16((H0)) | GETBIT22_ASBIT19((H0)) | GETBIT17_ASBIT22((H0)) | GETBIT20_ASBIT17((H0)) | GETBIT23_ASBIT20((H0)) | GETBIT18_ASBIT23((H0)) | GETBIT21_ASBIT18((H0)) | GETBIT16_ASBIT21((H0)))) 
-#define unify8bits_byte3(H0) ((GETBIT27_ASBIT24((H0)) | GETBIT30_ASBIT27((H0)) | GETBIT25_ASBIT30((H0)) | GETBIT28_ASBIT25((H0)) | GETBIT31_ASBIT28((H0)) | GETBIT26_ASBIT31((H0)) | GETBIT29_ASBIT26((H0)) | GETBIT24_ASBIT29((H0)))) 
-#define unify8bits_byte4(H0) ((GETBIT35_ASBIT32((H0)) | GETBIT38_ASBIT35((H0)) | GETBIT33_ASBIT38((H0)) | GETBIT36_ASBIT33((H0)) | GETBIT39_ASBIT36((H0)) | GETBIT34_ASBIT39((H0)) | GETBIT37_ASBIT34((H0)) | GETBIT32_ASBIT37((H0)))) 
-#define unify8bits_byte5(H0) ((GETBIT43_ASBIT40((H0)) | GETBIT46_ASBIT43((H0)) | GETBIT41_ASBIT46((H0)) | GETBIT44_ASBIT41((H0)) | GETBIT47_ASBIT44((H0)) | GETBIT42_ASBIT47((H0)) | GETBIT45_ASBIT42((H0)) | GETBIT40_ASBIT45((H0)))) 
-#define unify8bits_byte6(H0) ((GETBIT51_ASBIT48((H0)) | GETBIT54_ASBIT51((H0)) | GETBIT49_ASBIT54((H0)) | GETBIT52_ASBIT49((H0)) | GETBIT55_ASBIT52((H0)) | GETBIT50_ASBIT55((H0)) | GETBIT53_ASBIT50((H0)) | GETBIT48_ASBIT53((H0)))) 
-#define unify8bits_byte7(H0) ((GETBIT59_ASBIT56((H0)) | GETBIT62_ASBIT59((H0)) | GETBIT57_ASBIT62((H0)) | GETBIT60_ASBIT57((H0)) | GETBIT63_ASBIT60((H0)) | GETBIT58_ASBIT63((H0)) | GETBIT61_ASBIT58((H0)) | GETBIT56_ASBIT61((H0)))) 
-
-
-// Call 56 times on same 7-byte key to get back to original key value
-#define permute7bytes(H0) ((permute8bits_byte3(GETBYTE0_ASBYTE3((H0))) | permute8bits_byte6(GETBYTE3_ASBYTE6((H0))) | permute8bits_byte2(GETBYTE6_ASBYTE2((H0))) | permute8bits_byte5(GETBYTE2_ASBYTE5((H0))) | permute8bits_byte1(GETBYTE5_ASBYTE1((H0))) | permute8bits_byte4(GETBYTE1_ASBYTE4((H0))) | permute8bits_byte0(GETBYTE4_ASBYTE0((H0)))))
-#define unify7bytes(H0)   ((unify8bits_byte0(GETBYTE3_ASBYTE0((H0)))   | unify8bits_byte3(GETBYTE6_ASBYTE3((H0)))   | unify8bits_byte6(GETBYTE2_ASBYTE6((H0)))   | unify8bits_byte2(GETBYTE5_ASBYTE2((H0)))   | unify8bits_byte5(GETBYTE1_ASBYTE5((H0)))   | unify8bits_byte1(GETBYTE4_ASBYTE1((H0)))   | unify8bits_byte4(GETBYTE0_ASBYTE4((H0)))))
-
 
 // SBOX FROM AES
 //u8 aes[BOXSZ] = 
@@ -138,17 +109,20 @@ u8 lightofday[BOXSZ]  = { 231 , 183 , 184 , 239 , 240 , 24  , 241 , 23  , 161 , 
 			  27  , 133 , 90  , 207 , 220 , 95  , 227 , 139 , 110 , 198 , 109 , 40  , 160 , 237 , 86  , 245 , 
 			  254 , 233 , 107 , 228 , 54  , 69  , 137 , 63  , 31  , 119 , 97  , 194 , 128 , 22  , 177 , 101 , 
 			  170 , 213 , 60  , 114 , 152 , 82  , 99  , 25  , 18  , 156 , 216 , 124 , 250 , 55  , 175 , 113 };
-#define TRANSPOSE(reg) 	((*(aes + (reg))))
-#define TRANSLATE(reg) 	((*(aesinv + (reg))))
-#define SEAL(reg)   	((*(seal + (reg))))
-#define UNSEAL(reg) 	((*(unseal + (reg))))
-#define DARKNESS(reg)   ((*(darkofnight + (reg))))
-#define LIGHT(reg) 	((*(lightofday + (reg))))
+			  
+#define TRANSPOSE(reg) ((*(aes + (reg))))
+#define TRANSLATE(reg) ((*(aesinv + (reg))))
+#define SEAL(reg)      ((*(seal + (reg))))
+#define UNSEAL(reg)    ((*(unseal + (reg))))
+#define DARKNESS(reg)  ((*(darkofnight + (reg))))
+#define LIGHT(reg)     ((*(lightofday + (reg))))
 */
-
-#define KEYLEN	   	21
-#define AREALEN	 	 7
-#define ROUNDCOUNT 	21
+#define BOXSZ    	256
+#define MSGBLKSZ  	 49
+#define KEYSZ     	 21
+#define BLKBLKSZ   	  7
+#define KEYBLKSZ   	  7
+#define ROUNDCOUNT 	 21
 #define DYNAMICBOX(box, reg)    ((*((box) + (reg))))
 
 #define FIRSTHALF_MASK  0b00001111
@@ -166,16 +140,41 @@ u8 lightofday[BOXSZ]  = { 231 , 183 , 184 , 239 , 240 , 24  , 241 , 23  , 161 , 
 #define COMBINEHALVES12(reg1, reg2)	((SECONDHALF(reg1)) | (FIRSTHALF(reg2)))
 #define COMBINEHALVES21(reg1, reg2)	((SECONDHALF(reg2)) | (FIRSTHALF(reg1)))
 
-u8 sboxarray[ROUNDCOUNT * BOXSZ * 2];
-u64 G	  = 0x0000000000000000;
-u64 S	  = 0x0000000000000000;
-u64 H	  = 0x0000000000000000;
-u32 GSHh  = 0x00000000;
-u32 Gh    = 0x00000000;
-u32 Sh    = 0x00000000;
-u32 Hh    = 0x00000000;
-u8  order = 0x00;
-u8  trikey[KEYLEN + 1];
+u8  lineup[KEYSZ * ROUNDCOUNT];
+u8  sboxarray[ROUNDCOUNT * BOXSZ * 2];
+u8* F_i_E_L_D = NULLPTR;
+
+u64  G	   = 0x0000000000000000;
+u64  S	   = 0x0000000000000000;
+u64  H	   = 0x0000000000000000;
+u64  hG    = 0x0000000000000000;
+u64  hS    = 0x0000000000000000;
+u64  hH    = 0x0000000000000000;
+u32  GSHh  = 0x00000000;
+u32  Gh    = 0x00000000;
+u32  Sh    = 0x00000000;
+u32  Hh    = 0x00000000;
+u8   order = 0x00;
+
+static inline void keytoreg(u8* ptr)	// Overwrites 'hG', 'hS', and 'hH'
+{
+	u64* kptr1 = (u64*)(ptr); 
+	u64* kptr2 = (u64*)(ptr + BLKBLKSZ); 
+	u64* kptr3 = (u64*)(ptr + BLKBLKSZ + BLKBLKSZ); 	
+		hG = CLEARBYTE7(*kptr1);
+		hS = CLEARBYTE7(*kptr2);
+		hH = CLEARBYTE7(*kptr3);
+}
+
+static inline void regtokey(u8* ptr)	// Overwrites 'hG', 'hS', and 'hH'
+{
+	u64* kptr1 = (u64*)(ptr); 
+	u64* kptr2 = (u64*)(ptr + BLKBLKSZ); 
+	u64* kptr3 = (u64*)(ptr + BLKBLKSZ + BLKBLKSZ); 	
+	*kptr1 = hG;
+	*kptr2 = hS;
+	*kptr3 = hH;
+}
 
 static inline void POSITION_HALFBYTES_FROM12(u8* byte1, u8* byte2, u8 halves)
 {
@@ -192,65 +191,64 @@ static inline void POSITION_HALFBYTES_FROM21(u8* byte1, u8* byte2, u8 halves)
 static inline void switchlock12(u8* blackbox, u8* byte1, u8* byte2)
 {
 	register u8 halves = permute8bits_byte0(COMBINEHALVES12(*byte1, *byte2));
-			 halves = DYNAMICBOX(blackbox, halves);
+		    halves = DYNAMICBOX(blackbox, halves);
 	POSITION_HALFBYTES_FROM12(byte1, byte2, halves);
 }
 // Weave bottom part of first byte and top part of second byte together
 static inline void switchlock21(u8* blackbox, u8* byte1, u8* byte2)
 {
 	register u8 halves = unify8bits_byte0(COMBINEHALVES21(*byte1, *byte2));
-			 halves = DYNAMICBOX(blackbox, halves);
+		    halves = DYNAMICBOX(blackbox, halves);
 	POSITION_HALFBYTES_FROM21(byte1, byte2, halves);
 }
 
-static inline void achieveorder()	// Determine order, determine & hide hashes, and hide order
+static inline void setkey(u8* trikey)	// Determine order, determine & hide hashes, and hide order
 {
-	zeroarray(trikey, KEYLEN + 1);
 	order = *(trikey + MOD(*(trikey)      + *(trikey +  1) + *(trikey +  2) + *(trikey +  3) + *(trikey +  4) + *(trikey +  5) + *(trikey +  6) +
 		   	       *(trikey +  7) + *(trikey +  8) + *(trikey +  9) + *(trikey + 10) + *(trikey + 11) + *(trikey + 12) + *(trikey + 13) +
-		   	       *(trikey + 14) + *(trikey + 15) + *(trikey + 16) + *(trikey + 17) + *(trikey + 18) + *(trikey + 19) + *(trikey + 20), KEYLEN));
+		   	       *(trikey + 14) + *(trikey + 15) + *(trikey + 16) + *(trikey + 17) + *(trikey + 18) + *(trikey + 19) + *(trikey + 20), KEYSZ));
 	
 	u64* kptr1 = (u64*)(trikey); 
-	u64* kptr2 = (u64*)(trikey + AREALEN); 
-	u64* kptr3 = (u64*)(trikey + AREALEN + AREALEN); 
+	u64* kptr2 = (u64*)(trikey + BLKBLKSZ); 
+	u64* kptr3 = (u64*)(trikey + BLKBLKSZ + BLKBLKSZ); 
 	switch(order % 3)
 	{
 		case 0:	
 			G    = CLEARBYTE7(*kptr1);
 			S    = CLEARBYTE7(*kptr2);
 			H    = CLEARBYTE7(*kptr3);
-			Gh   = MOD(order * signature((const char*)kptr1, AREALEN), 0x100000000);
-			Sh   = MOD(order * signature((const char*)kptr2, AREALEN), 0x100000000);
-			Hh   = MOD(order * signature((const char*)kptr3, AREALEN), 0x100000000);
+			Gh   = MOD(order * signature((const char*)kptr1, BLKBLKSZ), 0x100000000);
+			Sh   = MOD(order * signature((const char*)kptr2, BLKBLKSZ), 0x100000000);
+			Hh   = MOD(order * signature((const char*)kptr3, BLKBLKSZ), 0x100000000);
 			break;
 		case 1:
 			G    = CLEARBYTE7(*kptr2);
 			S    = CLEARBYTE7(*kptr3);
 			H    = CLEARBYTE7(*kptr1);
-			Gh   = MOD(order * signature((const char*)kptr2, AREALEN), 0x100000000);
-			Sh   = MOD(order * signature((const char*)kptr3, AREALEN), 0x100000000);
-			Hh   = MOD(order * signature((const char*)kptr1, AREALEN), 0x100000000);
+			Gh   = MOD(order * signature((const char*)kptr2, BLKBLKSZ), 0x100000000);
+			Sh   = MOD(order * signature((const char*)kptr3, BLKBLKSZ), 0x100000000);
+			Hh   = MOD(order * signature((const char*)kptr1, BLKBLKSZ), 0x100000000);
 			break;
 		case 2:
 			G    = CLEARBYTE7(*kptr3);
 			S    = CLEARBYTE7(*kptr1);
 			H    = CLEARBYTE7(*kptr2);
-			Gh   = MOD(order * signature((const char*)kptr3, AREALEN), 0x100000000);
-			Sh   = MOD(order * signature((const char*)kptr1, AREALEN), 0x100000000);
-			Hh   = MOD(order * signature((const char*)kptr2, AREALEN), 0x100000000); // 4,294,967,296
+			Gh   = MOD(order * signature((const char*)kptr3, BLKBLKSZ), 0x100000000);
+			Sh   = MOD(order * signature((const char*)kptr1, BLKBLKSZ), 0x100000000);
+			Hh   = MOD(order * signature((const char*)kptr2, BLKBLKSZ), 0x100000000); // 4,294,967,296
 	}
-	GSHh  = signature(trikey, KEYLEN);
+	GSHh  = signature(trikey, KEYSZ);
 	order = MOD(order + GSHh + Gh + Sh + Hh, 0x100); // 256
 }
 
-void generator()
+static inline void boxgen()
 {
 	register double input = 0.0;
 	register double adder = 1.0;
 	register double e     = 2.71828182845905;
 	register double pi    = 3.14159265358979;
 	register double phi   = 1.61803398874989;
-	u8 hit[256];
+	u8 hit[BOXSZ];
 	register u16 i = 0;
 	register u16 j = 0;
 	register u8  boxcount = 0;
@@ -259,7 +257,7 @@ void generator()
 	{
 		zeroarray(hit, BOXSZ);	// Zero out array
 		// Create sbox from equation
-		while(j < 256)
+		while(j < BOXSZ)
 		{
 			register double first  = tan(pow(sqrt(input), input));
 			register double second = pow(e, cos(input));
@@ -273,7 +271,7 @@ void generator()
 				goto keepgoing;
 			if (!(*(hit + candidate)))
 			{
-								print_space_format256(candidate, 0);
+				print_space_format256(candidate, 0);
 				PRINTN(j);
 				*(hit + candidate) = 1;
 				*(sboxarray + (boxcount * BOXSZ) + i) = candidate;
@@ -299,22 +297,33 @@ void generator()
 	}
 }
 
-void triangle(u64* G, u64* S, u64* HS)
+static inline void triangle()
 {
-	register u64 all    = *G;
-	register u64 good   = *S;
-	register u64 things = *HS;
+	register u64 all    = G;
+	register u64 good   = S;
+	register u64 things = HS;
 	
-	*HS = good   ^  things;
-	*S  = all    ^  good;
-	*G  = things ^  all;
+	HS = good   ^  things;
+	S  = all    ^  good;
+	G  = things ^  all;
 }
 
-void sow(u64* x, u64 decree) // decree is actually a 'u8' type
+static inline void minitriangle(u64* x, u64* y, u64* z)
 {
-	register u64 faith = 0x0000000000000000 | (decree << 48);	// Places decree value into 6th byte
+	register u64 regx = *x;
+	register u64 regy = *y;
+	register u64 regz = *z;
 	
-	switch(decree % AREALEN)
+	*x = regx ^ regy;
+	*y = regy ^ regz;
+	*z = regz ^ regx;
+}
+
+static inline void sow(u64* x) // decree is actually a 'u8' type
+{
+	register u64 faith = 0x0000000000000000 | ((u64)(order) << 48);	// Places decree value into 6th byte
+	
+	switch(order % BLKBLKSZ)
 	{
 		case 0 : ;
 			 faith = GETBYTE0_ASBYTE4(S) |
@@ -382,27 +391,95 @@ void sow(u64* x, u64 decree) // decree is actually a 'u8' type
 	*x ^= faith;
 }
 
-void til(u64* x, u64* y, u64* z)
+static inline void keypathways(u8* sbox, u8* key)
 {
-	register u64 regx = *x;
-	register u64 regy = *y;
-	register u64 regz = *z;
-	
-	*x = regx ^ regy;
-	*y = regy ^ regz;
-	*z = regz ^ regx;
+	*(key     ) = DYNAMICBOX(sbox, *(key     ));
+	*(key +  1) = DYNAMICBOX(sbox, *(key +  1));
+	*(key +  2) = DYNAMICBOX(sbox, *(key +  2));
+	*(key +  3) = DYNAMICBOX(sbox, *(key +  3));
+	*(key +  4) = DYNAMICBOX(sbox, *(key +  4));
+	*(key +  5) = DYNAMICBOX(sbox, *(key +  5));
+	*(key +  6) = DYNAMICBOX(sbox, *(key +  6));
+	*(key +  7) = DYNAMICBOX(sbox, *(key +  7));
+	*(key +  8) = DYNAMICBOX(sbox, *(key +  8));
+	*(key +  9) = DYNAMICBOX(sbox, *(key +  9));
+	*(key + 10) = DYNAMICBOX(sbox, *(key + 10));
+	*(key + 11) = DYNAMICBOX(sbox, *(key + 11));
+	*(key + 12) = DYNAMICBOX(sbox, *(key + 12));
+	*(key + 13) = DYNAMICBOX(sbox, *(key + 13));
+	*(key + 14) = DYNAMICBOX(sbox, *(key + 14));
+	*(key + 15) = DYNAMICBOX(sbox, *(key + 15));
+	*(key + 16) = DYNAMICBOX(sbox, *(key + 16));
+	*(key + 17) = DYNAMICBOX(sbox, *(key + 17));
+	*(key + 18) = DYNAMICBOX(sbox, *(key + 18));
+	*(key + 19) = DYNAMICBOX(sbox, *(key + 19));
+	*(key + 20) = DYNAMICBOX(sbox, *(key + 20));
 }
 
-void weaver(u8* field)
+static inline void datapathways(u8* sbox)
 {
-	
-	u64* ptr0 = (u64*)(field);
-	u64* ptr1 = (u64*)(field + 7);
-	u64* ptr2 = (u64*)(field + 14);
-	u64* ptr3 = (u64*)(field + 21);
-	u64* ptr4 = (u64*)(field + 28);
-	u64* ptr5 = (u64*)(field + 35);
-	u64* ptr6 = (u64*)(field + 42);
+	*(F_i_E_L_D     ) = DYNAMICBOX(sbox, *(F_i_E_L_D     ));
+	*(F_i_E_L_D +  1) = DYNAMICBOX(sbox, *(F_i_E_L_D +  1));
+	*(F_i_E_L_D +  2) = DYNAMICBOX(sbox, *(F_i_E_L_D +  2));
+	*(F_i_E_L_D +  3) = DYNAMICBOX(sbox, *(F_i_E_L_D +  3));
+	*(F_i_E_L_D +  4) = DYNAMICBOX(sbox, *(F_i_E_L_D +  4));
+	*(F_i_E_L_D +  5) = DYNAMICBOX(sbox, *(F_i_E_L_D +  5));
+	*(F_i_E_L_D +  6) = DYNAMICBOX(sbox, *(F_i_E_L_D +  6));
+	*(F_i_E_L_D +  7) = DYNAMICBOX(sbox, *(F_i_E_L_D +  7));
+	*(F_i_E_L_D +  8) = DYNAMICBOX(sbox, *(F_i_E_L_D +  8));
+	*(F_i_E_L_D +  9) = DYNAMICBOX(sbox, *(F_i_E_L_D +  9));
+	*(F_i_E_L_D + 10) = DYNAMICBOX(sbox, *(F_i_E_L_D + 10));
+	*(F_i_E_L_D + 11) = DYNAMICBOX(sbox, *(F_i_E_L_D + 11));
+	*(F_i_E_L_D + 12) = DYNAMICBOX(sbox, *(F_i_E_L_D + 12));
+	*(F_i_E_L_D + 13) = DYNAMICBOX(sbox, *(F_i_E_L_D + 13));
+	*(F_i_E_L_D + 14) = DYNAMICBOX(sbox, *(F_i_E_L_D + 14));
+	*(F_i_E_L_D + 15) = DYNAMICBOX(sbox, *(F_i_E_L_D + 15));
+	*(F_i_E_L_D + 16) = DYNAMICBOX(sbox, *(F_i_E_L_D + 16));
+	*(F_i_E_L_D + 17) = DYNAMICBOX(sbox, *(F_i_E_L_D + 17));
+	*(F_i_E_L_D + 18) = DYNAMICBOX(sbox, *(F_i_E_L_D + 18));
+	*(F_i_E_L_D + 19) = DYNAMICBOX(sbox, *(F_i_E_L_D + 19));
+	*(F_i_E_L_D + 20) = DYNAMICBOX(sbox, *(F_i_E_L_D + 20));
+	*(F_i_E_L_D + 21) = DYNAMICBOX(sbox, *(F_i_E_L_D + 21));
+	*(F_i_E_L_D + 22) = DYNAMICBOX(sbox, *(F_i_E_L_D + 22));
+	*(F_i_E_L_D + 23) = DYNAMICBOX(sbox, *(F_i_E_L_D + 23));
+	*(F_i_E_L_D + 24) = DYNAMICBOX(sbox, *(F_i_E_L_D + 24));
+	*(F_i_E_L_D + 25) = DYNAMICBOX(sbox, *(F_i_E_L_D + 25));
+	*(F_i_E_L_D + 26) = DYNAMICBOX(sbox, *(F_i_E_L_D + 26));
+	*(F_i_E_L_D + 27) = DYNAMICBOX(sbox, *(F_i_E_L_D + 27));
+	*(F_i_E_L_D + 28) = DYNAMICBOX(sbox, *(F_i_E_L_D + 28));
+	*(F_i_E_L_D + 29) = DYNAMICBOX(sbox, *(F_i_E_L_D + 29));
+	*(F_i_E_L_D + 30) = DYNAMICBOX(sbox, *(F_i_E_L_D + 30));
+	*(F_i_E_L_D + 31) = DYNAMICBOX(sbox, *(F_i_E_L_D + 31));
+	*(F_i_E_L_D + 32) = DYNAMICBOX(sbox, *(F_i_E_L_D + 32));
+	*(F_i_E_L_D + 33) = DYNAMICBOX(sbox, *(F_i_E_L_D + 33));
+	*(F_i_E_L_D + 34) = DYNAMICBOX(sbox, *(F_i_E_L_D + 34));
+	*(F_i_E_L_D + 35) = DYNAMICBOX(sbox, *(F_i_E_L_D + 35));
+	*(F_i_E_L_D + 36) = DYNAMICBOX(sbox, *(F_i_E_L_D + 36));
+	*(F_i_E_L_D + 37) = DYNAMICBOX(sbox, *(F_i_E_L_D + 37));
+	*(F_i_E_L_D + 38) = DYNAMICBOX(sbox, *(F_i_E_L_D + 38));
+	*(F_i_E_L_D + 39) = DYNAMICBOX(sbox, *(F_i_E_L_D + 39));
+	*(F_i_E_L_D + 40) = DYNAMICBOX(sbox, *(F_i_E_L_D + 40));
+	*(F_i_E_L_D + 41) = DYNAMICBOX(sbox, *(F_i_E_L_D + 41));
+	*(F_i_E_L_D + 42) = DYNAMICBOX(sbox, *(F_i_E_L_D + 42));
+	*(F_i_E_L_D + 43) = DYNAMICBOX(sbox, *(F_i_E_L_D + 43));
+	*(F_i_E_L_D + 44) = DYNAMICBOX(sbox, *(F_i_E_L_D + 44));
+	*(F_i_E_L_D + 45) = DYNAMICBOX(sbox, *(F_i_E_L_D + 45));
+	*(F_i_E_L_D + 46) = DYNAMICBOX(sbox, *(F_i_E_L_D + 46));
+	*(F_i_E_L_D + 47) = DYNAMICBOX(sbox, *(F_i_E_L_D + 47));
+	*(F_i_E_L_D + 48) = DYNAMICBOX(sbox, *(F_i_E_L_D + 48));
+}
+
+static inline void weave()
+{
+	// 0 3 6 2 5 1 4
+	// 4 1 5 2 6 3 0
+	u64* ptr0 = (u64*)(F_i_E_L_D);
+	u64* ptr1 = (u64*)(F_i_E_L_D + (BLKBLKSZ));
+	u64* ptr2 = (u64*)(F_i_E_L_D + (BLKBLKSZ * 2));
+	u64* ptr3 = (u64*)(F_i_E_L_D + (BLKBLKSZ * 3));
+	u64* ptr4 = (u64*)(F_i_E_L_D + (BLKBLKSZ * 4));
+	u64* ptr5 = (u64*)(F_i_E_L_D + (BLKBLKSZ * 5));
+	u64* ptr6 = (u64*)(F_i_E_L_D + (BLKBLKSZ * 6));
 	
 	register u64 area6 = *ptr6;	
 	register u64 area5 = *ptr5;
@@ -412,25 +489,25 @@ void weaver(u8* field)
 	register u64 area1 = *ptr1;
 	register u64 area0 = *ptr0;
 	
-	*ptr0 = area0 ^ area2 ^ area5;
-	*ptr1 = area1 ^ area3 ^ area6;
-	*ptr2 = area2 ^ area4 ^ area0;
-	*ptr3 = area3 ^ area5 ^ area1;
-	*ptr4 = area4 ^ area6 ^ area2;
-	*ptr5 = area5 ^ area0 ^ area3;
-	*ptr6 = CLEARBYTE7(area6 ^ area1 ^ area4) | *(field + MSGSZ - 1);
+	*ptr3 = area0 ^ area2 ^ area5;				// 0 -> 3
+	*ptr4 = ROTATE3BYTES_LEFT(area1 ^ area3 ^ area6);	// 1 -> 4
+	*ptr5 = ROTATE6BYTES_LEFT(area2 ^ area4 ^ area0);	// 2 -> 5
+	*ptr6 = ROTATE2BYTES_LEFT(area3 ^ area5 ^ area1);	// 3 -> 6
+	*ptr0 = ROTATE5BYTES_LEFT(area4 ^ area6 ^ area2);	// 4 -> 0
+	*ptr1 = ROTATE1BYTES_LEFT(area5 ^ area0 ^ area3);	// 5 -> 1
+	*ptr2 = ROTATE4BYTES_LEFT(CLEARBYTE7(area6 ^ area1 ^ area4) | *(field + MSGSZ - 1)); // 6 -> 2
 	
 }
 
-void unweave(u8* field)
+static inline void unweave()
 {
-	u64* ptr0 = (u64*)(field);
-	u64* ptr1 = (u64*)(field + 7);
-	u64* ptr2 = (u64*)(field + 14);
-	u64* ptr3 = (u64*)(field + 21);
-	u64* ptr4 = (u64*)(field + 28);
-	u64* ptr5 = (u64*)(field + 35);
-	u64* ptr6 = (u64*)(field + 42);
+	u64* ptr4 = (u64*)(F_i_E_L_D);			// 0 -> 4
+	u64* ptr5 = (u64*)(F_i_E_L_D + (BLKBLKSZ));	// 1 -> 5
+	u64* ptr6 = (u64*)(F_i_E_L_D + (BLKBLKSZ * 2)); // 2 -> 6
+	u64* ptr0 = (u64*)(F_i_E_L_D + (BLKBLKSZ * 3)); // 3 -> 0
+	u64* ptr1 = (u64*)(F_i_E_L_D + (BLKBLKSZ * 4)); // 4 -> 1
+	u64* ptr2 = (u64*)(F_i_E_L_D + (BLKBLKSZ * 5)); // 5 -> 2
+	u64* ptr3 = (u64*)(F_i_E_L_D + (BLKBLKSZ * 6)); // 6 -> 3
 	
 	register u64 area6 = *ptr6;	
 	register u64 area5 = *ptr5;
@@ -439,6 +516,13 @@ void unweave(u8* field)
 	register u64 area2 = *ptr2;
 	register u64 area1 = *ptr1;
 	register u64 area0 = *ptr0;
+	
+	area1 = ROTATE3BYTES_RIGHT(area1);
+	area2 = ROTATE6BYTES_RIGHT(area2);
+	area3 = ROTATE2BYTES_RIGHT(area3);
+	area4 = ROTATE5BYTES_RIGHT(area4);
+	area5 = ROTATE1BYTES_RIGHT(area5);
+	area6 = ROTATE4BYTES_RIGHT(area6);
 	
 	*ptr5 = area0 ^ area5 ^ area3 ^ area6 ^ area4;
 	*ptr6 = area1 ^ area3 ^ *ptr5;
@@ -448,37 +532,77 @@ void unweave(u8* field)
 	*ptr3 = area5 ^ *ptr0 ^ *ptr5;
 	*ptr1 = CLEARBYTE7(area1 ^ *ptr3 ^ *ptr6) | *(field + MSGSZ - 1);
 }
-
-/*
-// 0 3 6 2 5 1 4
-// 4 1 5 2 6 3 0
-void flesh(u64* x, u8 k)
+	
+static inline void clockwise(u8* box, u8* prevkey, u8* nxtkey)
 {
-	register u64 hold = *x;
-	register u64 work = TRANSPOSE(GETBYTE0(hold)) | 
-			    TRANSPOSE(GETBYTE1(hold)) | 
-			    TRANSPOSE(GETBYTE2(hold)) | 
-			    TRANSPOSE(GETBYTE3(hold)) | 
-			    TRANSPOSE(GETBYTE4(hold)) | 
-			    TRANSPOSE(GETBYTE5(hold)) | 
-			    TRANSPOSE(GETBYTE6(hold)) | 
-			    TRANSPOSE(GETBYTE7(hold));
-	*x = work;
+	u8 holdorder = order;
+	keytoreg(prevkey);
+	minitriangle(&hG, &hS, &hH);
+	regtokey(nxtkey);
+	switchlock12(box, *(nxtkey)    , *(nxtkey + 1));
+	switchlock12(box, *(nxtkey + 1), *(nxtkey + 2));
+	switchlock12(box, *(nxtkey + 2), *(nxtkey + 3));
+	switchlock12(box, *(nxtkey + 3), *(nxtkey + 4));
+	switchlock12(box, *(nxtkey + 4), *(nxtkey + 5));
+	switchlock12(box, *(nxtkey + 5), *(nxtkey + 6));
+	keypathways(box, nxtkey);
+	order = holdorder;
 }
-void stone(u64* x, u8 k)
-{
-	register u64 hold = *x;
-	register u64 work = TRANSLATE(GETBYTE0(hold)) | 
-			    TRANSLATE(GETBYTE1(hold)) | 
-			    TRANSLATE(GETBYTE2(hold)) | 
-			    TRANSLATE(GETBYTE3(hold)) | 
-			    TRANSLATE(GETBYTE4(hold)) | 
-			    TRANSLATE(GETBYTE5(hold)) | 
-			    TRANSLATE(GETBYTE6(hold)) | 
-			    TRANSLATE(GETBYTE7(hold));
-	*x = work;
-}*/
 
+static inline void keygen()
+{
+	clockwise(sboxarray,                lineup, 	           lineup + (KEYSZ));
+	clockwise(sboxarray + (BOXSZ *  2), lineup + (KEYSZ),      lineup + (KEYSZ *  2));
+	clockwise(sboxarray + (BOXSZ *  4), lineup + (KEYSZ *  2), lineup + (KEYSZ *  3));
+	clockwise(sboxarray + (BOXSZ *  6), lineup + (KEYSZ *  3), lineup + (KEYSZ *  4));
+	clockwise(sboxarray + (BOXSZ *  8), lineup + (KEYSZ *  4), lineup + (KEYSZ *  5));
+	clockwise(sboxarray + (BOXSZ * 10), lineup + (KEYSZ *  5), lineup + (KEYSZ *  6));
+	clockwise(sboxarray + (BOXSZ * 12), lineup + (KEYSZ *  6), lineup + (KEYSZ *  7));
+	clockwise(sboxarray + (BOXSZ * 14), lineup + (KEYSZ *  7), lineup + (KEYSZ *  8));
+	clockwise(sboxarray + (BOXSZ * 16), lineup + (KEYSZ *  8), lineup + (KEYSZ *  9));
+	clockwise(sboxarray + (BOXSZ * 18), lineup + (KEYSZ *  9), lineup + (KEYSZ * 10));
+	clockwise(sboxarray + (BOXSZ * 20), lineup + (KEYSZ * 10), lineup + (KEYSZ * 11));
+	clockwise(sboxarray + (BOXSZ * 22), lineup + (KEYSZ * 11), lineup + (KEYSZ * 12));
+	clockwise(sboxarray + (BOXSZ * 24), lineup + (KEYSZ * 12), lineup + (KEYSZ * 13));
+	clockwise(sboxarray + (BOXSZ * 26), lineup + (KEYSZ * 13), lineup + (KEYSZ * 14));
+	clockwise(sboxarray + (BOXSZ * 28), lineup + (KEYSZ * 14), lineup + (KEYSZ * 15));
+	clockwise(sboxarray + (BOXSZ * 30), lineup + (KEYSZ * 15), lineup + (KEYSZ * 16));
+	clockwise(sboxarray + (BOXSZ * 32), lineup + (KEYSZ * 16), lineup + (KEYSZ * 17));
+	clockwise(sboxarray + (BOXSZ * 34), lineup + (KEYSZ * 17), lineup + (KEYSZ * 18));
+	clockwise(sboxarray + (BOXSZ * 36), lineup + (KEYSZ * 18), lineup + (KEYSZ * 19));
+	clockwise(sboxarray + (BOXSZ * 38), lineup + (KEYSZ * 19), lineup + (KEYSZ * 20));
+}
+
+void invisible(u8* box)
+{
+	datapathways(box);
+}
+
+void visible(u8* box)
+{
+	datapathways(box);
+}
+
+static inline void setup(u8* field, u8* key)
+{
+	if (!F_i_E_L_D)
+	{
+		F_i_E_L_D = field;
+		nbytesto(lineup, key, KEYSZ);
+		setkey(key);
+		boxgen();
+		keygen();
+	}
+}
+
+void encrypt(char* field, char* key)
+{
+	setup((u8*)(field), (u8*)(key));
+	
+	invisible();
+	clockwise(*(sboxarray));
+	
+}
 
 
 
