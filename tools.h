@@ -15,8 +15,8 @@ static inline void PRINTLLN(long long int num)  { printf("%lld\n", num); 	 }	 //
 static inline void PRINTULLN(long long int num) { printf("%llu\n", num); 	 }	 // UNSIGNED LONG LONG INT
 static inline void PRINTX(int num) 	         { printf("0x%x\n", num);   	 }	 // HEX
 static inline void PRINTLLX(long long int num)  { printf("0x%llx\n", num); 	 }	 // LONG LONG HEX
-static inline void PRINTF(float num)            { printf("%llf\n", num);  	 }       // FLOAT
-static inline void PRINTD(double num)           { printf("%llf\n", num);  	 }       // DOUBLE
+static inline void PRINTF(float num)            { printf("%lf\n", num);  	 }       // FLOAT
+static inline void PRINTD(double num)           { printf("%lf\n", num);  	 }       // DOUBLE
 
 void print_space_format256(u8 x, u8 sign)
 {
@@ -88,7 +88,7 @@ void PRINTNUMARRAY(i64* arr, u32 sz)
 	goodptr(arr, "NULLPTR GIVEN TO PRINTNUMARRAY", NOFUNC_RETURN);
 	register u32 i; 
 	for (i = 0; i < sz; ++i)
-		printf("%lld ", *(arr + i)); 
+		printf("%ld ", *(arr + i)); 
 	printf("\n"); 
 }
 

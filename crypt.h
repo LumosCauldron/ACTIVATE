@@ -241,58 +241,78 @@ static inline void setkey(u8* trikey)	// Determine order, determine & hide hashe
 	order = MOD(order + GSHh + Gh + Sh + Hh, 0x100); // 256
 }
 
-static inline void boxgen()
+static inline void boxgen(u32 qubo)
 {
-	register double input = 0.0;
-	register double adder = 1.0;
-	register double e     = 2.71828182845905;
-	register double pi    = 3.14159265358979;
-	register double phi   = 1.61803398874989;
+	register float u = 0.00000000;
+	register float g = 0.00000000;
+	register float v = 0.00000000;
+	register u8    x = 0;
+	switch(order % 4)
+	{
+		case 0 : ;
+			u = GETBYTE0(qubo);
+			g = GETBYTE1(qubo);
+			v = GETBYTE2(qubo);
+			x = GETBYTE3(qubo);
+		break;
+		case 1 : ;
+			u = GETBYTE1(qubo);
+			g = GETBYTE2(qubo);
+			v = GETBYTE3(qubo);
+			x = GETBYTE0(qubo);
+		break;
+		case 2 : ;
+			u = GETBYTE2(qubo);
+			g = GETBYTE3(qubo);
+			v = GETBYTE0(qubo);
+			x = GETBYTE1(qubo);
+		break;
+		case 3 : ;
+			u = GETBYTE3(qubo);
+			g = GETBYTE0(qubo);
+			v = GETBYTE1(qubo);
+			x = GETBYTE2(qubo);
+	}
+
+	register float phi   = 1.6180000;
+	register float pi    = 3.1410000;
+	register float e     = 2.7180000;
+	register u16 i          = 0;
+	register u16 numelected = 0;
+	register u8  boxcount   = 0;
 	u8 hit[BOXSZ];
-	register u16 i = 0;
-	register u16 j = 0;
-	register u8  boxcount = 0;
 	
 	for (boxcount = 0; boxcount < 42; boxcount += 2)
 	{
 		zeroarray(hit, BOXSZ);	// Zero out array
 		// Create sbox from equation
-		while(j < BOXSZ)
+		while(numelected < BOXSZ)
 		{
-			register double first  = tan(pow(sqrt(input), input));
-			register double second = pow(e, cos(input));
-			register double third  = pow(pi, sin(input));
+			register float potent = ( (0.5 * u * ( sin(   ((g * x) / 256.0) + v   ) )) +
+					          (0.5 * v * ( sin(   ((u * x) / 256.0) + g   ) )) +
+						  (0.5 * g * ( sin(   ((v * x) / 256.0) + u   ) )) + 384 ) / 3.0;
 		
-			register double chaos = (first * second) / third;
-			register double answer = 128 * sin(chaos) + 128;
 			
-			u16 candidate = (u16)(ceil(answer));
-			if (candidate > BOXSZ - 1)
+			u16 candidate = (u16)(ceil(potent));
+			if (candidate >= BOXSZ)
 				goto keepgoing;
 			if (!(*(hit + candidate)))
 			{
 				print_space_format256(candidate, 0);
-				PRINTN(j);
+				PRINTN(numelected);
 				*(hit + candidate) = 1;
+				
+				// Set substitution value within sbox
 				*(sboxarray + (boxcount * BOXSZ) + i) = candidate;
-				++i;
-				++j;
 
+				// Set corresponding inverse substitution value within corresponding inverse sbox
+				*(sboxarray + ((boxcount + 1) * BOXSZ) + candidate) = i;
+				++i;
+				++numelected;
 			}
 			keepgoing:
-			input += adder;
-			if (input >= BOXSZ)
-			{
-				adder /= 10.0;
-				input  = 0.0;
-				input += adder;
-			}
+				++x;
 		}
-		j     = 0;
-		adder = 1.0;
-		// Create inverse of generated sbox
-		for (i = 0; i < BOXSZ; ++i)
-			*(sboxarray + ((boxcount + 1) * BOXSZ) + i) = i;
 		exit(0);
 	}
 }
@@ -301,9 +321,9 @@ static inline void triangle()
 {
 	register u64 all    = G;
 	register u64 good   = S;
-	register u64 things = HS;
+	register u64 things = H;
 	
-	HS = good   ^  things;
+	H = good   ^  things;
 	S  = all    ^  good;
 	G  = things ^  all;
 }
@@ -490,12 +510,12 @@ static inline void weave()
 	register u64 area0 = *ptr0;
 	
 	*ptr3 = area0 ^ area2 ^ area5;				// 0 -> 3
-	*ptr4 = ROTATE3BYTES_LEFT(area1 ^ area3 ^ area6);	// 1 -> 4
-	*ptr5 = ROTATE6BYTES_LEFT(area2 ^ area4 ^ area0);	// 2 -> 5
-	*ptr6 = ROTATE2BYTES_LEFT(area3 ^ area5 ^ area1);	// 3 -> 6
-	*ptr0 = ROTATE5BYTES_LEFT(area4 ^ area6 ^ area2);	// 4 -> 0
-	*ptr1 = ROTATE1BYTES_LEFT(area5 ^ area0 ^ area3);	// 5 -> 1
-	*ptr2 = ROTATE4BYTES_LEFT(CLEARBYTE7(area6 ^ area1 ^ area4) | *(field + MSGSZ - 1)); // 6 -> 2
+	*ptr4 = ROTATE3BYTESOF7_LEFT(area1 ^ area3 ^ area6);	// 1 -> 4
+	*ptr5 = ROTATE6BYTESOF7_LEFT(area2 ^ area4 ^ area0);	// 2 -> 5
+	*ptr6 = ROTATE2BYTESOF7_LEFT(area3 ^ area5 ^ area1);	// 3 -> 6
+	*ptr0 = ROTATE5BYTESOF7_LEFT(area4 ^ area6 ^ area2);	// 4 -> 0
+	*ptr1 = ROTATE1BYTEOF7_LEFT(area5 ^ area0 ^ area3);	// 5 -> 1
+	*ptr2 = ROTATE4BYTESOF7_LEFT(CLEARBYTE7(area6 ^ area1 ^ area4) | *(F_i_E_L_D + MSGBLKSZ - 1)); // 6 -> 2
 	
 }
 
@@ -517,12 +537,12 @@ static inline void unweave()
 	register u64 area1 = *ptr1;
 	register u64 area0 = *ptr0;
 	
-	area1 = ROTATE3BYTES_RIGHT(area1);
-	area2 = ROTATE6BYTES_RIGHT(area2);
-	area3 = ROTATE2BYTES_RIGHT(area3);
-	area4 = ROTATE5BYTES_RIGHT(area4);
-	area5 = ROTATE1BYTES_RIGHT(area5);
-	area6 = ROTATE4BYTES_RIGHT(area6);
+	area1 = ROTATE3BYTESOF7_RIGHT(area1);
+	area2 = ROTATE6BYTESOF7_RIGHT(area2);
+	area3 = ROTATE2BYTESOF7_RIGHT(area3);
+	area4 = ROTATE5BYTESOF7_RIGHT(area4);
+	area5 = ROTATE1BYTEOF7_RIGHT(area5);
+	area6 = ROTATE4BYTESOF7_RIGHT(area6);
 	
 	*ptr5 = area0 ^ area5 ^ area3 ^ area6 ^ area4;
 	*ptr6 = area1 ^ area3 ^ *ptr5;
@@ -530,7 +550,7 @@ static inline void unweave()
 	*ptr2 = area4 ^ *ptr4 ^ *ptr6;
 	*ptr0 = area0 ^ *ptr2 ^ *ptr5;
 	*ptr3 = area5 ^ *ptr0 ^ *ptr5;
-	*ptr1 = CLEARBYTE7(area1 ^ *ptr3 ^ *ptr6) | *(field + MSGSZ - 1);
+	*ptr1 = CLEARBYTE7(area1 ^ *ptr3 ^ *ptr6) | *(F_i_E_L_D + MSGBLKSZ - 1);
 }
 	
 static inline void clockwise(u8* box, u8* prevkey, u8* nxtkey)
@@ -539,12 +559,12 @@ static inline void clockwise(u8* box, u8* prevkey, u8* nxtkey)
 	keytoreg(prevkey);
 	minitriangle(&hG, &hS, &hH);
 	regtokey(nxtkey);
-	switchlock12(box, *(nxtkey)    , *(nxtkey + 1));
-	switchlock12(box, *(nxtkey + 1), *(nxtkey + 2));
-	switchlock12(box, *(nxtkey + 2), *(nxtkey + 3));
-	switchlock12(box, *(nxtkey + 3), *(nxtkey + 4));
-	switchlock12(box, *(nxtkey + 4), *(nxtkey + 5));
-	switchlock12(box, *(nxtkey + 5), *(nxtkey + 6));
+	switchlock12(box, (nxtkey)    , (nxtkey + 1));
+	switchlock12(box, (nxtkey + 1), (nxtkey + 2));
+	switchlock12(box, (nxtkey + 2), (nxtkey + 3));
+	switchlock12(box, (nxtkey + 3), (nxtkey + 4));
+	switchlock12(box, (nxtkey + 4), (nxtkey + 5));
+	switchlock12(box, (nxtkey + 5), (nxtkey + 6));
 	keypathways(box, nxtkey);
 	order = holdorder;
 }
@@ -590,18 +610,18 @@ static inline void setup(u8* field, u8* key)
 		F_i_E_L_D = field;
 		nbytesto(lineup, key, KEYSZ);
 		setkey(key);
-		boxgen();
+		boxgen(G);
 		keygen();
 	}
 }
 
 void encrypt(char* field, char* key)
 {
-	setup((u8*)(field), (u8*)(key));
+	//setup((u8*)(field), (u8*)(key));
 	
-	invisible();
-	clockwise(*(sboxarray));
-	
+	//invisible();
+	//clockwise(*(sboxarray));
+	// ...
 }
 
 

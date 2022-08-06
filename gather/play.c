@@ -12,49 +12,7 @@
 
 void missionwrapper(u8* box)	// Varies from test case to test case [strtovect(Bytes* str, char dlim, char skipfirst, char opt)]
 {
-	register double input = 0.0;
-	register double adder = 1.0;
-	register double e     = 2.71828182845905;
-	register double pi    = 3.14159265358979;
-	register double phi   = 1.61803398874989;
-	u8 hit[256];
-	register i16 i = 0;
 	
-	zeroarray(hit, BOXSZ);	// Zero out array
-	
-	// Create sbox from equation
-	while(i < BOXSZ)
-	{
-		register double first  = tan(pow(sqrt(input), input));
-		register double second = pow(e, cos(input));
-		register double third  = pow(pi, sin(input));
-	
-		register double chaos = (first * second) / third;
-		register double answer = 128 * sin(chaos) + 128;
-		
-		u16 candidate = (u16)(ceil(answer));
-		if (candidate > BOXSZ - 1)
-			goto keepgoing;
-		if (!(*(hit + candidate)))
-		{
-			*(hit + candidate) = 1;
-			*(box + i)         = candidate;
-			++i;
-		}
-		
-		keepgoing:
-		input += adder;
-		if (input >= BOXSZ)
-		{
-			adder /= 10.0;
-			input = 0.0;
-			input += adder;
-		}
-	}
-	
-	// Create inverse of generated sbox
-	//for (i = 0; i < BOXSZ; ++i)
-	//	BOXINVERSE(*(box + i)) = i;
 }
 
 void timer(Mission** mission)
@@ -76,10 +34,10 @@ void timer(Mission** mission)
 int main(int argc, char** argv)
 {
     CALIBRATE();
-    Mission* mptr = missionplan(missionwrapper, EMPTYTOOLSET, ZEROTOOLS, NOFREEMISSION);
+    //Mission* mptr = missionplan(missionwrapper, EMPTYTOOLSET, ZEROTOOLS, NOFREEMISSION);
     //timer(&mptr);
     //missionscruball(&mptr);
-    generator();
+    boxgen(0x12345678);
 
     DECALIBRATE();
 }
